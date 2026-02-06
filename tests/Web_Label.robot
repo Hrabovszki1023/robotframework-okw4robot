@@ -11,22 +11,22 @@ ${DEMO_FILE}    docs/examples/widgets_demo.html
 
 *** Keywords ***
 Setup Widgets Demo
-    Start Host     Chrome
-    Start App      Chrome
-    Select Window  Chrome
+    StartHost     Chrome
+    StartApp      Chrome
+    SelectWindow  Chrome
     ${FILE_URL}=   Evaluate    __import__('pathlib').Path('${DEMO_FILE}').resolve().as_uri()
     PAR.SetOKWParameter    TimeOutVerifyLabel    10
     PAR.SetOKWParameter    TimeOutVerifyValue    10
     SetValue       URL         ${FILE_URL}
-    Start App      web/WidgetsDemo
+    StartApp      web/WidgetsDemo
 
 Teardown Widgets Demo
-    Stop Host
+    StopHost
 
 *** Test Cases ***
 Verify Labels For Form Controls
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     LAB.VerifyLabel        Name            Name
     LAB.VerifyLabel        Vorname         Vorname
     LAB.VerifyLabel        Anmerkung       Anmerkung
@@ -36,15 +36,16 @@ Verify Labels For Form Controls
 
 Label Wildcard And Regex
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     LAB.VerifyLabelWCM     Verheiratet     *heirat*
     LAB.VerifyLabelREGX    Geschlecht      ^Geschl.*
     Teardown Widgets Demo
 
 Memorize And Log Label
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     LAB.MemorizeLabel      Name        NameLabel
     LAB.LogLabel           Name
     # Verwendung: ${NameLabel}
     Teardown Widgets Demo
+

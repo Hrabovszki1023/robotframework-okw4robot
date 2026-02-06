@@ -2,6 +2,7 @@
 Library    SeleniumLibrary
 Library    okw4robot.keywords.host.HostKeywords                 WITH NAME    Host
 Library    okw4robot.keywords.app.AppKeywords                   WITH NAME    App
+Library    okw4robot.keywords.list_keywords.ListKeywords        WITH NAME    LST
 Library    okw4robot.keywords.widget_keywords.WidgetKeywords    WITH NAME    KW
 
 *** Variables ***
@@ -20,13 +21,17 @@ Teardown Widgets Demo
     StopHost
 
 *** Test Cases ***
-Clickable YES And NO
+List And Selected Counts
     Setup Widgets Demo
     SelectWindow   WidgetsDemo
-    KW.VerifyIsClickable   OK      YES
-    KW.ExecuteJS    document.querySelector('[data-testid="btn-ok"]').style.display='none';
-    KW.VerifyIsClickable   OK      NO
+    # Combo options count (native select has 4 options)
+    LST.VerifyListCount        Geschlecht       4
+    # Radio group counts: Zahlungsmethode has 3; Lieferung has 5
+    LST.VerifyListCount        Zahlungsmethode  3
+    LST.VerifyListCount        Lieferung        5
+    # Selected count: radios are initially 0; after selecting becomes 1
+    LST.VerifySelectedCount    Zahlungsmethode  0
+    KW.Select                  Zahlungsmethode  paypal
+    LST.VerifySelectedCount    Zahlungsmethode  1
     Teardown Widgets Demo
-
-
 

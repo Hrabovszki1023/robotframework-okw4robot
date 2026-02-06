@@ -35,3 +35,12 @@ class ListBox(BaseWidget):
 
     def okw_memorize_value(self):
         return self.adapter.get_selected_list_labels(self.locator)
+
+    # Counts
+    def okw_get_list_count(self) -> int:
+        el = self.adapter.sl.get_webelement(self.adapter._resolve(self.locator))
+        return len(el.find_elements("css selector", "option"))
+
+    def okw_get_selected_count(self) -> int:
+        vals = self.adapter.get_selected_list_values(self.locator) or []
+        return len(vals)

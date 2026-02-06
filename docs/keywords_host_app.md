@@ -6,7 +6,7 @@ Diese Anleitung beschreibt die Verwendung der OKW4Robot-Schlüsselwörter für H
 
 ## 🔌 Host-Keywords
 
-### `Start Host    <HostName>`
+### `StartHost    <HostName>`
 Lädt und initialisiert den Treiber für die Host-Umgebung (z. B. `Chrome`, `Firefox`). Erwartet wird eine passende Objektlisten-YAML in:
 
 ```
@@ -26,25 +26,25 @@ Chrome:
 
 ---
 
-### `Select Host    <HostName>`
+### `SelectHost    <HostName>`
 Wechselt in einen zuvor gestarteten Host-Kontext. Dies ist sinnvoll, wenn mehrere Hosts parallel verwendet werden (z. B. Browser-Vergleich).
 
 ✅ Wirft Fehler, wenn der gewünschte Host nicht aktiv ist.
 
 ---
 
-### `Stop Host`
+### `StopHost`
 Beendet den aktuellen Treiber (z. B. schließt den Browser) und löscht alle App- und Fensterkontexte.
 
 ---
 
 ## 🧱 App-Keywords
 
-### `Start App    <AppName>`
+### `StartApp    <AppName>`
 Lädt eine **Objektlisten-YAML** für eine Anwendung. Der Pfad wird wie folgt interpretiert:
 
-- `Start App    TestApp` → `locators/TestApp.yaml`
-- `Start App    web/TestApp` → `locators/web/TestApp.yaml`
+- `StartApp    TestApp` → `locators/TestApp.yaml`
+- `StartApp    web/TestApp` → `locators/web/TestApp.yaml`
 
 Beispiel:
 ```yaml
@@ -59,17 +59,17 @@ TestApp:
 
 ---
 
-### `Select Window    <WindowName>`
+### `SelectWindow    <WindowName>`
 Aktiviert ein Fenster oder ein virtuelles Widget aus dem App-Modell. Erst nach Auswahl eines Fensters kann auf darunterliegende Widgets zugegriffen werden.
 
 Beispiel:
 ```
-Select Window    LoginDialog
+SelectWindow    LoginDialog
 ```
 
 ---
 
-### `Stop App`
+### `StopApp`
 Beendet den aktuellen Anwendungskontext (Modell, Fenster, Name).
 
 ---
@@ -84,36 +84,36 @@ Library    okw4robot.keywords.widget_keywords.WidgetKeywords
 
 *** Test Cases ***
 Login mit Chrome
-    Start Host           Chrome
-    Start App            Chrome
-    Select Window        Chrome
+    StartHost           Chrome
+    StartApp            Chrome
+    SelectWindow        Chrome
     SetValue             URL      file:///C:/temp/login.html
     ClickOn              Maximize Window
-    Start App            web/TestAppOKW4Robot_WEB
-    Select Window        LoginDialog
+    StartApp            web/TestAppOKW4Robot_WEB
+    SelectWindow        LoginDialog
     SetValue             Benutzer     admin
-    Stop App
-    Stop Host
+    StopApp
+    StopHost
 
 Login mit Firefox
-    Start Host           Firefox
-    Start App            Firefox
-    Select Window        Firefox
+    StartHost           Firefox
+    StartApp            Firefox
+    SelectWindow        Firefox
     SetValue             URL      file:///C:/temp/login.html
     ClickOn              Maximize Window
-    Start App            web/TestAppOKW4Robot_WEB
-    Select Window        LoginDialog
+    StartApp            web/TestAppOKW4Robot_WEB
+    SelectWindow        LoginDialog
     SetValue             Benutzer     admin
-    Stop App
-    Stop Host
+    StopApp
+    StopHost
 ```
 
 ---
 
 ## 📌 Hinweise
 
-- Das `Select Window` funktioniert sowohl für "echte" Fenster als auch für virtuelle Objekte (z. B. `URL`, `Maximize Window` bei Browsern).
-- Wird `Start Host` erneut aufgerufen, werden App und Fenster-Kontext automatisch zurückgesetzt.
+- Das `SelectWindow` funktioniert sowohl für "echte" Fenster als auch für virtuelle Objekte (z. B. `URL`, `Maximize Window` bei Browsern).
+- Wird `StartHost` erneut aufgerufen, werden App und Fenster-Kontext automatisch zurückgesetzt.
 - Alle Fehler wie "kein Host aktiv", "Fenster nicht gefunden" oder "Widget nicht definiert" werden klar protokolliert (inkl. Stacktrace, falls aktiviert).
 
 ---
@@ -121,4 +121,5 @@ Login mit Firefox
 > 📂 Du findest die zugehörigen YAMLs in `locators/` (Projekt) oder `src/okw4robot/locators/` (Framework-Vorgaben).
 
 > 🧩 Für eine Liste aller verfügbaren Widget-Keywords siehe `docs/keywords_widget.md` (folgt).
+
 

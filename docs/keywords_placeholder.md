@@ -45,4 +45,10 @@ Placeholder Prüfen
 - TextField: `src/okw4robot/widgets/common/text_field.py` → `okw_verify_placeholder*`
 - MultilineField: erbt von TextField
 - ComboBox: `src/okw4robot/widgets/common/combobox.py` → `okw_verify_placeholder*` (nur sinnvoll bei input-basierten Combos)
-- Keywords: `src/okw4robot/keywords/placeholder_keywords.py`
+ - Keywords: `src/okw4robot/keywords/placeholder_keywords.py`
+
+---
+
+## Hinweis zu Regex in Robot
+
+Backslashes werden in Robot‑Tabellen häufig als Escape interpretiert. Nutze daher z. B. `[0-9]` statt `\d`, oder escapen doppelt (z. B. `^Mehrzeilige\\s+Eingabe`). Das betrifft alle REGX‑Varianten der Placeholder‑Keywords.

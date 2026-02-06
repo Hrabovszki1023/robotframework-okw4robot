@@ -50,3 +50,9 @@ Merken Und Nutzen
 - Keywords: `src/okw4robot/keywords/tooltip_keywords.py`
 - Attributzugriff: `src/okw4robot/adapters/selenium_web.py#get_attribute` (nutzt WebElement.get_attribute)
 
+---
+
+## Hinweis zu Regex in Robot
+
+Backslashes werden in Robot‑Tabellen oft als Escape interpretiert. Verwende z. B. `[0-9]` statt `\d`, oder escapen doppelt (z. B. `^Klick\\s+hier$`). Gilt für alle REGX‑Varianten.
+

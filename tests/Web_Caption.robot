@@ -11,27 +11,28 @@ ${DEMO_FILE}    docs/examples/widgets_demo.html
 
 *** Keywords ***
 Setup Widgets Demo
-    Start Host     Chrome
-    Start App      Chrome
-    Select Window  Chrome
+    StartHost     Chrome
+    StartApp      Chrome
+    SelectWindow  Chrome
     ${FILE_URL}=   Evaluate    __import__('pathlib').Path('${DEMO_FILE}').resolve().as_uri()
     PAR.SetOKWParameter    TimeOutVerifyCaption    10
     SetValue       URL         ${FILE_URL}
-    Start App      web/WidgetsDemo
+    StartApp      web/WidgetsDemo
 
 Teardown Widgets Demo
-    Stop Host
+    StopHost
 
 *** Test Cases ***
 Verify Button Caption
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     CAP.VerifyCaption      OK      OK
     Teardown Widgets Demo
 
 Memorize And Log Caption
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     CAP.MemorizeCaption    OK      OkCaption
     CAP.LogCaption         OK
     Teardown Widgets Demo
+

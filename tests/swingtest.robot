@@ -14,7 +14,7 @@ ${ZIELDATEI}    objektliste.yaml
 
 *** Test Cases ***
 Objektliste Exportieren
-    Start Host    JavaRPC
+    StartHost    JavaRPC
     Warte Bis JavaRPC-Server Bereit Ist
     Exportiere Objektstruktur    ${ZIELDATEI}
 
@@ -35,3 +35,4 @@ Starte RPC-Server Und SwingApp
 Stoppe RPC-Server
     [Documentation]    Beendet den JavaRPC-Server
     Terminate All Processes
+

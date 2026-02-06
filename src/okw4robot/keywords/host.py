@@ -7,7 +7,7 @@ from ..utils.logging_mixin import LoggingMixin
 
 class HostKeywords(LoggingMixin):
 
-    @keyword("Start Host")
+    @keyword("StartHost")
     def start_host(self, name: str):
         self.log_info(f"Starte Host '{name}'...")
         model = load_yaml_with_fallback(name)
@@ -17,7 +17,7 @@ class HostKeywords(LoggingMixin):
         context.set_adapter(adapter)
         self.log_info(f"Host '{name}' erfolgreich gestartet.")
 
-    @keyword("Select Host")
+    @keyword("SelectHost")
     def select_host(self, name: str):
         current = context.get_adapter().__class__.__name__
         self.log_info(f"Prüfe, ob Host '{name}' aktiv ist...")
@@ -26,8 +26,10 @@ class HostKeywords(LoggingMixin):
             raise RuntimeError(f"Host '{name}' is not active (currently: '{current}')")
         self.log_info(f"Host '{name}' ist aktiv.")
 
-    @keyword("Stop Host")
+    @keyword("StopHost")
     def stop_host(self):
         self.log_info("Stoppe aktuellen Host...")
         context.stop_adapter()
         self.log_info("Host wurde gestoppt.")
+
+    

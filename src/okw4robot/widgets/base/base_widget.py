@@ -25,6 +25,13 @@ class BaseWidget(LoggingMixin):
     def okw_has_value(self): raise NotImplementedError()
     def okw_memorize_value(self): raise NotImplementedError()
 
+    # === List-like counts (to be implemented by list-like widgets) ===
+    def okw_get_list_count(self) -> int:
+        raise NotImplementedError()
+
+    def okw_get_selected_count(self) -> int:
+        raise NotImplementedError()
+
     # === Sync helpers ===
     def _get_global_sync(self, intent: str) -> dict:
         bi = BuiltIn()

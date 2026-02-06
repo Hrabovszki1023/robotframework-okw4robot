@@ -29,3 +29,8 @@ Ignore‑Regel: `$IGNORE` (und optional leere Werte via `${OKW_IGNORE_EMPTY}=YES
 - `${OKW_TIMEOUT_VERIFY_CAPTION}`: Default 10 (Sekunden). Als Zahl oder Robot‑Zeitstring setzbar.
 - Setzen per Keyword: `SetOKWParameter  TimeOutVerifyCaption  15s`
 
+---
+
+## Hinweis zu Regex in Robot
+
+Backslashes werden in Robot‑Tabellen häufig als Escape interpretiert. Bevorzuge z. B. `[0-9]` statt `\d`, oder escapen doppelt (z. B. `^Titel\\s+\d+$`). Diese Empfehlung gilt für alle REGX‑Varianten.

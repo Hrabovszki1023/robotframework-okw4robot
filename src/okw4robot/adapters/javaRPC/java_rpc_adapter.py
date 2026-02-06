@@ -48,6 +48,20 @@ class JavaRpcAdapter(LoggingMixin):
         self.log_info(f"Prüfe Existenz von {locator}")
         return self._rpc_call("elementExists", {"locator": locator})
 
+    def list_actions(self, node_id):
+        """
+        Holt die verfügbaren Actions für eine Node-ID vom JSON-RPC-Server (proxyt Agent /actions).
+        """
+        self.log_info(f"Liste Actions für Node {node_id}")
+        return self._rpc_call("listActions", {"id": node_id})
+
+    def call_action(self, node_id, action, args=None):
+        """
+        Führt eine Action für eine Node-ID aus (proxyt Agent /action).
+        """
+        self.log_info(f"Rufe Action {action} auf Node {node_id} mit args={args}")
+        return self._rpc_call("callAction", {"id": node_id, "action": action, "args": args or []})
+
     def get_object_tree(self) -> dict:
         """
         Fragt die GUI-Objektstruktur vom Java-RPC-Server ab

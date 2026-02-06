@@ -62,3 +62,9 @@ Beschriftung Merken
 ```robotframework
 ${OKW_TIMEOUT_VERIFY_LABEL}    15s
 ```
+
+---
+
+## Hinweis zu Regex in Robot
+
+Backslashes werden in Robot‑Tabellen häufig als Escape interpretiert. Verwende nach Möglichkeit Klassen wie `[0-9]` statt `\d`, oder escapen doppelt (z. B. `^Start\\d+$`). Das gilt für alle REGX‑Varianten der Verify‑Keywords.

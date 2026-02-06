@@ -9,20 +9,20 @@ ${DEMO_FILE}    docs/examples/widgets_demo.html
 
 *** Keywords ***
 Setup Widgets Demo
-    Start Host     Chrome
-    Start App      Chrome
-    Select Window  Chrome
+    StartHost     Chrome
+    StartApp      Chrome
+    SelectWindow  Chrome
     ${FILE_URL}=   Evaluate    __import__('pathlib').Path('${DEMO_FILE}').resolve().as_uri()
     KW.SetValue    URL         ${FILE_URL}
-    Start App      web/WidgetsDemo
+    StartApp      web/WidgetsDemo
 
 Teardown Widgets Demo
-    Stop Host
+    StopHost
 
 *** Test Cases ***
 Focus Switch Between Inputs
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     KW.SetFocus         Name
     KW.VerifyHasFocus   Name        YES
     KW.VerifyHasFocus   Vorname     NO
@@ -33,7 +33,7 @@ Focus Switch Between Inputs
 
 Focus Textarea And Button
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     KW.SetFocus         Anmerkung
     KW.VerifyHasFocus   Anmerkung   YES
     KW.SetFocus         OK
@@ -43,10 +43,11 @@ Focus Textarea And Button
 
 Focus Checkbox And ComboBox
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     KW.SetFocus         Verheiratet
     KW.VerifyHasFocus   Verheiratet    YES
     KW.SetFocus         Geschlecht
     KW.VerifyHasFocus   Geschlecht  YES
     KW.VerifyHasFocus   Verheiratet    NO
     Teardown Widgets Demo
+

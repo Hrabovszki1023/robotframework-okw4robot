@@ -54,6 +54,24 @@ def _get_tooltip(widget) -> str:
 class TooltipKeywords:
     @keyword("VerifyTooltip")
     def verify_tooltip(self, name, expected):
+        """Verifies that a widget's tooltip equals the expected string.
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+        - ``expected``: Expected tooltip text (exact match).
+
+        Special tokens / control parameters:
+        - ``$IGNORE`` or ``${IGNORE}`` (case‑insensitive): Skip verification for this field.
+        - Empty value (``""``) is ignored if ``${OKW_IGNORE_EMPTY}=YES`` is set.
+
+        Behavior:
+        - Reads tooltip via element attributes (prefers ``title``, falls back to ``aria-label``).
+        - Polls until ``${OKW_TIMEOUT_VERIFY_TOOLTIP}`` (default 10s); raises last error on timeout.
+
+        Examples:
+        | VerifyTooltip | HelpIcon | Opens settings |
+        | VerifyTooltip | Hint     | $IGNORE        |
+        """
         if _should_ignore(expected):
             print(f"[VerifyTooltip] '{name}' ignored (blank or $IGNORE)")
             return
@@ -79,6 +97,24 @@ class TooltipKeywords:
 
     @keyword("VerifyTooltipWCM")
     def verify_tooltip_wcm(self, name, expected):
+        """Verifies a widget's tooltip using wildcard matching (WCM).
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+        - ``expected``: Wildcard pattern where ``*`` = any sequence, ``?`` = one character.
+
+        Special tokens / control parameters:
+        - ``$IGNORE`` or ``${IGNORE}`` (case‑insensitive): Skip verification for this field.
+        - Empty value (``""``) is ignored if ``${OKW_IGNORE_EMPTY}=YES`` is set.
+
+        Behavior:
+        - Converts the wildcard pattern to a case‑sensitive regex anchored with ``^...$`` (DOTALL).
+        - Polls until ``${OKW_TIMEOUT_VERIFY_TOOLTIP}`` (default 10s); raises last error on timeout.
+
+        Examples:
+        | VerifyTooltipWCM | HelpIcon | *settings* |
+        | VerifyTooltipWCM | Hint     | Error?     |
+        """
         if _should_ignore(expected):
             print(f"[VerifyTooltipWCM] '{name}' ignored (blank or $IGNORE)")
             return
@@ -105,6 +141,24 @@ class TooltipKeywords:
 
     @keyword("VerifyTooltipREGX")
     def verify_tooltip_regx(self, name, expected):
+        """Verifies a widget's tooltip using a regular expression (regex).
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+        - ``expected``: Python regular expression used with ``re.search`` (not anchored).
+
+        Special tokens / control parameters:
+        - ``$IGNORE`` or ``${IGNORE}`` (case‑insensitive): Skip verification for this field.
+        - Empty value (``""``) is ignored if ``${OKW_IGNORE_EMPTY}=YES`` is set.
+
+        Behavior:
+        - Case‑sensitive search within the tooltip text; use inline flags like ``(?i)`` for case‑insensitive.
+        - Polls until ``${OKW_TIMEOUT_VERIFY_TOOLTIP}`` (default 10s); raises last error on timeout.
+
+        Examples:
+        | VerifyTooltipREGX | HelpIcon | ^Open.*settings$ |
+        | VerifyTooltipREGX | Hint     | (?i)error        |
+        """
         if _should_ignore(expected):
             print(f"[VerifyTooltipREGX] '{name}' ignored (blank or $IGNORE)")
             return

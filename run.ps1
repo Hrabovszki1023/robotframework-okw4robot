@@ -22,4 +22,13 @@ robot -d reports `
   tests\Web_VerifyEditable.robot `
   tests\Web_VerifyFocusable.robot `
   tests\Web_VerifyClickable.robot `
-  tests\Web_VerifyHasFocus.robot
+  tests\Web_VerifyHasFocus.robot `
+  tests\Web_Table_VerifyCell.robot `
+  tests\Web_Table_VerifyRow.robot `
+  tests\Web_Table_VerifyColumn.robot `
+  tests\Web_Table_VerifyCounts.robot `
+  tests\Web_Table_VerifyHasRow.robot `
+  tests\Web_Table_VerifyContent.robot `
+  tests\Web_Table_VerifyByHeaders.robot `
+  tests\Web_Table_VerifyByHeadersREGX.robot `
+  tests\Web_List_VerifyCounts.robot

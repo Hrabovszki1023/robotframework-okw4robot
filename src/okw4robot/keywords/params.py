@@ -29,6 +29,8 @@ class ParamsKeywords:
             "TIMEOUTVERIFYFOCUSABLE": "${OKW_TIMEOUT_VERIFY_FOCUSABLE}",
             "TIMEOUTVERIFYCLICKABLE": "${OKW_TIMEOUT_VERIFY_CLICKABLE}",
             "TIMEOUTVERIFYFOCUS": "${OKW_TIMEOUT_VERIFY_FOCUS}",
+            # Table verification timeout
+            "TIMEOUTVERIFYTABLE": "${OKW_TIMEOUT_VERIFY_TABLE}",
             # Poll interval for verify loops
             "POLLVERIFY": "${OKW_POLL_VERIFY}",
         }

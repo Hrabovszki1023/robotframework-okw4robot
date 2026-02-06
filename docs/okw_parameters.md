@@ -94,6 +94,7 @@ Zusätzlich zu den oben genannten Timeouts sind folgende Parameter verfügbar un
 - `${OKW_TIMEOUT_VERIFY_CLICKABLE}` (Default 2.0)
 - `${OKW_TIMEOUT_VERIFY_FOCUS}` (Default 2.0)
 - `${OKW_POLL_VERIFY}` (Default 0.1) – Polling‑Intervall für alle Verify*‑Schleifen
+- `${OKW_TIMEOUT_VERIFY_TABLE}` (Default 2.0) – Timeout für Tabellen‑Verify‑Keywords
 
 Setzen per Keyword (zusätzlich unterstützt):
 
@@ -106,6 +107,7 @@ PAR.SetOKWParameter    TimeOutVerifyFocusable   2
 PAR.SetOKWParameter    TimeOutVerifyClickable   2
 PAR.SetOKWParameter    TimeOutVerifyFocus       2
 PAR.SetOKWParameter    PollVerify               0.2
+PAR.SetOKWParameter    TimeOutVerifyTable       2
 ```
 
 Setzen per Variables‑Section (Beispiel):
@@ -119,5 +121,6 @@ ${OKW_TIMEOUT_VERIFY_EDITABLE}      2.0
 ${OKW_TIMEOUT_VERIFY_FOCUSABLE}     2.0
 ${OKW_TIMEOUT_VERIFY_CLICKABLE}     2.0
 ${OKW_TIMEOUT_VERIFY_FOCUS}         2.0
+${OKW_TIMEOUT_VERIFY_TABLE}         2.0
 ${OKW_POLL_VERIFY}                  0.1
 ```

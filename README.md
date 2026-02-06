@@ -15,8 +15,22 @@ Dieses Projekt ermöglicht es, mit einem einheitlichen Satz von Schlüsselwörte
 - Ignore-Regel ($IGNORE, ${OKW_IGNORE_EMPTY}, $DELETE): [docs/keywords_ignore_rule.md](docs/keywords_ignore_rule.md)
 - Placeholder-Keywords: [docs/keywords_placeholder.md](docs/keywords_placeholder.md)
 - Tooltip-Keywords: [docs/keywords_tooltip.md](docs/keywords_tooltip.md)
+- ExecuteJS Snippets (Web, JS One‑Liners): [docs/executejs-snippets.md](docs/executejs-snippets.md)
 - OKW Parameter und Timeouts: [docs/okw_parameters.md](docs/okw_parameters.md)
 - Synchronisations-/Delay-Strategie: [docs/synchronization_strategy.md](docs/synchronization_strategy.md)
+
+---
+
+## Lizenz
+
+- Community (nicht-kommerziell): siehe LICENSE. Nutzung kostenfrei, solange kein direkter/indirekter Umsatzbezug besteht.
+- Kommerzielle Nutzung: siehe COMMERCIAL_LICENSE.md für Überblick und Kontakt.
+- FAQ: typische Fälle und Beispiele unter [docs/license_faq.md](docs/license_faq.md).
+- Haftung/Gewährleistung: Die Software wird "AS IS" bereitgestellt; Haftung ist – soweit gesetzlich zulässig – ausgeschlossen (Details in LICENSE).
+
+Repository/Projektseiten
+- Repository: https://github.com/Hrabovszki1023/okw4robot
+- Dokumentation: docs/ im Repo
 
 ---
 
@@ -70,4 +84,3 @@ OKW4Robot/
   - Instanz-Overrides (Locator-YAML): `wait.write/read: { timeout, poll, exists, visible, enabled, editable, scroll_into_view, until_not_visible: ['css:...'] }`.
 
 Details: `docs/synchronization_strategy.md`, `docs/okw_parameters.md`.
-

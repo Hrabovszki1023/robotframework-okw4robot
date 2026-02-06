@@ -5,7 +5,7 @@ from ..utils.logging_mixin import LoggingMixin
 
 class AppKeywords(LoggingMixin):
 
-    @keyword("Start App")
+    @keyword("StartApp")
     def start_app(self, name: str):
         self.log_info(f"Starte App '{name}'...")
         model = load_yaml_with_fallback(name)
@@ -19,13 +19,13 @@ class AppKeywords(LoggingMixin):
         context.set_app(app_name, app_model)
         self.log_info(f"App '{app_name}' gestartet.")
 
-    @keyword("Select Window")
+    @keyword("SelectWindow")
     def select_window(self, name: str):
         self.log_info(f"Wähle Fenster/Widget '{name}'...")
         context.set_window(name)
         self.log_info(f"Fenster/Widget '{name}' aktiviert.")
 
-    @keyword("Stop App")
+    @keyword("StopApp")
     def stop_app(self):
         if context._app_model is None:
             self.log_error("Keine App aktiv – nichts zu stoppen.")
@@ -33,3 +33,5 @@ class AppKeywords(LoggingMixin):
 
         self.log_info(f"Beende App '{context._app_name}'.")
         context.stop_app()
+
+    

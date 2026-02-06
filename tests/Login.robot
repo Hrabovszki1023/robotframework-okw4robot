@@ -12,51 +12,52 @@ ${LOGIN_HTML}   file:///C:/temp/login.html
 
 *** Keywords ***
 Setup Login Test
-    Start Host     Chrome
-    Start App      Chrome 
-    Select Window  Chrome
+    StartHost     Chrome
+    StartApp      Chrome 
+    SelectWindow  Chrome
     SetValue       URL       ${LOGIN_HTML}
     # ClickOn        Maximize Window
-    Start App      web/TestAppOKW4Robot_WEB
+    StartApp      web/TestAppOKW4Robot_WEB
 
 *** Test Cases ***
 Login OK
     Setup Login Test
 
-    Select Window  LoginDialog
+    SelectWindow  LoginDialog
     SetValue       Benutzer     admin
     SetValue       Passwort     geheim
     ClickOn        OK
     VerifyValue    Status       Status: Angemeldet
 
-    Stop Host
+    StopHost
 
 Login Abbruch
     Setup Login Test
 
-    Select Window  LoginDialog
+    SelectWindow  LoginDialog
     ClickOn        Abbruch
     VerifyValue    Status       Status: Abgebrochen
 
-    Stop Host
+    StopHost
 
 Widget Existenzprüfung
     Setup Login Test
 
-    Select Window  LoginDialog
+    SelectWindow  LoginDialog
     VerifyExist    DoesNotExist    NO
 
-    Stop Host
+    StopHost
 
 Chrome Zu Firefox Umschalten
-    Start Host     Chrome
-    Start App      Chrome
-    Select Window  Chrome
+    StartHost     Chrome
+    StartApp      Chrome
+    SelectWindow  Chrome
     SetValue       URL    ${LOGIN_HTML}
-    Stop Host
+    StopHost
 
-    Start Host     Firefox
-    Start App      Firefox
-    Select Window  Firefox
+    StartHost     Firefox
+    StartApp      Firefox
+    SelectWindow  Firefox
     SetValue       URL    ${LOGIN_HTML}
-    Stop Host
+    StopHost
+

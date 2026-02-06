@@ -123,3 +123,26 @@ class ComboBox(BaseWidget):
         value = self._get_placeholder()
         if not re.search(expected, value or ""):
             raise AssertionError("[VerifyPlaceholderREGX] Value '" + str(value) + "' does not match regex '" + str(expected) + "'")
+
+    # Counts (basic support)
+    def okw_get_list_count(self) -> int:
+        el = self.adapter.sl.get_webelement(self.adapter._resolve(self.locator))
+        tag = (el.tag_name or '').lower()
+        if tag == 'select':
+            return len(el.find_elements("css selector", "option"))
+        raise NotImplementedError("[ComboBox] List count not supported for non-native select. Model a list widget explicitly if needed.")
+
+    def okw_get_selected_count(self) -> int:
+        # Native <select>: number of selected options (typically 0/1)
+        try:
+            labels = self.adapter.get_selected_list_labels(self.locator) or []
+            if labels:
+                return len(labels)
+        except Exception:
+            pass
+        # Input-based combo: treat non-empty value as one selected/entered value
+        try:
+            val = self.adapter.get_value(self.locator) or ""
+            return 1 if str(val) != "" else 0
+        except Exception:
+            return 0

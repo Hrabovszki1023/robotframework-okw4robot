@@ -41,3 +41,9 @@ Attribute Merken/Loggen
 
 - Keywords: `src/okw4robot/keywords/attribute_keywords.py`
 - Adapterzugriff: `adapter.get_attribute(locator, name)` (Selenium: WebElement.get_attribute)
+
+---
+
+## Hinweis zu Regex in Robot
+
+In Robot‑Tabellen können Backslashes als Escape behandelt werden. Nutze besser Klassen wie `[0-9]` statt `\d`, oder escapen doppelt (z. B. `^(idle|ready)\\s*\d*$`). Das betrifft alle REGX‑Varianten.

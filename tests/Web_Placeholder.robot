@@ -11,22 +11,23 @@ ${DEMO_FILE}    docs/examples/widgets_demo.html
 
 *** Keywords ***
 Setup Widgets Demo
-    Start Host     Chrome
-    Start App      Chrome
-    Select Window  Chrome
+    StartHost     Chrome
+    StartApp      Chrome
+    SelectWindow  Chrome
     ${FILE_URL}=   Evaluate    __import__('pathlib').Path('${DEMO_FILE}').resolve().as_uri()
     PAR.SetOKWParameter    TimeOutVerifyPlaceholder    10
     SetValue       URL         ${FILE_URL}
-    Start App      web/WidgetsDemo
+    StartApp      web/WidgetsDemo
 
 Teardown Widgets Demo
-    Stop Host
+    StopHost
 
 *** Test Cases ***
 Verify Placeholders
     Setup Widgets Demo
-    Select Window   WidgetsDemo
+    SelectWindow   WidgetsDemo
     PH.VerifyPlaceholder        Name        Nachname
     PH.VerifyPlaceholderWCM     Vorname     *name*
     PH.VerifyPlaceholderREGX    Anmerkung   ^Mehrzeilige\\s+Eingabe.*
     Teardown Widgets Demo
+

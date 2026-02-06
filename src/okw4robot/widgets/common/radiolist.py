@@ -82,6 +82,35 @@ class RadioList(BaseWidget):
         # Legacy name+value verification
         self.adapter.radio_button_should_be_set_to(self.group, expected)
 
+    # Counts
+    def okw_get_list_count(self) -> int:
+        name_from_loc = self._extract_name_from_locator()
+        if name_from_loc:
+            css = f"css:input[type='radio'][name='{name_from_loc}']"
+            return len(self.adapter.sl.get_webelements(self.adapter._resolve(css)))
+        container = self._container_css()
+        if container:
+            css = f"css:{container} input[type='radio']"
+            return len(self.adapter.sl.get_webelements(self.adapter._resolve(css)))
+        if self.group:
+            css = f"css:input[type='radio'][name='{self.group}']"
+            return len(self.adapter.sl.get_webelements(self.adapter._resolve(css)))
+        raise ValueError("RadioList needs either 'group' or a locator with [name=...] or a container locator")
+
+    def okw_get_selected_count(self) -> int:
+        name_from_loc = self._extract_name_from_locator()
+        if name_from_loc:
+            css = f"css:input[type='radio'][name='{name_from_loc}']:checked"
+            return len(self.adapter.sl.get_webelements(self.adapter._resolve(css)))
+        container = self._container_css()
+        if container:
+            css = f"css:{container} input[type='radio']:checked"
+            return len(self.adapter.sl.get_webelements(self.adapter._resolve(css)))
+        if self.group:
+            css = f"css:input[type='radio'][name='{self.group}']:checked"
+            return len(self.adapter.sl.get_webelements(self.adapter._resolve(css)))
+        raise ValueError("RadioList needs either 'group' or a locator with [name=...] or a container locator")
+
 
 class WebRadioList(RadioList):
     """Alias/Spezialisierung für Web-RadioList.
