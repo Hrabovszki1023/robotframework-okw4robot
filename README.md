@@ -34,6 +34,46 @@ Repository/Projektseiten
 
 ---
 
+## OKW Architektur
+
+```
+                    ┌─────────────────────────────────────────────────────────┐
+                    │              VS Code Extension (Tooling)                │
+                    ├──────────────────────────┬─────────┬─────────┬─────────┤
+                    │  OKW4Robot Keywords       │         │         │         │
+                    │  (Robot Framework)        │ Docker  │ Proxmox │   SSH   │
+┌──────────────┐    ├────────────┬─────────────┤         │         │         │
+│              │    │  Selenium  │ Java Swing  │         │         │         │
+│  okw-        │    │  (Web)     │             │         │         │         │
+│  contract-   │    ├────────────┴─────────────┼─────────┴─────────┴─────────┤
+│  utils       │    │     GUI-Adapter          │   Infrastruktur-Adapter     │
+│              │    └──────────────────────────┴─────────────────────────────┘
+│  (Shared     │       ▲               ▲               ▲              ▲
+│   Contracts) │       │               │               │              │
+│              │───────┴───────────────┴───────────────┴──────────────┘
+│  • Matchers  │
+│  • Tokens    │    Gemeinsame Contracts über alle Komponenten
+│  • YES/NO    │
+│  • $MEM{KEY} │
+└──────────────┘
+```
+
+**okw-contract-utils** stellt die gemeinsamen Verträge bereit, die von **allen** Bibliotheken
+verwendet werden – unabhängig von der Ebene:
+
+- **Matchers**: EXACT, WCM (fnmatch: `*`, `?`), REGX (regex)
+- **Tokens**: `$IGNORE`, `$EMPTY`, `$DELETE`
+- **YES/NO Existence Model**: `parse_yes_no()`, `assert_exists()`
+- **Value Expansion**: `$MEM{KEY}` Platzhalter
+
+| Komponente | PyPI | Beschreibung |
+|------------|------|-------------|
+| okw-contract-utils | [PyPI](https://pypi.org/project/okw-contract-utils/) | Shared Contracts (Matchers, Tokens, YES/NO) |
+| okw4robot | – | Treiber-unabhängige GUI-Keywords (Selenium, Swing) |
+| robotframework-okw-remote-ssh | [PyPI](https://pypi.org/project/robotframework-okw-remote-ssh/) | SSH-Kommandos und SFTP-Dateitransfer |
+
+---
+
 ## Erste Schritte
 
 ```bash
