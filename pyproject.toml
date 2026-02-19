@@ -1,36 +1,40 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=65", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "okw4robot"
-version = "0.2.0"
-description = "Driver-agnostic keyword library for Robot Framework (OKW4Robot)"
+name = "robotframework-okw4robot"
+version = "0.3.0"
+description = "Driver-agnostic Robot Framework keyword library for GUI test automation (OKW4Robot)."
+authors = [{ name = "Zoltán Hrabovszki" }]
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-  "robotframework",
-  "selenium",
-  "PyYAML",
-]
-authors = [
-  { name = "Zoltán Hrabovszki" }
-]
 license = { file = "LICENSE" }
+requires-python = ">=3.10"
+keywords = ["robotframework", "testing", "testautomation", "gui", "selenium", "okw", "okw4robot"]
+dependencies = [
+  "robotframework>=6.0",
+  "selenium>=4.0",
+  "PyYAML>=6.0",
+  "okw-contract-utils>=0.2.0",
+]
 classifiers = [
-  "License :: Other/Proprietary License",
+  "Development Status :: 4 - Beta",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Framework :: Robot Framework",
+  "Framework :: Robot Framework :: Library",
+  "Topic :: Software Development :: Testing",
 ]
 
 [project.urls]
-Repository = "https://github.com/Hrabovszki1023/okw4robot"
-Homepage = "https://github.com/Hrabovszki1023/okw4robot"
-Documentation = "https://github.com/Hrabovszki1023/okw4robot/tree/main/docs"
+Repository = "https://github.com/Hrabovszki1023/robotframework-okw4robot"
+Homepage = "https://github.com/Hrabovszki1023/robotframework-okw4robot"
+Documentation = "https://hrabovszki1023.github.io/robotframework-okw4robot/"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -39,3 +43,9 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = false
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

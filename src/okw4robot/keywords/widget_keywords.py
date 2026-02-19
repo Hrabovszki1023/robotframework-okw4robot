@@ -1,41 +1,13 @@
 ROBOT_LIBRARY_DOC_FORMAT = 'ROBOT'
 from robot.api.deco import keyword
 from ..runtime.context import context
-from ..utils.loader import load_class
-
-def _blank_ignore_enabled() -> bool:
-    try:
-        from robot.libraries.BuiltIn import BuiltIn
-        val = BuiltIn().get_variable_value("${OKW_IGNORE_EMPTY}", default="NO")
-        return str(val).strip().upper() in ("YES", "TRUE", "1")
-    except Exception:
-        return False
-
-def _should_ignore(value) -> bool:
-    """Return True if the keyword argument indicates 'ignore'.
-
-    Rules:
-    - Literal tokens '$IGNORE' or '${IGNORE}' (any case) -> ignore
-    - Optionally, if ${OKW_IGNORE_EMPTY}=YES, then empty/whitespace-only -> ignore
-    """
-    if isinstance(value, str):
-        sv = value.strip()
-        t = sv.upper()
-        if t in ("$IGNORE", "${IGNORE}"):
-            return True
-        if sv == "" and _blank_ignore_enabled():
-            return True
-    return False
-
-def resolve_widget(name):
-    model = context.get_current_window_model()
-    if name not in model:
-        raise KeyError(f"Widget '{name}' not found in current window.")
-    entry = model[name]
-    widget_class = load_class(entry["class"])
-    adapter = context.get_adapter()
-    extras = {k: v for k, v in entry.items() if k not in ("class", "locator")}
-    return widget_class(adapter, entry.get("locator"), **extras)
+from ..utils.okw_helpers import (
+    should_ignore, is_empty, is_delete,
+    get_robot_timeout, get_robot_poll,
+    normalize_var_name, resolve_widget,
+    verify_with_timeout, verify_yes_no_poll,
+)
+from okw_contract_utils import MatchMode
 
 def _require_adapter_method(adapter, method_name: str, widget, widget_name: str, keyword_name: str):
     if not hasattr(adapter, method_name):
@@ -47,22 +19,6 @@ def _require_adapter_method(adapter, method_name: str, widget, widget_name: str,
             f"for widget '{widget_name}' ({w}), locator={loc}"
         )
     return getattr(adapter, method_name)
-
-def _get_time(var_name: str, default_seconds: float) -> float:
-    try:
-        from robot.libraries.BuiltIn import BuiltIn
-        to = BuiltIn().get_variable_value(var_name, default=default_seconds)
-        return float(to) if isinstance(to, (int, float)) else BuiltIn().convert_time(str(to))
-    except Exception:
-        return float(default_seconds)
-
-def _get_poll() -> float:
-    try:
-        from robot.libraries.BuiltIn import BuiltIn
-        po = BuiltIn().get_variable_value("${OKW_POLL_VERIFY}", default=0.1)
-        return float(po) if isinstance(po, (int, float)) else BuiltIn().convert_time(str(po))
-    except Exception:
-        return 0.1
 
 class WidgetKeywords:
     """Widget interactions and verifications.
@@ -153,7 +109,7 @@ class WidgetKeywords:
         if isinstance(value, str) and value.strip().upper() in ("$EMPTY", "${EMPTY}"):
             resolve_widget(name).okw_set_value("")
             return
-        if _should_ignore(value):
+        if should_ignore(value):
             print(f"[SetValue] '{name}' ignored (blank or $IGNORE)")
             return
         resolve_widget(name).okw_set_value(value)
@@ -187,7 +143,7 @@ class WidgetKeywords:
         | SetSuiteVariable | ${OKW_IGNORE_EMPTY} | YES |
         | Select           | Region  |    |    # ignored
         """
-        if _should_ignore(value):
+        if should_ignore(value):
             print(f"[Select] '{name}' ignored (blank or $IGNORE)")
             return
         resolve_widget(name).okw_select(value)
@@ -223,7 +179,7 @@ class WidgetKeywords:
         | TypeKey      | ExtraInfo   | $IGNORE |
         """
         # Handle special delete token
-        if isinstance(key, str) and key.strip().upper() in ("$DELETE", "${DELETE}"):
+        if is_delete(key):
             widget = resolve_widget(name)
             try:
                 widget.adapter.clear_text(widget.locator)
@@ -237,7 +193,7 @@ class WidgetKeywords:
                 return
             except Exception:
                 pass
-        if _should_ignore(key):
+        if should_ignore(key):
             print(f"[TypeKey] '{name}' ignored (blank or $IGNORE)")
             return
         resolve_widget(name).okw_type_key(key)
@@ -266,28 +222,12 @@ class WidgetKeywords:
         | # Skip optional verification
         | VerifyValue  | Comment     | $IGNORE |
         """
-        if _should_ignore(expected):
+        if should_ignore(expected):
             print(f"[VerifyValue] '{name}' ignored (blank or $IGNORE)")
             return
-        import time
-        from robot.libraries.BuiltIn import BuiltIn
         w = resolve_widget(name)
-        try:
-            to = BuiltIn().get_variable_value("${OKW_TIMEOUT_VERIFY_VALUE}", default=10)
-            timeout = float(to) if isinstance(to, (int, float)) else BuiltIn().convert_time(str(to))
-        except Exception:
-            timeout = 10.0
-        end = time.time() + timeout
-        last_error = None
-        while time.time() < end:
-            try:
-                w.okw_verify_value(expected)
-                return
-            except AssertionError as e:
-                last_error = e
-                time.sleep(0.1)
-        if last_error:
-            raise last_error
+        timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_VALUE}", 10.0)
+        verify_with_timeout(w.okw_get_value, expected, MatchMode.EXACT, timeout, f"[VerifyValue] '{name}'")
 
     @keyword("VerifyValueWCM")
     def verify_value_wcm(self, name, expected):
@@ -311,28 +251,12 @@ class WidgetKeywords:
         | VerifyValueWCM | Username | adm*n |
         | VerifyValueWCM | Title    | Hello?World |
         """
-        if _should_ignore(expected):
+        if should_ignore(expected):
             print(f"[VerifyValueWCM] '{name}' ignored (blank or $IGNORE)")
             return
-        import time
-        from robot.libraries.BuiltIn import BuiltIn
         w = resolve_widget(name)
-        try:
-            to = BuiltIn().get_variable_value("${OKW_TIMEOUT_VERIFY_VALUE}", default=10)
-            timeout = float(to) if isinstance(to, (int, float)) else BuiltIn().convert_time(str(to))
-        except Exception:
-            timeout = 10.0
-        end = time.time() + timeout
-        last_error = None
-        while time.time() < end:
-            try:
-                w.okw_verify_value_wcm(expected)
-                return
-            except AssertionError as e:
-                last_error = e
-                time.sleep(0.1)
-        if last_error:
-            raise last_error
+        timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_VALUE}", 10.0)
+        verify_with_timeout(w.okw_get_value, expected, MatchMode.WCM, timeout, f"[VerifyValueWCM] '{name}'")
 
     @keyword("VerifyValueREGX")
     def verify_value_regx(self, name, expected):
@@ -356,28 +280,12 @@ class WidgetKeywords:
         | VerifyValueREGX | Username | ^adm.*$ |
         | VerifyValueREGX | Title    | (?i)hello\s+world |
         """
-        if _should_ignore(expected):
+        if should_ignore(expected):
             print(f"[VerifyValueREGX] '{name}' ignored (blank or $IGNORE)")
             return
-        import time
-        from robot.libraries.BuiltIn import BuiltIn
         w = resolve_widget(name)
-        try:
-            to = BuiltIn().get_variable_value("${OKW_TIMEOUT_VERIFY_VALUE}", default=10)
-            timeout = float(to) if isinstance(to, (int, float)) else BuiltIn().convert_time(str(to))
-        except Exception:
-            timeout = 10.0
-        end = time.time() + timeout
-        last_error = None
-        while time.time() < end:
-            try:
-                w.okw_verify_value_regex(expected)
-                return
-            except AssertionError as e:
-                last_error = e
-                time.sleep(0.1)
-        if last_error:
-            raise last_error
+        timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_VALUE}", 10.0)
+        verify_with_timeout(w.okw_get_value, expected, MatchMode.REGX, timeout, f"[VerifyValueREGX] '{name}'")
 
     @keyword("VerifyExist")
     def verify_exist(self, name, expected):
@@ -399,25 +307,24 @@ class WidgetKeywords:
         | VerifyExist | LoginButton | YES |
         | VerifyExist | LegacyLink  | NO  |
         """
+        from okw_contract_utils.tokens import parse_yes_no, assert_exists
+        import time
         widget = resolve_widget(name)
         adapter = context.get_adapter()
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyExist] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_EXIST}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
+        yn = parse_yes_no(expected)
+        timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_EXIST}", 2.0)
+        poll = get_robot_poll()
+        end = time.monotonic() + timeout
+        last = False
+        while True:
             last = bool(adapter.element_exists(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
+            from okw_contract_utils.tokens import OkwYesNo
+            if (yn == OkwYesNo.YES and last) or (yn == OkwYesNo.NO and not last):
                 return
+            if time.monotonic() >= end:
+                break
             time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyExist] Element '{name}' should exist, but it does not.")
-        else:
-            raise AssertionError(f"[VerifyExist] Element '{name}' should NOT exist, but it does.")
+        assert_exists(last, yn, context=f"[VerifyExist] '{name}'")
 
     @keyword("LogValue")
     def log_value(self, name):
@@ -508,23 +415,12 @@ class WidgetKeywords:
         """
         widget = resolve_widget(name)
         adapter = context.get_adapter()
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyHasFocus] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_FOCUS}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
-            last = bool(adapter.has_focus(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
-                return
-            time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyHasFocus] Element '{name}' should have focus, but it does not.")
-        else:
-            raise AssertionError(f"[VerifyHasFocus] Element '{name}' should NOT have focus, but it does.")
+        verify_yes_no_poll(
+            lambda: adapter.has_focus(widget.locator),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_FOCUS}", 2.0,
+            f"[VerifyHasFocus] '{name}'",
+        )
 
     @keyword("VerifyIsVisible")
     def verify_visible(self, name, expected):
@@ -547,25 +443,13 @@ class WidgetKeywords:
         """
         widget = resolve_widget(name)
         adapter = context.get_adapter()
-        # Strict: adapter must support method
         is_visible = _require_adapter_method(adapter, 'is_visible', widget, name, 'VerifyIsVisible')
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyIsVisible] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_VISIBLE}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
-            last = bool(is_visible(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
-                return
-            time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyIsVisible] Element '{name}' should be visible, but it is not.")
-        else:
-            raise AssertionError(f"[VerifyIsVisible] Element '{name}' should NOT be visible, but it is.")
+        verify_yes_no_poll(
+            lambda: is_visible(widget.locator),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_VISIBLE}", 2.0,
+            f"[VerifyIsVisible] '{name}'",
+        )
 
     @keyword("VerifyIsEnabled")
     def verify_enabled(self, name, expected):
@@ -588,23 +472,12 @@ class WidgetKeywords:
         widget = resolve_widget(name)
         adapter = context.get_adapter()
         is_enabled = _require_adapter_method(adapter, 'is_enabled', widget, name, 'VerifyIsEnabled')
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyIsEnabled] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_ENABLED}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
-            last = bool(is_enabled(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
-                return
-            time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyIsEnabled] Element '{name}' should be enabled, but it is not.")
-        else:
-            raise AssertionError(f"[VerifyIsEnabled] Element '{name}' should NOT be enabled, but it is.")
+        verify_yes_no_poll(
+            lambda: is_enabled(widget.locator),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_ENABLED}", 2.0,
+            f"[VerifyIsEnabled] '{name}'",
+        )
 
     @keyword("VerifyIsEditable")
     def verify_editable(self, name, expected):
@@ -624,23 +497,12 @@ class WidgetKeywords:
         widget = resolve_widget(name)
         adapter = context.get_adapter()
         is_editable = _require_adapter_method(adapter, 'is_editable', widget, name, 'VerifyIsEditable')
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyIsEditable] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_EDITABLE}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
-            last = bool(is_editable(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
-                return
-            time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyIsEditable] Element '{name}' should be editable, but it is not.")
-        else:
-            raise AssertionError(f"[VerifyIsEditable] Element '{name}' should NOT be editable, but it is.")
+        verify_yes_no_poll(
+            lambda: is_editable(widget.locator),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_EDITABLE}", 2.0,
+            f"[VerifyIsEditable] '{name}'",
+        )
 
     @keyword("VerifyIsFocusable")
     def verify_focusable(self, name, expected):
@@ -660,23 +522,12 @@ class WidgetKeywords:
         widget = resolve_widget(name)
         adapter = context.get_adapter()
         is_focusable = _require_adapter_method(adapter, 'is_focusable', widget, name, 'VerifyIsFocusable')
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyIsFocusable] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_FOCUSABLE}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
-            last = bool(is_focusable(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
-                return
-            time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyIsFocusable] Element '{name}' should be focusable, but it is not.")
-        else:
-            raise AssertionError(f"[VerifyIsFocusable] Element '{name}' should NOT be focusable, but it is.")
+        verify_yes_no_poll(
+            lambda: is_focusable(widget.locator),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_FOCUSABLE}", 2.0,
+            f"[VerifyIsFocusable] '{name}'",
+        )
 
     @keyword("VerifyIsClickable")
     def verify_clickable(self, name, expected):
@@ -695,25 +546,13 @@ class WidgetKeywords:
         """
         widget = resolve_widget(name)
         adapter = context.get_adapter()
-        # Strict: adapter must support method
         is_clickable = _require_adapter_method(adapter, 'is_clickable', widget, name, 'VerifyIsClickable')
-        expected = str(expected).strip().upper()
-        if expected not in ("YES", "NO"):
-            raise ValueError(f"[VerifyIsClickable] Expected must be 'YES' or 'NO', got '{expected}'")
-        import time
-        timeout = _get_time("${OKW_TIMEOUT_VERIFY_CLICKABLE}", 2.0)
-        poll = _get_poll()
-        end = time.time() + timeout
-        last = None
-        while time.time() < end:
-            last = bool(is_clickable(widget.locator))
-            if (expected == "YES" and last) or (expected == "NO" and not last):
-                return
-            time.sleep(poll)
-        if expected == "YES":
-            raise AssertionError(f"[VerifyIsClickable] Element '{name}' should be clickable, but it is not.")
-        else:
-            raise AssertionError(f"[VerifyIsClickable] Element '{name}' should NOT be clickable, but it is.")
+        verify_yes_no_poll(
+            lambda: is_clickable(widget.locator),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_CLICKABLE}", 2.0,
+            f"[VerifyIsClickable] '{name}'",
+        )
 
     @keyword("ExecuteJS")
     def execute_js(self, script: str):

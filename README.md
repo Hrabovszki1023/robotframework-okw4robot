@@ -37,11 +37,11 @@ Repository/Projektseiten
 ## OKW Architektur
 
 ```
-                    ┌─────────────────────────────────────────────────────────┐
-                    │              VS Code Extension (Tooling)                │
+                    ┌────────────────────────────────────────────────────────┐
+                    │              VS Code Extension (Tooling)               │
                     ├──────────────────────────┬─────────┬─────────┬─────────┤
-                    │  OKW4Robot Keywords       │         │         │         │
-                    │  (Robot Framework)        │ Docker  │ Proxmox │   SSH   │
+                    │  OKW4Robot Keywords      │         │         │         │
+                    │  (Robot Framework)       │ Docker  │ Proxmox │   SSH   │
 ┌──────────────┐    ├────────────┬─────────────┤         │         │         │
 │              │    │  Selenium  │ Java Swing  │         │         │         │
 │  okw-        │    │  (Web)     │             │         │         │         │
