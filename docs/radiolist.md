@@ -14,7 +14,7 @@ Diese Seite bezieht sich auf Web/HTML. Radio‑Buttons werden im Web über das `
   - container‑basiert über `locator: { css: '[data-testid="…"]' }` (robuster für Sync/Scroll).
 
 Benennung in OKW:
-- Bevorzugte Klasse für Web: `okw4robot.widgets.common.radiolist.WebRadioList`
+- Bevorzugte Klasse für Web: `okw_web_selenium.widgets.webse_radiolist.WebSe_RadioList`
 - `RadioList` existiert als Alias/Abwärtskompatibilität.
 
 ---
@@ -35,7 +35,7 @@ Benennung in OKW:
 YAML (OKW):
 ```yaml
 Zahlungsmethode:
-  class: okw4robot.widgets.common.radiolist.WebRadioList
+  class: okw_web_selenium.widgets.webse_radiolist.WebSe_RadioList
   group: zahlungsmethode   # name‑Attribut der Radios
 ```
 
@@ -63,7 +63,7 @@ Auswahl in OKW (WebRadioList):
 YAML (OKW):
 ```yaml
 Lieferung:
-  class: okw4robot.widgets.common.radiolist.WebRadioList
+  class: okw_web_selenium.widgets.webse_radiolist.WebSe_RadioList
   locator: { css: '[data-testid="rl-lieferung"]' }
 ```
 

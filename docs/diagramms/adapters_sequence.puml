@@ -1,13 +1,13 @@
 @startuml AdaptersSequence
-title OKW4Robot – Sequenz: Start Host → Start App → Select Window → SetValue
+title OKW4Robot – Sequenz: Start Host -> Start App -> Select Window -> SetValue
 
 actor Tester as T
 participant "HostKeywords" as HK
 participant "AppKeywords" as AK
 participant "WidgetKeywords" as WK
 participant "Context" as C
-participant "Adapter\n(SeleniumWebAdapter)" as AD
-participant "BaseWidget\n(TextField)" as W
+participant "WebSe_TextField\n(OkwWidget)" as W
+participant "SeleniumWebAdapter" as AD
 participant "Browser/DOM" as DOM
 
 ' Start Host
@@ -29,15 +29,15 @@ T -> AK: Select Window("WidgetsDemo")
 AK -> C: set_window("WidgetsDemo")
 C --> AK: window set
 
-' SetValue (URL or Field)
+' SetValue – Delegation!
 T -> WK: SetValue("Name", "Alice")
 WK -> C: get current app/window
 WK -> WK: resolve_widget("Name")
-WK -> W: new TextField(adapter, locator, extras)
+note right: YAML class:\nokw_web_selenium.widgets\n.webse_textfield.WebSe_TextField
+WK -> W: **okw_set_value("Alice")**
 activate W
-WK -> W: okw_set_value("Alice")
 W -> W: _wait_before('write')
-W -> AD: element_exists/visible/enabled/scroll/…
+W -> AD: element_exists/visible/enabled/scroll/...
 AD -> DOM: checks
 W -> AD: clear_text(locator)
 AD -> DOM: clear
@@ -48,16 +48,17 @@ WK --> T: done
 
 note right of WK
 resolve_widget(name):
-1) App‑YAML → class/locator/extras
+1) App-YAML -> class/locator/extras
 2) adapter = Context.get_adapter()
 3) return class(adapter, locator, **extras)
 end note
 
 note right of W
-_wait_before('write')
-exists → scroll_into_view → visible → enabled → (editable) → until_not_visible
-Timeout/Poll & Busy‑Selektoren
-konfigurierbar (global/Klasse/Instanz)
+Delegation: Das Keyword ruft nur
+widget.okw_set_value("Alice") auf.
+Das Widget (WebSe_TextField) entscheidet
+intern, wie es den Wert setzt
+(clear + input_text via Adapter).
 end note
 
 @enduml

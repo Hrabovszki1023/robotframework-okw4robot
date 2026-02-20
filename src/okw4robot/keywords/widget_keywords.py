@@ -9,17 +9,6 @@ from ..utils.okw_helpers import (
 )
 from okw_contract_utils import MatchMode
 
-def _require_adapter_method(adapter, method_name: str, widget, widget_name: str, keyword_name: str):
-    if not hasattr(adapter, method_name):
-        a = adapter.__class__.__name__
-        w = widget.__class__.__name__ if widget else "<unknown>"
-        loc = getattr(widget, 'locator', None)
-        raise RuntimeError(
-            f"[{keyword_name}] Not implemented by adapter: method '{method_name}' is missing on '{a}' "
-            f"for widget '{widget_name}' ({w}), locator={loc}"
-        )
-    return getattr(adapter, method_name)
-
 class WidgetKeywords:
     """Widget interactions and verifications.
 
@@ -178,21 +167,10 @@ class WidgetKeywords:
         | # Skip a field if needed
         | TypeKey      | ExtraInfo   | $IGNORE |
         """
-        # Handle special delete token
+        # Handle special delete token -- delegiert an Widget
         if is_delete(key):
-            widget = resolve_widget(name)
-            try:
-                widget.adapter.clear_text(widget.locator)
-                return
-            except Exception:
-                pass
-            try:
-                widget.adapter.click(widget.locator)
-                widget.adapter.press_keys(widget.locator, "CTRL+A")
-                widget.adapter.press_keys(widget.locator, "DELETE")
-                return
-            except Exception:
-                pass
+            resolve_widget(name).okw_delete()
+            return
         if should_ignore(key):
             print(f"[TypeKey] '{name}' ignored (blank or $IGNORE)")
             return
@@ -307,24 +285,13 @@ class WidgetKeywords:
         | VerifyExist | LoginButton | YES |
         | VerifyExist | LegacyLink  | NO  |
         """
-        from okw_contract_utils.tokens import parse_yes_no, assert_exists
-        import time
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        yn = parse_yes_no(expected)
-        timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_EXIST}", 2.0)
-        poll = get_robot_poll()
-        end = time.monotonic() + timeout
-        last = False
-        while True:
-            last = bool(adapter.element_exists(widget.locator))
-            from okw_contract_utils.tokens import OkwYesNo
-            if (yn == OkwYesNo.YES and last) or (yn == OkwYesNo.NO and not last):
-                return
-            if time.monotonic() >= end:
-                break
-            time.sleep(poll)
-        assert_exists(last, yn, context=f"[VerifyExist] '{name}'")
+        verify_yes_no_poll(
+            lambda: widget.okw_exists(),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_EXIST}", 2.0,
+            f"[VerifyExist] '{name}'",
+        )
 
     @keyword("LogValue")
     def log_value(self, name):
@@ -389,9 +356,7 @@ class WidgetKeywords:
         | SetFocus     | Username    |
         | TypeKey      | Username    | admin |
         """
-        widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        adapter.focus(widget.locator)
+        resolve_widget(name).okw_set_focus()
 
     @keyword("VerifyHasFocus")
     def verify_has_focus(self, name, expected):
@@ -414,9 +379,8 @@ class WidgetKeywords:
         | VerifyHasFocus  | Username | YES |
         """
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
         verify_yes_no_poll(
-            lambda: adapter.has_focus(widget.locator),
+            lambda: widget.okw_has_focus(),
             expected,
             "${OKW_TIMEOUT_VERIFY_FOCUS}", 2.0,
             f"[VerifyHasFocus] '{name}'",
@@ -442,10 +406,8 @@ class WidgetKeywords:
         | VerifyIsVisible | Banner | YES |
         """
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        is_visible = _require_adapter_method(adapter, 'is_visible', widget, name, 'VerifyIsVisible')
         verify_yes_no_poll(
-            lambda: is_visible(widget.locator),
+            lambda: widget.okw_is_visible(),
             expected,
             "${OKW_TIMEOUT_VERIFY_VISIBLE}", 2.0,
             f"[VerifyIsVisible] '{name}'",
@@ -470,10 +432,8 @@ class WidgetKeywords:
         | VerifyIsEnabled | Submit | YES |
         """
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        is_enabled = _require_adapter_method(adapter, 'is_enabled', widget, name, 'VerifyIsEnabled')
         verify_yes_no_poll(
-            lambda: is_enabled(widget.locator),
+            lambda: widget.okw_is_enabled(),
             expected,
             "${OKW_TIMEOUT_VERIFY_ENABLED}", 2.0,
             f"[VerifyIsEnabled] '{name}'",
@@ -495,10 +455,8 @@ class WidgetKeywords:
           ``${OKW_TIMEOUT_VERIFY_EDITABLE}`` (default 2s) using ``${OKW_POLL_VERIFY}``.
         """
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        is_editable = _require_adapter_method(adapter, 'is_editable', widget, name, 'VerifyIsEditable')
         verify_yes_no_poll(
-            lambda: is_editable(widget.locator),
+            lambda: widget.okw_is_editable(),
             expected,
             "${OKW_TIMEOUT_VERIFY_EDITABLE}", 2.0,
             f"[VerifyIsEditable] '{name}'",
@@ -520,10 +478,8 @@ class WidgetKeywords:
           ``${OKW_TIMEOUT_VERIFY_FOCUSABLE}`` (default 2s) using ``${OKW_POLL_VERIFY}``.
         """
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        is_focusable = _require_adapter_method(adapter, 'is_focusable', widget, name, 'VerifyIsFocusable')
         verify_yes_no_poll(
-            lambda: is_focusable(widget.locator),
+            lambda: widget.okw_is_focusable(),
             expected,
             "${OKW_TIMEOUT_VERIFY_FOCUSABLE}", 2.0,
             f"[VerifyIsFocusable] '{name}'",
@@ -545,49 +501,10 @@ class WidgetKeywords:
           ``${OKW_TIMEOUT_VERIFY_CLICKABLE}`` (default 2s) using ``${OKW_POLL_VERIFY}``.
         """
         widget = resolve_widget(name)
-        adapter = context.get_adapter()
-        is_clickable = _require_adapter_method(adapter, 'is_clickable', widget, name, 'VerifyIsClickable')
         verify_yes_no_poll(
-            lambda: is_clickable(widget.locator),
+            lambda: widget.okw_is_clickable(),
             expected,
             "${OKW_TIMEOUT_VERIFY_CLICKABLE}", 2.0,
             f"[VerifyIsClickable] '{name}'",
         )
 
-    @keyword("ExecuteJS")
-    def execute_js(self, script: str):
-        """Executes raw JavaScript in the current browser context.
-
-        Arguments:
-        - ``script``: JavaScript source to execute. Must be a self‑contained string.
-
-        Why this exists:
-        - Power‑escape hatch for scenarios not covered by high‑level keywords or
-          adapter APIs (e.g., interacting with tricky widgets, reading transient
-          DOM state, invoking browser APIs).
-        - Useful for debugging and temporary workarounds while a proper keyword
-          is being added.
-
-        Behavior:
-        - Supported with web adapters that expose SeleniumLibrary as ``adapter.sl``.
-          Internally calls ``SeleniumLibrary.Execute Javascript`` and returns its result.
-        - Return value mirrors SeleniumLibrary semantics: primitives and JSON‑serializable
-          results are returned; complex DOM objects are typically not serializable.
-
-        Limitations & notes:
-        - Works only when the active adapter provides ``execute_javascript`` (web context).
-        - Runs in the page context: subject to same‑origin policy and the page's CSP.
-        - Prefer dedicated keywords for maintainability; reserve this for exceptions.
-
-        Examples:
-        | ${title}= | ExecuteJS | return document.title; |
-        | ${len}=   | ExecuteJS | return document.querySelectorAll('input').length; |
-        | ExecuteJS | document.querySelector('#email').value = 'user@example.com'; |
-        | ExecuteJS | window.localStorage.setItem('feature_flag','on'); |
-        """
-        adapter = context.get_adapter()
-        # Selenium adapter exposes its SeleniumLibrary as 'sl'
-        if hasattr(adapter, 'sl') and hasattr(adapter.sl, 'execute_javascript'):
-            return adapter.sl.execute_javascript(script)
-        a = adapter.__class__.__name__
-        raise RuntimeError(f"[ExecuteJS] Not supported by adapter '{a}'")

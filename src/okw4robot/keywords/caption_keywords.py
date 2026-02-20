@@ -4,10 +4,9 @@ from ..utils.okw_helpers import should_ignore, get_robot_timeout, resolve_widget
 from okw_contract_utils import MatchMode
 
 
-def _get_caption_text(widget) -> str:
-    # Caption = sichtbarer Text des Elements selbst
+def _get_caption(w) -> str:
     try:
-        return widget.adapter.get_text(widget.locator) or ""
+        return w.okw_get_text() or ""
     except Exception:
         return ""
 
@@ -20,7 +19,7 @@ class CaptionKeywords:
             return
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_CAPTION}", 10.0)
-        verify_with_timeout(lambda: _get_caption_text(w), expected, MatchMode.EXACT, timeout, f"[VerifyCaption] '{name}'")
+        verify_with_timeout(lambda: _get_caption(w), expected, MatchMode.EXACT, timeout, f"[VerifyCaption] '{name}'")
 
     @keyword("VerifyCaptionWCM")
     def verify_caption_wcm(self, name, expected):
@@ -29,7 +28,7 @@ class CaptionKeywords:
             return
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_CAPTION}", 10.0)
-        verify_with_timeout(lambda: _get_caption_text(w), expected, MatchMode.WCM, timeout, f"[VerifyCaptionWCM] '{name}'")
+        verify_with_timeout(lambda: _get_caption(w), expected, MatchMode.WCM, timeout, f"[VerifyCaptionWCM] '{name}'")
 
     @keyword("VerifyCaptionREGX")
     def verify_caption_regx(self, name, expected):
@@ -38,17 +37,17 @@ class CaptionKeywords:
             return
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_CAPTION}", 10.0)
-        verify_with_timeout(lambda: _get_caption_text(w), expected, MatchMode.REGX, timeout, f"[VerifyCaptionREGX] '{name}'")
+        verify_with_timeout(lambda: _get_caption(w), expected, MatchMode.REGX, timeout, f"[VerifyCaptionREGX] '{name}'")
 
     @keyword("MemorizeCaption")
     def memorize_caption(self, name, variable):
         from robot.libraries.BuiltIn import BuiltIn
         w = resolve_widget(name)
-        value = _get_caption_text(w)
+        value = _get_caption(w)
         BuiltIn().set_test_variable(normalize_var_name(variable), value)
 
     @keyword("LogCaption")
     def log_caption(self, name):
         w = resolve_widget(name)
-        value = _get_caption_text(w)
+        value = _get_caption(w)
         logger.info(f"[LogCaption] {value}")

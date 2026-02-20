@@ -2,27 +2,27 @@
 title OKW Sync-Strategie (Read: Verify*/Memorize*/Log*)
 
 actor Test
-participant "WidgetKeywords\n(Verify*/Memorize/Log)" as KW
-participant "BaseWidget\n(_wait_before 'read')" as BW
+participant "Keywords\n(Verify*/Memorize/Log)" as KW
+participant "OkwWidget\n(WebSe_Base._wait_before 'read')" as W
 participant "Adapter\n(SeleniumWebAdapter)" as AD
 participant "Browser/DOM" as DOM
 
 Test -> KW: VerifyValue/Verify... (Name, expected)
-KW -> BW: resolve_widget(name)
-KW -> BW: _wait_before('read')
+KW -> W: resolve_widget(name)
+KW -> W: _wait_before('read')
 ...
-BW -> AD: element_exists(locator)
+W -> AD: element_exists(locator)
 AD -> DOM: query element
-AD --> BW: True/False
+AD --> W: True/False
 opt visible (if configured)
-  BW -> AD: wait_until_visible(locator, timeout)
+  W -> AD: wait_until_visible(locator, timeout)
 end
 
 == value wait loop ==
 loop until verify-timeout
-  KW -> BW: read current value/text/attr
-  BW -> AD: get_value/get_text/get_attribute/...
-  AD --> BW: actual
+  KW -> W: widget.okw_get_value/okw_get_text/okw_get_attribute/...
+  W -> AD: get_value/get_text/get_attribute/...
+  AD --> W: actual
   alt matches expected (Exact/WCM/REGX)
     KW --> Test: pass
     break

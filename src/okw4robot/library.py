@@ -47,7 +47,7 @@ class OKW4RobotLibrary(
 
     | *Phase*      | *Keywords*                                                         | *Aufgabe*                              |
     | Vorbereiten  | ``SetValue``, ``Select``, ``TypeKey``, ``ClickOn``                 | Widget-Zustand setzen / Aktion auslösen |
-    | Ausführen    | ``ClickOn``, ``DoubleClickOn``, ``ExecuteJS``                      | Aktion am Widget ausführen              |
+    | Ausführen    | ``ClickOn``, ``DoubleClickOn``                                     | Aktion am Widget ausführen              |
     | Prüfen       | ``VerifyValue``, ``VerifyExist``, ``VerifyCaption``, …             | Widget-Zustand verifizieren             |
 
     Beispiel – vollständiger Login-Test:
@@ -80,17 +80,17 @@ class OKW4RobotLibrary(
     ``StartApp`` aufgelöst. Die Datei enthält für jedes Fenster eine Map von
     logischen Namen zu Widget-Definitionen:
 
-    | # locators/web/LoginApp.yaml
+    | # locators/LoginApp.yaml
     | LoginApp:
     |   LoginDialog:
     |     Username:
-    |       class: okw4robot.widgets.common.text_field.TextField
+    |       class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
     |       locator: id=user_input
     |     Password:
-    |       class: okw4robot.widgets.common.text_field.TextField
+    |       class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
     |       locator: id=password_input
     |     OK:
-    |       class: okw4robot.widgets.common.button.Button
+    |       class: okw_web_selenium.widgets.webse_button.WebSe_Button
     |       locator: id=login_btn
 
     = OKW Tokens =
@@ -128,16 +128,24 @@ class OKW4RobotLibrary(
 
     | Library    okw4robot.library.OKW4RobotLibrary
 
+    = Treiber-Pakete =
+
+    Diese Bibliothek ist der generische Kern. Fuer die Anbindung an konkrete
+    GUI-Technologien werden Treiber-Pakete benoetigt:
+
+    | *Treiber*                       | *Paket*                                  | *Installation*                                  |
+    | Selenium (Chrome, Firefox, ...) | ``robotframework-okw-web-selenium``      | ``pip install robotframework-okw-web-selenium``  |
+    | Java Swing (JavaRPC)            | ``robotframework-okw-java-swing``        | ``pip install robotframework-okw-java-swing``    |
+
     = Abhängigkeiten =
 
     - ``robotframework >= 6.0``
-    - ``selenium >= 4.0`` (für den Selenium-Web-Adapter)
     - ``PyYAML >= 6.0``
     - ``okw-contract-utils >= 0.2.0``
     """
 
     ROBOT_LIBRARY_DOC_FORMAT = 'ROBOT'
-    ROBOT_LIBRARY_VERSION = '0.3.0'
+    ROBOT_LIBRARY_VERSION = '0.4.0'
 
     def __init__(self):
         """Initialisiert die OKW4RobotLibrary.

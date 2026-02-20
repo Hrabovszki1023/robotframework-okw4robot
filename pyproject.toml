@@ -4,16 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "robotframework-okw4robot"
-version = "0.3.0"
-description = "Driver-agnostic Robot Framework keyword library for GUI test automation (OKW4Robot)."
+version = "0.4.0"
+description = "Driver-agnostic Robot Framework keyword library core for GUI test automation (OKW4Robot)."
 authors = [{ name = "Zoltán Hrabovszki" }]
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
-keywords = ["robotframework", "testing", "testautomation", "gui", "selenium", "okw", "okw4robot"]
+keywords = ["robotframework", "testing", "testautomation", "gui", "okw", "okw4robot"]
 dependencies = [
   "robotframework>=6.0",
-  "selenium>=4.0",
   "PyYAML>=6.0",
   "okw-contract-utils>=0.2.0",
 ]

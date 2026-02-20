@@ -2,61 +2,63 @@
 title OKW Sync-Strategie (Write: Click/SetValue/TypeKey/Select)
 
 actor Test
-participant "WidgetKeywords\n(Verify/Set/Select)" as KW
-participant "BaseWidget\n(_wait_before 'write')" as BW
+participant "Keywords\n(Set/Select/Click)" as KW
+participant "OkwWidget\n(WebSe_Base._wait_before 'write')" as W
 participant "Adapter\n(SeleniumWebAdapter)" as AD
 participant "Browser/DOM" as DOM
 
 Test -> KW: SetValue/Select/Click/TypeKey(Name, ...)
-KW -> BW: resolve_widget(name)
-KW -> BW: _wait_before('write')
+KW -> W: resolve_widget(name)
+KW -> W: widget.okw_set_value/okw_click/...
+activate W
+W -> W: _wait_before('write')
 ...
-BW -> AD: element_exists(locator)
+W -> AD: element_exists(locator)
 AD -> DOM: query element
-AD --> BW: True/False
+AD --> W: True/False
 alt not exists
-  BW --> KW: fail [Sync] Element does not exist
+  W --> KW: fail [Sync] Element does not exist
 end
 
 opt scroll_into_view
-  BW -> AD: scroll_into_view(locator)
+  W -> AD: scroll_into_view(locator)
   AD -> DOM: scrollIntoView()
 end
 
 opt visible
-  BW -> AD: wait_until_visible(locator, timeout)
+  W -> AD: wait_until_visible(locator, timeout)
 end
 
 opt enabled
   loop until timeout (poll)
-    BW -> AD: is_enabled(locator)
-    AD --> BW: True/False
+    W -> AD: is_enabled(locator)
+    AD --> W: True/False
   end
   alt not enabled
-    BW --> KW: fail [Sync] Element not enabled
+    W --> KW: fail [Sync] Element not enabled
   end
 end
 
-opt editable (TextField/MultilineField)
+opt editable (WebSe_TextField/WebSe_MultilineField)
   loop until timeout (poll)
-    BW -> AD: is_editable(locator)
-    AD --> BW: True/False
+    W -> AD: is_editable(locator)
+    AD --> W: True/False
   end
   alt not editable
-    BW --> KW: fail [Sync] Element not editable
+    W --> KW: fail [Sync] Element not editable
   end
 end
 
 opt project waits (until_not_visible)
   loop selectors
-    BW -> AD: wait_until_not_visible(selector, timeout)
+    W -> AD: wait_until_not_visible(selector, timeout)
   end
 end
 
 == perform action ==
-KW -> BW: invoke widget action
-BW -> AD: click/select_by_label/clear_text+input_text/press_keys
+W -> AD: click/select_by_label/clear_text+input_text/press_keys
 AD -> DOM: apply action
+deactivate W
 KW --> Test: done
 
 note right of KW

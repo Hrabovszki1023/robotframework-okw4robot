@@ -1,5 +1,5 @@
 @startuml AdaptersOverview
-title OKW4Robot – Adapter-Einbindung (Treiberübersicht)
+title OKW4Robot – Architektur-Uebersicht (Delegation statt Steuerung)
 
 package "okw4robot.runtime" {
   class Context {
@@ -32,74 +32,90 @@ package "okw4robot.keywords" {
   }
 }
 
-package "okw4robot.widgets.base" {
-  abstract class BaseWidget {
+package "okw4robot.widgets" {
+  class OkwWidget {
     +adapter
     +locator
     +options
+    .. okw_* Schnittstelle ..
+    +okw_click()
+    +okw_set_value(value)
+    +okw_get_value()
+    +okw_select(value)
+    +okw_type_key(key)
+    +okw_get_text()
+    +okw_get_label()
+    +okw_get_tooltip()
+    +okw_get_placeholder()
+    +okw_get_attribute(name)
+    +okw_exists()
+    +okw_is_visible()
+    +okw_is_enabled()
+    ..
   }
 }
 
-package "okw4robot.adapters" {
-  interface UiAdapter {
+package "okw_web_selenium" {
+  class SeleniumWebAdapter {
+    +browser
+    +sl: SeleniumLibrary
     +click(locator)
-    +double_click(locator)
-    +input_text(locator, value)
-    +get_text(locator)
     +get_value(locator)
-    +select_by_label(locator, label)
     ..
   }
-  package "selenium_web" {
-    class SeleniumWebAdapter {
-      +browser
-      +sl:SeleniumLibrary
-    }
+  class WebSe_Base {
+    +sl: SeleniumLibrary
+    # _wait_before(intent)
+    # _resolve()
   }
-  package "javaRPC" {
-    class JavaRpcAdapter {
-      +_rpc_call(method, params)
-      +click(locator)
-      +input_text(locator, value)
-      +get_text(locator)
-    }
+  class WebSe_TextField
+  class WebSe_Button
+  class WebSe_ComboBox
+  class "WebSe_*" as WebSeOther
+}
+
+package "okw_java_swing" {
+  class JavaRpcAdapter {
+    +_rpc_call(method, params)
   }
+  class "JavaSw_*" as JavaSwOther
 }
 
 HostKeywords --> Context : set_adapter(adapter)
-HostKeywords ..> "YAML (Host)\nChrome.yaml (__self__.class)" : lädt Adapterklasse + Args
+HostKeywords ..> "YAML (Host)\nChrome.yaml" : laedt Adapterklasse
 AppKeywords --> Context : set_app(name, model)
 WidgetKeywords ..> Context : resolve via get_adapter()
-WidgetKeywords --> BaseWidget : new Widget(adapter, locator, options)
-BaseWidget *--> UiAdapter : composition
-SeleniumWebAdapter ..|> UiAdapter
-JavaRpcAdapter ..|> UiAdapter
+WidgetKeywords --> OkwWidget : widget.okw_*(...)
 
-note right of HostKeywords
-Host-YAML (Beispiel):
-Chrome:
-  __self__:
-    class: okw4robot.adapters.selenium_web.SeleniumWebAdapter
-    browser: chrome
-  Chrome:
-    URL:
-      class: ...UrlBar
-      locator: { virtual: true }
-end note
+OkwWidget <|-- WebSe_Base
+WebSe_Base <|-- WebSe_TextField
+WebSe_Base <|-- WebSe_Button
+WebSe_Base <|-- WebSe_ComboBox
+WebSe_Base <|-- WebSeOther
+WebSe_Base *--> SeleniumWebAdapter : adapter
+
+OkwWidget <|-- JavaSwOther
 
 note right of WidgetKeywords
 resolve_widget(name):
-- lädt Widgetklasse aus App-YAML
+- laedt Widgetklasse aus App-YAML
 - holt Adapter aus Context
-- instanziert Widget(adapter, locator, extras)
+- instanziert Widget(adapter, locator, **extras)
 end note
 
-note bottom of UiAdapter
-UiAdapter ist konzeptionell –
-konkrete Adapter bieten eine
-einheitliche API (click/get_value/…)
-die Widgets rufen diese treiber-
-unabhängig auf.
+note bottom of OkwWidget
+OkwWidget definiert die Schnittstelle.
+Nicht implementierte Methoden werfen
+NotImplementedError.
+Treiber-Pakete (okw_web_selenium, okw_java_swing)
+erben und implementieren die Methoden.
+end note
+
+note right of WebSe_Base
+Delegation: Keywords rufen widget.okw_*()
+auf. Das Widget entscheidet intern,
+wie die Aktion treiberspezifisch
+(z.B. via SeleniumLibrary) umgesetzt wird.
 end note
 
 @enduml

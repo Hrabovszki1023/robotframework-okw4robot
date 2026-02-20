@@ -4,21 +4,11 @@ from ..utils.okw_helpers import should_ignore, get_robot_timeout, resolve_widget
 from okw_contract_utils import MatchMode
 
 
-def _get_tooltip(widget) -> str:
-    # Prefer HTML 'title' attribute, fallback to 'aria-label'
+def _get_tooltip(w) -> str:
     try:
-        val = widget.adapter.get_attribute(widget.locator, 'title')
-        if val:
-            return val
+        return w.okw_get_tooltip() or ""
     except Exception:
-        pass
-    try:
-        val = widget.adapter.get_attribute(widget.locator, 'aria-label')
-        if val:
-            return val
-    except Exception:
-        pass
-    return ""
+        return ""
 
 
 class TooltipKeywords:
@@ -35,7 +25,7 @@ class TooltipKeywords:
         - Empty value (``""``) is ignored if ``${OKW_IGNORE_EMPTY}=YES`` is set.
 
         Behavior:
-        - Reads tooltip via element attributes (prefers ``title``, falls back to ``aria-label``).
+        - Delegates to ``widget.okw_get_tooltip()`` – driver-specific logic decides how to read the tooltip.
         - Polls until ``${OKW_TIMEOUT_VERIFY_TOOLTIP}`` (default 10s); raises last error on timeout.
 
         Examples:
@@ -57,12 +47,8 @@ class TooltipKeywords:
         - ``name``: Logical widget name from the current window (YAML model).
         - ``expected``: Wildcard pattern where ``*`` = any sequence, ``?`` = one character.
 
-        Special tokens / control parameters:
-        - ``$IGNORE`` or ``${IGNORE}`` (case-insensitive): Skip verification for this field.
-        - Empty value (``""``) is ignored if ``${OKW_IGNORE_EMPTY}=YES`` is set.
-
         Behavior:
-        - Converts the wildcard pattern to a case-sensitive regex anchored with ``^...$`` (DOTALL).
+        - Delegates to ``widget.okw_get_tooltip()``.
         - Polls until ``${OKW_TIMEOUT_VERIFY_TOOLTIP}`` (default 10s); raises last error on timeout.
 
         Examples:
@@ -84,12 +70,8 @@ class TooltipKeywords:
         - ``name``: Logical widget name from the current window (YAML model).
         - ``expected``: Python regular expression used with ``re.search`` (not anchored).
 
-        Special tokens / control parameters:
-        - ``$IGNORE`` or ``${IGNORE}`` (case-insensitive): Skip verification for this field.
-        - Empty value (``""``) is ignored if ``${OKW_IGNORE_EMPTY}=YES`` is set.
-
         Behavior:
-        - Case-sensitive search within the tooltip text; use inline flags like ``(?i)`` for case-insensitive.
+        - Delegates to ``widget.okw_get_tooltip()``.
         - Polls until ``${OKW_TIMEOUT_VERIFY_TOOLTIP}`` (default 10s); raises last error on timeout.
 
         Examples:

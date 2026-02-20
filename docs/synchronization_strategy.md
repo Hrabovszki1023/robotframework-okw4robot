@@ -78,7 +78,7 @@ Pro Widget kann das Verhalten überschrieben/ergänzt werden:
 
 ```yaml
 Name:
-  class: okw4robot.widgets.common.text_field.TextField
+  class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
   locator: { css: '[data-testid="tf-name"]' }
   wait:
     write:
@@ -109,7 +109,7 @@ Name:
   - `is_enabled(locator)` – Selenium `is_enabled()`
   - `is_editable(locator)` – prüft `readonly`, `contenteditable`, `tag_name`
   - `wait_until_visible`/`wait_until_not_visible` – via SeleniumLibrary
-- BaseWidget:
+- WebSe_Base:
   - `_get_global_sync(intent)` – liest globale Defaults
   - `_merge_wait(intent)` – merged Instanz‑Overrides (und ggf. Klassenprofil)
   - `_wait_before(intent)` – führt die Checks aus
@@ -139,7 +139,7 @@ ${OKW_BUSY_SELECTORS_WRITE}     css:.app-busy, css:.loading
 
 ```yaml
 Speichern:
-  class: okw4robot.widgets.common.button.Button
+  class: okw_web_selenium.widgets.webse_button.WebSe_Button
   locator: { css: '[data-testid="btn-save"]' }
   wait:
     write:

@@ -1,6 +1,9 @@
 # CONTRACT – robotframework-okw4robot
 
-This document defines the public contract of `robotframework-okw4robot`.
+Dieses Dokument definiert den oeffentlichen Vertrag von `robotframework-okw4robot`.
+
+Fuer oekosystem-weite Konzepte (Tokens, Matching-Modi, YES/NO-Modell,
+Widget-Delegations-Modell) siehe: **OKW-CONTRACT.md** im okw-workspace.
 
 ## Library Import
 
@@ -10,13 +13,42 @@ Library    okw4robot.library.OKW4RobotLibrary
 
 ---
 
+## Architektur: Delegation statt Steuerung
+
+`okw4robot` ist **treiber-agnostisch**. Keywords rufen keine Adapter-Methoden
+direkt auf, sondern delegieren an genau **eine** `okw_*`-Methode des Widgets.
+Die treiberspezifische Widget-Klasse (z.B. `WebSe_TextField` in
+`okw_web_selenium`) entscheidet intern, wie die Aktion umgesetzt wird.
+
+Die vollstaendige Keyword → Widget-Methoden-Zuordnung ist in der
+**OKW-CONTRACT.md** definiert (Abschnitt "Widget-Delegations-Modell").
+
+### Basisklasse
+
+```python
+from okw4robot.widgets.okw_widget import OkwWidget
+```
+
+`OkwWidget` definiert die Schnittstelle. Nicht implementierte Methoden
+werfen `NotImplementedError`. Treiber-Pakete erben von `OkwWidget`
+und ueberschreiben die benoetigten Methoden.
+
+### Treiber-Pakete
+
+| Paket                           | Namespace           | Treiber          |
+|---------------------------------|---------------------|------------------|
+| `robotframework-okw-web-selenium` | `okw_web_selenium`  | Selenium/Browser |
+| `robotframework-okw-java-swing`   | `okw_java_swing`    | JavaRPC/Swing    |
+
+---
+
 ## Keywords (Public API)
 
 ### Host Lifecycle
 
 | Keyword       | Parameters      | Description |
 |---------------|----------------|-------------|
-| `StartHost`   | `<name>`        | Loads the host YAML (`locators/<name>.yaml`), instantiates the adapter (e.g. Selenium) and registers it in the global Context. |
+| `StartHost`   | `<name>`        | Loads the host YAML (`locators/<name>.yaml`), instantiates the adapter and registers it in the global Context. |
 | `SelectHost`  | `<name>`        | Asserts that the named host/adapter is currently active. |
 | `StopHost`    |                 | Stops the active host/adapter and clears the Context. |
 
@@ -30,179 +62,165 @@ Library    okw4robot.library.OKW4RobotLibrary
 
 ### Widget – Write / Interact
 
-| Keyword         | Parameters          | Description |
-|-----------------|---------------------|-------------|
-| `SetValue`      | `<name>` `<value>`  | Sets the value of a widget. Delegates to `okw_set_value(value)`. |
-| `Select`        | `<name>` `<value>`  | Selects a value/option on a widget. Delegates to `okw_select(value)`. |
-| `TypeKey`       | `<name>` `<key>`    | Simulates keyboard input. Delegates to `okw_type_key(key)`. |
-| `ClickOn`       | `<name>`            | Clicks a widget. Delegates to `okw_click()`. |
-| `DoubleClickOn` | `<name>`            | Double-clicks a widget. Delegates to `okw_double_click()`. |
-| `SetFocus`      | `<name>`            | Moves keyboard focus to a widget via `adapter.focus(locator)`. |
+| Keyword         | Parameters          | Delegiert an             |
+|-----------------|---------------------|--------------------------|
+| `SetValue`      | `<name>` `<value>`  | `okw_set_value(value)`   |
+| `Select`        | `<name>` `<value>`  | `okw_select(value)`      |
+| `TypeKey`       | `<name>` `<key>`    | `okw_type_key(key)`      |
+| `TypeKey`       | `<name>` `$DELETE`  | `okw_delete()`           |
+| `ClickOn`       | `<name>`            | `okw_click()`            |
+| `DoubleClickOn` | `<name>`            | `okw_double_click()`     |
+| `SetFocus`      | `<name>`            | `okw_set_focus()`        |
 
 ### Widget – Verify Value
 
-| Keyword           | Parameters                | Default | Description |
-|-------------------|--------------------------|---------|-------------|
-| `VerifyValue`     | `<name>` `<expected>`    |         | EXACT match on widget value. |
-| `VerifyValueWCM`  | `<name>` `<pattern>`     |         | Wildcard match (`*` = any chars, `?` = one char). |
-| `VerifyValueREGX` | `<name>` `<regex>`       |         | Regex match (Python `re.search`, not anchored). |
+| Keyword           | Parameters                | Delegiert an        |
+|-------------------|--------------------------|---------------------|
+| `VerifyValue`     | `<name>` `<expected>`    | `okw_get_value()`   |
+| `VerifyValueWCM`  | `<name>` `<pattern>`     | `okw_get_value()`   |
+| `VerifyValueREGX` | `<name>` `<regex>`       | `okw_get_value()`   |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_VALUE}` (default: 10s).
 
 ### Widget – Verify State
 
-| Keyword             | Parameters              | Default | Description |
-|---------------------|------------------------|---------|-------------|
-| `VerifyExist`       | `<name>` `<expected>`  |         | Asserts element exists (`YES`) or not (`NO`). |
-| `VerifyIsVisible`   | `<name>` `<expected>`  |         | Asserts element is visible (`YES`) or not (`NO`). |
-| `VerifyIsEnabled`   | `<name>` `<expected>`  |         | Asserts element is enabled (`YES`) or not (`NO`). |
-| `VerifyIsEditable`  | `<name>` `<expected>`  |         | Asserts element is editable (`YES`) or not (`NO`). |
-| `VerifyIsFocusable` | `<name>` `<expected>`  |         | Asserts element is focusable (`YES`) or not (`NO`). |
-| `VerifyIsClickable` | `<name>` `<expected>`  |         | Asserts element is clickable (`YES`) or not (`NO`). |
-| `VerifyHasFocus`    | `<name>` `<expected>`  |         | Asserts element has keyboard focus (`YES`) or not (`NO`). |
+| Keyword             | Parameters              | Delegiert an          |
+|---------------------|------------------------|-----------------------|
+| `VerifyExist`       | `<name>` `<expected>`  | `okw_exists()`        |
+| `VerifyIsVisible`   | `<name>` `<expected>`  | `okw_is_visible()`    |
+| `VerifyIsEnabled`   | `<name>` `<expected>`  | `okw_is_enabled()`    |
+| `VerifyIsEditable`  | `<name>` `<expected>`  | `okw_is_editable()`   |
+| `VerifyIsFocusable` | `<name>` `<expected>`  | `okw_is_focusable()`  |
+| `VerifyIsClickable` | `<name>` `<expected>`  | `okw_is_clickable()`  |
+| `VerifyHasFocus`    | `<name>` `<expected>`  | `okw_has_focus()`     |
 
 The `expected` parameter accepts `YES`/`NO`, `TRUE`/`FALSE`, or `1`/`0` (case-insensitive).
 Timeouts: `${OKW_TIMEOUT_VERIFY_EXIST}`, `${OKW_TIMEOUT_VERIFY_VISIBLE}`, etc. (default: 2s).
 
 ### Widget – Memorize / Log
 
-| Keyword         | Parameters                    | Description |
-|-----------------|------------------------------|-------------|
-| `MemorizeValue` | `<name>` `<variable>`        | Stores the widget value in `${variable}` via `Set Test Variable`. |
-| `LogValue`      | `<name>`                     | Logs the current widget value. |
-| `HasValue`      | `<name>`                     | Checks if the widget has a value (widget-specific). |
+| Keyword         | Parameters                    | Delegiert an            |
+|-----------------|------------------------------|-------------------------|
+| `MemorizeValue` | `<name>` `<variable>`        | `okw_memorize_value()`  |
+| `LogValue`      | `<name>`                     | `okw_log_value()`       |
+| `HasValue`      | `<name>`                     | `okw_has_value()`       |
 
-### Caption (visible element text)
+### Caption (sichtbarer Text)
 
-| Keyword            | Parameters                | Default | Description |
-|--------------------|--------------------------|---------|-------------|
-| `VerifyCaption`    | `<name>` `<expected>`    |         | EXACT match on element text. |
-| `VerifyCaptionWCM` | `<name>` `<pattern>`     |         | Wildcard match on element text. |
-| `VerifyCaptionREGX`| `<name>` `<regex>`       |         | Regex match on element text. |
-| `MemorizeCaption`  | `<name>` `<variable>`    |         | Stores element text in `${variable}`. |
-| `LogCaption`       | `<name>`                 |         | Logs element text. |
+| Keyword            | Parameters                | Delegiert an        |
+|--------------------|--------------------------|---------------------|
+| `VerifyCaption`    | `<name>` `<expected>`    | `okw_get_text()`    |
+| `VerifyCaptionWCM` | `<name>` `<pattern>`     | `okw_get_text()`    |
+| `VerifyCaptionREGX`| `<name>` `<regex>`       | `okw_get_text()`    |
+| `MemorizeCaption`  | `<name>` `<variable>`    | `okw_get_text()`    |
+| `LogCaption`       | `<name>`                 | `okw_get_text()`    |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_CAPTION}` (default: 10s).
 
-### Label (associated label text)
+### Label
 
-| Keyword           | Parameters                | Default | Description |
-|-------------------|--------------------------|---------|-------------|
-| `VerifyLabel`     | `<name>` `<expected>`    |         | EXACT match on label text (aria-labelledby → label[for] → aria-label → own text). |
-| `VerifyLabelWCM`  | `<name>` `<pattern>`     |         | Wildcard match on label text. |
-| `VerifyLabelREGX` | `<name>` `<regex>`       |         | Regex match on label text. |
-| `MemorizeLabel`   | `<name>` `<variable>`    |         | Stores label text in `${variable}`. |
-| `LogLabel`        | `<name>`                 |         | Logs label text. |
+| Keyword           | Parameters                | Delegiert an         |
+|-------------------|--------------------------|----------------------|
+| `VerifyLabel`     | `<name>` `<expected>`    | `okw_get_label()`    |
+| `VerifyLabelWCM`  | `<name>` `<pattern>`     | `okw_get_label()`    |
+| `VerifyLabelREGX` | `<name>` `<regex>`       | `okw_get_label()`    |
+| `MemorizeLabel`   | `<name>` `<variable>`    | `okw_get_label()`    |
+| `LogLabel`        | `<name>`                 | `okw_get_label()`    |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_LABEL}` (default: 10s).
 
 ### Tooltip
 
-| Keyword             | Parameters                | Default | Description |
-|---------------------|--------------------------|---------|-------------|
-| `VerifyTooltip`     | `<name>` `<expected>`    |         | EXACT match on tooltip (`title` attr, fallback `aria-label`). |
-| `VerifyTooltipWCM`  | `<name>` `<pattern>`     |         | Wildcard match on tooltip. |
-| `VerifyTooltipREGX` | `<name>` `<regex>`       |         | Regex match on tooltip. |
-| `MemorizeTooltip`   | `<name>` `<variable>`    |         | Stores tooltip in `${variable}`. |
-| `LogTooltip`        | `<name>`                 |         | Logs tooltip text. |
+| Keyword             | Parameters                | Delegiert an          |
+|---------------------|--------------------------|---------------------- |
+| `VerifyTooltip`     | `<name>` `<expected>`    | `okw_get_tooltip()`   |
+| `VerifyTooltipWCM`  | `<name>` `<pattern>`     | `okw_get_tooltip()`   |
+| `VerifyTooltipREGX` | `<name>` `<regex>`       | `okw_get_tooltip()`   |
+| `MemorizeTooltip`   | `<name>` `<variable>`    | `okw_get_tooltip()`   |
+| `LogTooltip`        | `<name>`                 | `okw_get_tooltip()`   |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_TOOLTIP}` (default: 10s).
 
-### Attribute (HTML element attribute)
+### Attribute
 
-| Keyword               | Parameters                           | Default | Description |
-|-----------------------|-------------------------------------|---------|-------------|
-| `VerifyAttribute`     | `<name>` `<attribute>` `<expected>` |         | EXACT match on HTML attribute value. |
-| `VerifyAttributeWCM`  | `<name>` `<attribute>` `<pattern>`  |         | Wildcard match on attribute value. |
-| `VerifyAttributeREGX` | `<name>` `<attribute>` `<regex>`    |         | Regex match on attribute value. |
-| `MemorizeAttribute`   | `<name>` `<attribute>` `<variable>` |         | Stores attribute value in `${variable}`. |
-| `LogAttribute`        | `<name>` `<attribute>`              |         | Logs attribute value. |
+| Keyword               | Parameters                           | Delegiert an                |
+|-----------------------|-------------------------------------|-----------------------------|
+| `VerifyAttribute`     | `<name>` `<attribute>` `<expected>` | `okw_get_attribute(name)`   |
+| `VerifyAttributeWCM`  | `<name>` `<attribute>` `<pattern>`  | `okw_get_attribute(name)`   |
+| `VerifyAttributeREGX` | `<name>` `<attribute>` `<regex>`    | `okw_get_attribute(name)`   |
+| `MemorizeAttribute`   | `<name>` `<attribute>` `<variable>` | `okw_get_attribute(name)`   |
+| `LogAttribute`        | `<name>` `<attribute>`              | `okw_get_attribute(name)`   |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_ATTRIBUTE}` (default: 10s).
 
 ### Placeholder
 
-| Keyword                 | Parameters                | Default | Description |
-|-------------------------|--------------------------|---------|-------------|
-| `VerifyPlaceholder`     | `<name>` `<expected>`    |         | EXACT match on placeholder text. |
-| `VerifyPlaceholderWCM`  | `<name>` `<pattern>`     |         | Wildcard match on placeholder. |
-| `VerifyPlaceholderREGX` | `<name>` `<regex>`       |         | Regex match on placeholder. |
+| Keyword                 | Parameters                | Delegiert an              |
+|-------------------------|--------------------------|---------------------------|
+| `VerifyPlaceholder`     | `<name>` `<expected>`    | `okw_get_placeholder()`   |
+| `VerifyPlaceholderWCM`  | `<name>` `<pattern>`     | `okw_get_placeholder()`   |
+| `VerifyPlaceholderREGX` | `<name>` `<regex>`       | `okw_get_placeholder()`   |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_PLACEHOLDER}` (default: 10s).
 
 ### List / Selection
 
-| Keyword               | Parameters                    | Description |
-|-----------------------|------------------------------|-------------|
-| `VerifyListCount`     | `<name>` `<expected_count>`  | Asserts the number of items in a list widget equals `expected_count`. |
-| `VerifySelectedCount` | `<name>` `<expected_count>`  | Asserts the number of selected items equals `expected_count`. |
+| Keyword               | Parameters                    | Delegiert an               |
+|-----------------------|------------------------------|----------------------------|
+| `VerifyListCount`     | `<name>` `<expected_count>`  | `okw_get_list_count()`     |
+| `VerifySelectedCount` | `<name>` `<expected_count>`  | `okw_get_selected_count()` |
 
 Timeout: `${OKW_TIMEOUT_VERIFY_LIST}` (default: 2s).
-
-### JavaScript (Web only)
-
-| Keyword     | Parameters   | Description |
-|-------------|-------------|-------------|
-| `ExecuteJS` | `<script>`  | Executes a JavaScript snippet in the browser context (Selenium adapter only). Returns the script result. |
 
 ---
 
 ## OKW Tokens
 
+Siehe **OKW-CONTRACT.md** fuer die vollstaendige Token-Dokumentation.
+
 | Token      | Supported by              | Behavior |
 |------------|--------------------------|----------|
 | `$IGNORE`  | All keywords with `value`/`expected` | Keyword is skipped (PASS). No action, no assertion. |
 | `$EMPTY`   | `SetValue`               | Sets an explicit empty string. Never ignored even with `${OKW_IGNORE_EMPTY}=YES`. |
-| `$DELETE`  | `TypeKey`                | Clears the field content (`clear_text` or CTRL+A + DELETE). |
-
-In Robot syntax: use `${IGNORE}` which expands to `$IGNORE`.
-
-### Global Flag: `${OKW_IGNORE_EMPTY}`
-
-Set to `YES` to treat blank/whitespace values as `$IGNORE` in `SetValue`, `Select`, `TypeKey` and all `Verify*` keywords. Default: `NO`.
-
-```robot
-Set Suite Variable    ${OKW_IGNORE_EMPTY}    YES
-SetValue              Comment    ${EMPTY}     # ignored
-SetValue              Comment    $EMPTY       # NOT ignored – explicitly sets empty string
-```
+| `$DELETE`  | `TypeKey`                | Delegates to `okw_delete()` on the widget. |
 
 ---
 
 ## YES/NO Existence Model
 
-All state-verification keywords (`VerifyExist`, `VerifyIsVisible`, etc.) use the OKW YES/NO model:
-
-| Input     | Interpreted as |
-|-----------|----------------|
-| `YES`, `TRUE`, `1` | Element must be present / active |
-| `NO`, `FALSE`, `0` | Element must be absent / inactive |
-
-Input is case-insensitive.
+Siehe **OKW-CONTRACT.md** (Abschnitt "YES/NO-Modell").
 
 ---
 
 ## Locator YAML Format
 
-Widgets are described in YAML files loaded by `StartApp`. Structure:
+Widgets werden in YAML-Dateien beschrieben. Die `class`-Eigenschaft referenziert
+die **treiberspezifische** Widget-Klasse:
 
 ```yaml
-# locators/web/LoginApp.yaml
+# locators/web/LoginApp.yaml – Selenium-Treiber
 LoginApp:
   LoginDialog:
     Username:
-      class: okw4robot.widgets.common.text_field.TextField
-      locator: id=user_input
+      class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
+      locator: { id: user_input }
     Password:
-      class: okw4robot.widgets.common.text_field.TextField
-      locator: id=password_input
+      class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
+      locator: { id: password_input }
     OK:
-      class: okw4robot.widgets.common.button.Button
-      locator: id=login_btn
+      class: okw_web_selenium.widgets.webse_button.WebSe_Button
+      locator: { id: login_btn }
     SubmitButton:
-      class: okw4robot.widgets.common.button.Button
-      locator: css=button[type=submit]
+      class: okw_web_selenium.widgets.webse_button.WebSe_Button
+      locator: { css: "button[type=submit]" }
 ```
+
+### YAML-Suche (Fallback)
+
+`okw4robot` sucht YAML-Dateien in dieser Reihenfolge:
+1. Projektverzeichnis (`locators/`)
+2. `okw_web_selenium.locators` (falls installiert)
+3. `okw_java_swing.locators` (falls installiert)
 
 ---
 

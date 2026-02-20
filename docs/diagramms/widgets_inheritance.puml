@@ -1,120 +1,157 @@
 @startuml WidgetsInheritance
-title OKW4Robot – Widget-Vererbung (mit projektspezifischer Erweiterung)
+title OKW – Widget-Vererbung (Delegation mit Treiber-Paketen)
 
-package "okw4robot.widgets.base" {
-  abstract class BaseWidget {
+package "okw4robot.widgets" {
+  class OkwWidget {
     +adapter
     +locator
     +options
     .. Interaktion ..
-    {abstract} okw_click()
-    {abstract} okw_double_click()
-    {abstract} okw_set_value(value)
-    {abstract} okw_select(value)
-    {abstract} okw_type_key(key)
-    {abstract} okw_verify_value(expected)
-    {abstract} okw_verify_value_wcm(expected)
-    {abstract} okw_verify_value_regex(expected)
-    +okw_verify_exist(): bool
-    +okw_log_value()
-    +okw_has_value()
-    +okw_memorize_value()
-    .. Sync (Basis) ..
-    # _get_global_sync(intent): dict
-    # _merge_wait(intent): dict
-    # _wait_before(intent)
-  }
-}
-
-package "okw4robot.widgets.common" {
-  class Button {
     +okw_click()
     +okw_double_click()
-  }
-  class TextField {
-    +okw_click()
     +okw_set_value(value)
+    +okw_select(value)
     +okw_type_key(key)
-    +okw_verify_value(expected)
-    +okw_verify_value_wcm(expected)
-    +okw_verify_value_regex(expected)
-  }
-  class MultilineField {
-  }
-  class Label {
-    +okw_verify_value(expected)
-    +okw_verify_value_wcm(expected)
-    +okw_verify_value_regex(expected)
-  }
-  class CheckBox {
-    +okw_click()
-    +okw_set_value(value)
-    +okw_verify_value(expected)
-  }
-  class ComboBox {
-    +okw_set_value(value)
-    +okw_select(value)
-    +okw_verify_value(expected)
-    .. intern ..
-    - _is_editable(): bool
-  }
-  class RadioList {
-    +okw_select(value)
-    +okw_verify_value(expected)
-    +okw_verify_value_wcm(expected)
-    +okw_verify_value_regex(expected)
-    .. intern ..
-    - _extract_name_from_locator(): str
-    - _container_css(): str
-    - _current_value(): str
-  }
-  class WebRadioList {}
-  class ListBox {
-    +okw_select(value)
-    +okw_verify_value(expected)
+    +okw_delete()
+    +okw_set_focus()
+    .. Werte lesen ..
+    +okw_get_value()
+    +okw_get_text()
+    +okw_get_label()
+    +okw_get_tooltip()
+    +okw_get_placeholder()
+    +okw_get_attribute(name)
+    .. Zustand ..
+    +okw_exists()
+    +okw_is_visible()
+    +okw_is_enabled()
+    +okw_is_editable()
+    +okw_has_focus()
+    +okw_is_focusable()
+    +okw_is_clickable()
+    .. Listen/Tabelle ..
+    +okw_get_list_count()
+    +okw_get_selected_count()
+    +okw_get_row_texts(row)
+    +okw_get_cell_text(row, col)
+    .. Logging ..
     +okw_log_value()
     +okw_memorize_value()
+    +okw_has_value()
   }
 }
 
-BaseWidget <|-- Button
-BaseWidget <|-- TextField
-TextField <|-- MultilineField
-BaseWidget <|-- Label
-BaseWidget <|-- CheckBox
-BaseWidget <|-- ComboBox
-BaseWidget <|-- RadioList
-RadioList <|-- WebRadioList
-BaseWidget <|-- ListBox
+package "okw_web_selenium.widgets" {
+  class WebSe_Base {
+    +sl: SeleniumLibrary
+    # _wait_before(intent)
+    # _merge_wait(intent)
+    # _get_global_sync(intent)
+    .. Gemeinsame Selenium-Logik ..
+    +okw_click()
+    +okw_double_click()
+    +okw_exists()
+    +okw_is_visible()
+    +okw_is_enabled()
+    +okw_get_text()
+    +okw_get_label()
+    +okw_get_tooltip()
+    +okw_get_placeholder()
+    +okw_get_attribute(name)
+  }
+  class WebSe_TextField {
+    +okw_set_value(value)
+    +okw_get_value()
+    +okw_type_key(key)
+  }
+  class WebSe_MultilineField
+  class WebSe_Button {
+    +okw_get_value()
+  }
+  class WebSe_Link
+  class WebSe_Label {
+    +okw_get_value()
+  }
+  class WebSe_CheckBox {
+    +okw_set_value(value)
+    +okw_get_value()
+  }
+  class WebSe_ComboBox {
+    +okw_set_value(value)
+    +okw_select(value)
+    +okw_get_value()
+    +okw_type_key(key)
+    - _is_editable()
+  }
+  class WebSe_RadioList {
+    +okw_select(value)
+    +okw_get_value()
+    - _extract_name_from_locator()
+    - _container_css()
+    - _current_value()
+  }
+  class WebSe_ListBox {
+    +okw_select(value)
+    +okw_set_value(value)
+    +okw_get_value()
+    - _to_list(label_str)
+  }
+  class WebSe_Table {
+    +okw_get_row_texts(row)
+    +okw_get_column_texts(col)
+    +okw_get_cell_text(row, col)
+    +okw_get_row_count()
+    +okw_get_column_count()
+    +okw_get_header_names()
+  }
+}
+
+OkwWidget <|-- WebSe_Base
+WebSe_Base <|-- WebSe_TextField
+WebSe_TextField <|-- WebSe_MultilineField
+WebSe_Base <|-- WebSe_Button
+WebSe_Button <|-- WebSe_Link
+WebSe_Base <|-- WebSe_Label
+WebSe_Base <|-- WebSe_CheckBox
+WebSe_Base <|-- WebSe_ComboBox
+WebSe_Base <|-- WebSe_RadioList
+WebSe_Base <|-- WebSe_ListBox
+WebSe_Base <|-- WebSe_Table
 
 package "myproject.widgets" {
-  class MyProjectButton {
-    +okw_click()
-    .. projektspezifische Sync ..
-    - _project_waits(): void
+  class MyProjectCombo {
+    +okw_set_value(value)
   }
 }
 
-Button <|-- MyProjectButton
+WebSe_ComboBox <|-- MyProjectCombo
 
-note right of MyProjectButton
-Beispiel-Projekterweiterung:
-okw_click() {
-  _wait_before('write')
-  _project_waits()              ' z.B. until_not_visible: .busy-overlay
-  adapter.click(locator)
-}
-Projekt-Waits können auch
-über YAML-Instanzkonfiguration
-per wait.write.until_not_visible
-gesetzt werden.
+note right of MyProjectCombo
+Beispiel Projekterweiterung:
+class MyProjectCombo(WebSe_ComboBox):
+    def okw_set_value(self, value):
+        # Projekt-spezifische Logik
+        super().okw_set_value(value)
+
+YAML:
+  MeinCombo:
+    class: myproject.widgets.MyProjectCombo
+    locator: { css: "#combo" }
 end note
 
-note bottom of BaseWidget
-Sync-Strategie (vereinfacht):
-- _get_global_sync(intent)
-- _merge_wait(intent)  ' Instanz > Klasse > Global
-- _wait_before(intent): exists → scroll → visible → enabled → editable → until_not_visible
+note bottom of OkwWidget
+Alle Methoden werfen NotImplementedError.
+Treiber-Pakete erben und implementieren
+die benoetigten Methoden.
+end note
+
+note right of WebSe_Base
+Gemeinsame Selenium-Logik:
+- _wait_before(intent): exists -> scroll
+  -> visible -> enabled -> editable
+  -> until_not_visible
+- Timeout/Poll & Busy-Selektoren
+  konfigurierbar (global/Klasse/Instanz)
 end note
 
 @enduml

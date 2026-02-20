@@ -4,9 +4,9 @@ from ..utils.okw_helpers import should_ignore, get_robot_timeout, resolve_widget
 from okw_contract_utils import MatchMode
 
 
-def _get_attr(widget, attr_name: str) -> str:
+def _get_attr(w, attr_name: str) -> str:
     try:
-        val = widget.adapter.get_attribute(widget.locator, attr_name)
+        val = w.okw_get_attribute(attr_name)
         return "" if val is None else str(val)
     except Exception:
         return ""

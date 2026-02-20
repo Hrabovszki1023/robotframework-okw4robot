@@ -1,7 +1,14 @@
-import time
 from robot.api.deco import keyword
 from robot.api import logger
-from ..utils.okw_helpers import should_ignore, get_robot_timeout, get_robot_poll, resolve_widget
+from ..utils.okw_helpers import should_ignore, get_robot_timeout, resolve_widget, verify_with_timeout, normalize_var_name
+from okw_contract_utils import MatchMode
+
+
+def _get_placeholder(w) -> str:
+    try:
+        return w.okw_get_placeholder() or ""
+    except Exception:
+        return ""
 
 
 class PlaceholderKeywords:
@@ -11,21 +18,8 @@ class PlaceholderKeywords:
             logger.info(f"[VerifyPlaceholder] '{name}' ignored ($IGNORE)")
             return
         w = resolve_widget(name)
-        if not hasattr(w, 'okw_verify_placeholder'):
-            raise NotImplementedError(f"Widget '{name}' does not support VerifyPlaceholder")
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_PLACEHOLDER}", 10.0)
-        poll = get_robot_poll()
-        end = time.monotonic() + timeout
-        last_error = None
-        while time.monotonic() < end:
-            try:
-                w.okw_verify_placeholder(expected)
-                return
-            except AssertionError as e:
-                last_error = e
-                time.sleep(poll)
-        if last_error:
-            raise last_error
+        verify_with_timeout(lambda: _get_placeholder(w), expected, MatchMode.EXACT, timeout, f"[VerifyPlaceholder] '{name}'")
 
     @keyword("VerifyPlaceholderWCM")
     def verify_placeholder_wcm(self, name, expected):
@@ -33,21 +27,8 @@ class PlaceholderKeywords:
             logger.info(f"[VerifyPlaceholderWCM] '{name}' ignored ($IGNORE)")
             return
         w = resolve_widget(name)
-        if not hasattr(w, 'okw_verify_placeholder_wcm'):
-            raise NotImplementedError(f"Widget '{name}' does not support VerifyPlaceholderWCM")
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_PLACEHOLDER}", 10.0)
-        poll = get_robot_poll()
-        end = time.monotonic() + timeout
-        last_error = None
-        while time.monotonic() < end:
-            try:
-                w.okw_verify_placeholder_wcm(expected)
-                return
-            except AssertionError as e:
-                last_error = e
-                time.sleep(poll)
-        if last_error:
-            raise last_error
+        verify_with_timeout(lambda: _get_placeholder(w), expected, MatchMode.WCM, timeout, f"[VerifyPlaceholderWCM] '{name}'")
 
     @keyword("VerifyPlaceholderREGX")
     def verify_placeholder_regx(self, name, expected):
@@ -55,18 +36,18 @@ class PlaceholderKeywords:
             logger.info(f"[VerifyPlaceholderREGX] '{name}' ignored ($IGNORE)")
             return
         w = resolve_widget(name)
-        if not hasattr(w, 'okw_verify_placeholder_regex'):
-            raise NotImplementedError(f"Widget '{name}' does not support VerifyPlaceholderREGX")
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_PLACEHOLDER}", 10.0)
-        poll = get_robot_poll()
-        end = time.monotonic() + timeout
-        last_error = None
-        while time.monotonic() < end:
-            try:
-                w.okw_verify_placeholder_regex(expected)
-                return
-            except AssertionError as e:
-                last_error = e
-                time.sleep(poll)
-        if last_error:
-            raise last_error
+        verify_with_timeout(lambda: _get_placeholder(w), expected, MatchMode.REGX, timeout, f"[VerifyPlaceholderREGX] '{name}'")
+
+    @keyword("MemorizePlaceholder")
+    def memorize_placeholder(self, name, variable):
+        from robot.libraries.BuiltIn import BuiltIn
+        w = resolve_widget(name)
+        value = _get_placeholder(w)
+        BuiltIn().set_test_variable(normalize_var_name(variable), value)
+
+    @keyword("LogPlaceholder")
+    def log_placeholder(self, name):
+        w = resolve_widget(name)
+        value = _get_placeholder(w)
+        logger.info(f"[LogPlaceholder] {value}")
