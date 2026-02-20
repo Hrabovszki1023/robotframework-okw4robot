@@ -38,12 +38,14 @@ class Context(LoggingMixin):
         if self._adapter is None:
             raise RuntimeError("[Context] Kein aktiver Adapter zum Stoppen.")
 
+        adapter_name = self._adapter.__class__.__name__
+
         self._adapter = None
         self._app_model = None
         self._app_name = None
         self._window = None
 
-        print(f"[Context] Adapter '{self._adapter.__class__.__name__}' wurde gestoppt.")
+        print(f"[Context] Adapter '{adapter_name}' wurde gestoppt.")
 
     def get_adapter(self):
         """Gibt den aktiven Adapter zurueck.

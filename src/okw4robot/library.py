@@ -16,6 +16,7 @@ from .keywords.list_keywords import ListKeywords
 from .keywords.placeholder_keywords import PlaceholderKeywords
 from .keywords.tooltip_keywords import TooltipKeywords
 from .keywords.table_keywords import TableKeywords
+from .keywords.params import ParamsKeywords
 
 
 @library(scope="GLOBAL")
@@ -30,6 +31,7 @@ class OKW4RobotLibrary(
     PlaceholderKeywords,
     TooltipKeywords,
     TableKeywords,
+    ParamsKeywords,
 ):
     """Driver-agnostic Robot Framework library for GUI test automation.
 
@@ -154,4 +156,4 @@ class OKW4RobotLibrary(
         ``StartHost`` muss vor allen Widget-Keywords aufgerufen werden.
         """
         # All keyword mixins are stateless; state lives in the global Context singleton.
-        pass
+        super().__init__()
