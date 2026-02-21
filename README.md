@@ -1,6 +1,6 @@
 # OKW4Robot
 
-Treiberunabhaengige Keyword-Architektur fuer das [Robot Framework](https://robotframework.org/).
+Treiberagnostische Keyword-Architektur fuer das [Robot Framework](https://robotframework.org/).
 
 Ein einheitlicher Satz von Schluessselwoertern fuer verschiedene GUI-Technologien
 (Web/Selenium, Web/Playwright, Java Swing, ...) – die konkrete Umsetzung erfolgt
@@ -17,7 +17,7 @@ im jeweiligen Treiber-Paket.
 └──────────────────────────┬──────────────────────────────┘
                            │
                ┌───────────▼───────────┐
-               │      okw4robot        │  Treiberunabhaengiger Kern
+               │      okw4robot        │  Treiberagnostischer Kern
                │  Keywords, OkwWidget  │  pip install -e .
                │  Context, Contracts   │
                └───┬───────────────┬───┘
