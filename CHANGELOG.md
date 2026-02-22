@@ -1,55 +1,80 @@
-Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-02-22
+
+### Highlights
+- Bilingual documentation (EN/DE) as defined in CONTRACT
+- Comprehensive timeout/parameter documentation with 5-scope cascade
+- Widget inheritance strategy documented
+
+### Features
+- `ParamsKeywords` added to `OKW4RobotLibrary` MRO — `SetOKWParameter` keyword now available without separate import
+- `context.stop_adapter()` crash fix — adapter name captured before clearing reference
+
+### Docs
+- `okw_parameters.md` / `okw_parameters_de.md`: Complete rewrite with 5-scope cascade (Global, Project, Widget, Test case, Execution), practical examples, CLI usage
+- `widgets_common.md`: 4-level widget inheritance strategy (driver standard, company, project, individual)
+- `CONTRACT.md`: Bilingual documentation convention (EN primary `*.md`, DE `*_de.md`)
+- `KEYWORDS.md`: Moved from web-selenium (generic keyword reference)
+- `README.md`: English version (PyPI-ready); `README_de.md` for German
+- Terminology: "treiberunabhaengig" → "treiberagnostisch" across all docs
+- Removed 6 Selenium-specific docs that belong in okw-web-selenium
+
+### Breaking Changes
+- None
+
+## [0.3.0] - 2025-12-15
+
+### Highlights
+- OKW ecosystem integration: okw4robot as driver-agnostic core, web-selenium and java-swing as driver packages
+- Package restructured for `src/` layout and PyPI publishing
+- Core cleanup: removed all driver-specific code
+
+### Features
+- `OKW4RobotLibrary` as single entry point with all keyword mixins
+- Widget delegation model: keywords → `okw_*()` methods on widgets
+- `OkwWidget` interface with `NotImplementedError` defaults
+- YAML locator search with fallback: project → driver packages
+- `context.py`: Central runtime context (adapter, app, window)
+- `SetOKWParameter` keyword for runtime timeout configuration
+- `super().__init__()` added to `OKW4RobotLibrary`
+
+### Docs
+- CONTRACT.md: Public contract (architecture, delegation model, YAML format)
+- SPECIFICATION.md: Semantic keyword specification
+- Full keyword documentation: attribute, caption, label, placeholder, tooltip, table, list
+- Synchronization strategy documented
+- OKW parameters and timeout reference
+
+### Breaking Changes
+- Individual keyword library imports (`AppKeywords`, `HostKeywords`, etc.) replaced by single `OKW4RobotLibrary` import
+
 ## [0.2.0] - 2025-10-19
 
-Highlights
+### Highlights
 - Packaging for PyPI: pyproject.toml configured for src/ layout; URLs set; Python >= 3.10.
-- Licensing: Community (non‑commercial) LICENSE with explicit AS‑IS warranty disclaimer and liability limitation; COMMERCIAL_LICENSE.md and docs/license_faq.md added.
-- Web widget matrix refreshed and normalized (UTF‑8, ✓ marks). Table + List keywords integrated in overview.
+- Licensing: Community (non-commercial) LICENSE with explicit AS-IS warranty disclaimer and liability limitation; COMMERCIAL_LICENSE.md and docs/license_faq.md added.
+- Web widget matrix refreshed and normalized (UTF-8, check marks). Table + List keywords integrated in overview.
 
-Features
+### Features
 - SetValue: $EMPTY implemented and documented; $IGNORE behavior clarified.
 - TypeKey: Documented; supports $DELETE to clear content.
 - Select: Documented.
 - Verify value family: VerifyValue, VerifyValueWCM, VerifyValueREGX documented.
 - Verify exist/log/memorize: VerifyExist, LogValue, MemorizeValue documented; SetFocus + VerifyHasFocus documented.
-- Verify “Is*” rename: VerifyVisible/Enabled/Editable/Focusable/Clickable → VerifyIsVisible/IsEnabled/IsEditable/IsFocusable/IsClickable; keyword docs added.
-- ExecuteJS: Comprehensive docs, plus docs/executejs-snippets.md with project‑specific one‑liners.
-- Tooltip: VerifyTooltip/…WCM/…REGX documented.
-- Tables:
-  - Documentation for VerifyTable* (row/column/cell/hasRow/counts/content).
-  - Header‑based selection keywords: VerifyTableCellValueByHeaders, VerifyTableRowContentByHeader, VerifyTableColumnContentByHeader.
-  - Regex variants for header‑based: …ByHeadersREGX/…ByHeaderREGX.
-  - Implementation helpers in table keywords: header name resolution and row key matching.
-- Lists:
-  - New list keywords: VerifyListCount, VerifySelectedCount (library: ListKeywords).
-  - Widget methods: BaseWidget stubs, implementations in ListBox, RadioList, ComboBox (native <select> support; input‑based selected count 0/1).
+- Verify "Is*" rename: VerifyVisible/Enabled/Editable/Focusable/Clickable → VerifyIsVisible/IsEnabled/IsEditable/IsFocusable/IsClickable; keyword docs added.
+- Tooltip: VerifyTooltip/...WCM/...REGX documented.
+- Tables: Header-based selection keywords, regex variants, implementation helpers.
+- Lists: VerifyListCount, VerifySelectedCount.
 
-Docs
-- Added docs/keywords_table_headers.md (header‑based + REGX table docs).
-- Added docs/keywords_list.md (list count/select keywords).
-- Added regex best practices: docs/regex_best_practices.md; linked from docs and matrix; REGX docs updated with backslash guidance.
-- Web_Widget_Matrix.md rebuilt (UTF‑8, consistent with all keywords).
-
-Tests
-- Table tests: Web_Table_VerifyByHeaders.robot and Web_Table_VerifyByHeadersREGX.robot.
-- List tests: Web_List_VerifyCounts.robot.
-- Fixed run.ps1 line continuation for including all suites; converted WidgetsDemo.robot to UTF‑8.
-
-Breaking changes
+### Breaking Changes
 - Keyword renames: VerifyVisible/VerifyEnabled/VerifyEditable/VerifyFocusable/VerifyClickable → VerifyIsVisible/IsEnabled/IsEditable/IsFocusable/IsClickable.
-  - External suites must update calls to the new names.
 
-Upgrade notes
-- Ensure your suites use the new VerifyIs* keywords.
-- For regex patterns in Robot tables prefer character classes (e.g., `[0-9]`) or double‑escape backslashes (e.g., `^A3\\d$`).
-
-Compatibility
+### Compatibility
 - Python: >= 3.10
 
-License
-- Community (non‑commercial) license with AS‑IS and liability disclaimer; commercial usage requires a separate license.
-
-[0.2.0]: https://github.com/Hrabovszki1023/okw4robot/releases/tag/v0.2.0
+[0.4.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.4.0
+[0.3.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.3.0
+[0.2.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.2.0
