@@ -5,6 +5,62 @@ Dieses Dokument definiert den oeffentlichen Vertrag von `robotframework-okw4robo
 Fuer oekosystem-weite Konzepte (Tokens, Matching-Modi, YES/NO-Modell,
 Widget-Delegations-Modell) siehe: **OKW-CONTRACT.md** im okw-workspace.
 
+---
+
+## Dokumentationssprache (Deutsch / Englisch)
+
+Die OKW-Dokumentation wird **zweisprachig** gepflegt: Deutsch und Englisch.
+
+### Hintergrund
+
+Die Keyword-Bibliothek wird u.a. bei deutschen Bundesbehoerden eingesetzt.
+Viele Anwender benoetigen die Dokumentation auf Deutsch. Gleichzeitig soll
+das Projekt international zugaenglich bleiben.
+
+### Konvention
+
+| Datei | Sprache | Beispiel |
+|-------|---------|---------|
+| `dokument.md` | **Englisch** (Primaersprache) | `okw_parameters.md` |
+| `dokument_de.md` | **Deutsch** | `okw_parameters_de.md` |
+
+Regeln:
+
+1. **Englisch ist die Primaersprache.** Die Datei ohne Suffix (`*.md`) ist immer
+   die englische Version.
+2. **Deutsche Version** wird mit dem Suffix `_de.md` gekennzeichnet und liegt
+   **neben** der englischen Version im selben Verzeichnis.
+3. **Inhaltliche Gleichwertigkeit.** Beide Versionen muessen denselben
+   fachlichen Inhalt abdecken. Code-Beispiele und Tabellen sind in beiden
+   Versionen identisch (Keywords, Variablennamen, YAML-Syntax sind ohnehin
+   sprachunabhaengig).
+4. **Aenderungen synchron halten.** Wird eine Version aktualisiert, muss die
+   andere Version zeitnah nachgezogen werden.
+5. **README.md** verlinkt auf beide Sprachversionen (sofern vorhanden).
+6. **Gilt fuer alle OKW-Pakete** (`okw4robot`, `okw-web-selenium`,
+   `okw-java-swing`, etc.).
+
+### Verzeichnisstruktur (Beispiel)
+
+```
+docs/
+  okw_parameters.md          ← Englisch
+  okw_parameters_de.md       ← Deutsch
+  widgets_common.md           ← Englisch
+  widgets_common_de.md        ← Deutsch
+  CONTRACT.md                 ← Englisch (dieses Dokument)
+  CONTRACT_de.md              ← Deutsch
+  ...
+```
+
+### Bestehende Dokumente
+
+Bestehende Dokumente, die aktuell nur in einer Sprache vorliegen, werden
+schrittweise um die jeweils fehlende Version ergaenzt. Neue Dokumente werden
+von Anfang an in beiden Sprachen erstellt.
+
+---
+
 ## Library Import
 
 ```robot
