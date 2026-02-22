@@ -1,87 +1,88 @@
-# OKW Parameter und Timeouts
+# OKW Parameters and Timeouts
 
-OKW verwendet konfigurierbare Timeout- und Steuerungsparameter, um das Verhalten
-von Verify-Keywords, Synchronisation und Ignore-Regeln anzupassen. Diese Seite
-beschreibt die **fuenf Geltungsbereiche (Scopes)**, in denen Parameter gesetzt
-werden koennen, und wie sie sich gegenseitig ueberschreiben.
+OKW uses configurable timeout and control parameters to adjust the behavior
+of verify keywords, synchronization, and ignore rules. This page describes
+the **five scopes** in which parameters can be set, and how they override
+each other.
+
+> **Deutsche Version:** [okw_parameters_de.md](okw_parameters_de.md)
 
 ---
 
-## Warum Timeouts anpassen?
+## Why Adjust Timeouts?
 
-OKW-Verify-Keywords (`VerifyValue`, `VerifyExist`, `VerifyTooltip`, ...) arbeiten
-**nicht** mit einem einzelnen Abgleich. Stattdessen laufen sie in einer
-**Polling-Schleife**: Der aktuelle Wert wird wiederholt gelesen und mit dem
-Sollwert verglichen, bis er passt oder das Timeout ablaeuft.
+OKW verify keywords (`VerifyValue`, `VerifyExist`, `VerifyTooltip`, ...) do
+**not** perform a single comparison. Instead, they run in a **polling loop**:
+the current value is read repeatedly and compared to the expected value until
+it matches or the timeout expires.
 
 ```
-Ablauf (vereinfacht):
+Flow (simplified):
 
-    VerifyValue "Benutzer" "Max"
+    VerifyValue "Username" "Max"
          │
          ▼
     ┌──────────────────────────┐
-    │  Wert lesen (okw_get_value)  │◄─────┐
-    │  Aktuell: ""                 │      │
-    │  Soll:    "Max"              │      │  Poll-Intervall
-    │  Match?   NEIN               │      │  (0.1s default)
+    │  Read value (okw_get_value)  │◄─────┐
+    │  Actual: ""                  │      │
+    │  Expected: "Max"             │      │  Poll interval
+    │  Match?   NO                 │      │  (0.1s default)
     └──────────┬───────────────────┘      │
                │                          │
                ▼                          │
-         Timeout erreicht? ───NEIN───────►┘
+         Timeout reached? ───NO──────────►┘
                │
-              JA
+              YES
                ▼
-         FAIL: "Erwartet 'Max', gelesen ''"
+         FAIL: "Expected 'Max', got ''"
 ```
 
-Die **Standard-Timeouts** (10 Sekunden fuer Werte, 2 Sekunden fuer Zustaende)
-passen fuer die meisten Anwendungen. In bestimmten Situationen muessen sie
-angepasst werden:
+The **default timeouts** (10 seconds for values, 2 seconds for states) work
+for most applications. In certain situations they need to be adjusted:
 
-| Situation | Empfehlung | Scope |
-|-----------|------------|-------|
-| **Langsame Applikation** (komplexe Berechnungen, Backend-Calls) | Timeout erhoehen (`20s`, `30s`) | Projekt |
-| **Schnelle Unit-/Widget-Tests** (lokale HTML-Seite, kein Backend) | Timeout reduzieren (`3s`, `5s`) | Projekt |
-| **CI/CD-Umgebung** (langsamere VMs, parallele Last) | Timeout erhoehen (`15s`–`30s`) | Ausfuehrung |
-| **Asynchrones Laden** (AJAX, WebSocket-Updates) | Timeout + Poll-Intervall anpassen | Projekt / Widget |
-| **Einzelnes traege Element** (z.B. Dashboard-Widget) | Per YAML-Instanz ueberschreiben | Widget |
-| **Ein Test braucht mehr Zeit** (Report-Generierung, Export) | `SetOKWParameter` im Test | Testfall |
-| **Debugging eines einzelnen Tests** | `--variable` auf der Kommandozeile | Ausfuehrung |
+| Situation | Recommendation | Scope |
+|-----------|---------------|-------|
+| **Slow application** (complex calculations, backend calls) | Increase timeout (`20s`, `30s`) | Project |
+| **Fast unit/widget tests** (local HTML page, no backend) | Reduce timeout (`3s`, `5s`) for faster feedback | Project |
+| **CI/CD environment** (slower VMs, parallel load) | Increase timeout (`15s`–`30s`) | Execution |
+| **Asynchronous loading** (AJAX, WebSocket updates) | Increase timeout + adjust poll interval | Project / Widget |
+| **Single slow element** (e.g. dashboard widget) | Override via YAML instance | Widget |
+| **One test needs more time** (report generation, export) | `SetOKWParameter` in the test | Test case |
+| **Debugging a single test** | `--variable` on the command line | Execution |
 
 ---
 
-## Die fuenf Scopes (Override-Kaskade)
+## The Five Scopes (Override Cascade)
 
-Parameter werden in fuenf Geltungsbereichen gesetzt. Jeder engere Scope
-ueberschreibt den weiteren:
+Parameters are set in five scopes. Each more specific scope overrides the
+broader one:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  1. Global (OKW-Default)         — Hardcodiert in OKW       │
+│  1. Global (OKW Default)        — Hard-coded in OKW          │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │  2. Projekt                   — Resource / __init__    │  │
+│  │  2. Project                  — Resource / __init__      │  │
 │  │  ┌─────────────────────────────────────────────────┐  │  │
-│  │  │  3. Widget                 — YAML wait:-Block    │  │  │
+│  │  │  3. Widget                — YAML wait: block      │  │  │
 │  │  │  ┌───────────────────────────────────────────┐  │  │  │
-│  │  │  │  4. Testfall            — SetOKWParameter   │  │  │  │
+│  │  │  │  4. Test case          — SetOKWParameter    │  │  │  │
 │  │  │  │  ┌─────────────────────────────────────┐  │  │  │  │
-│  │  │  │  │  5. Ausfuehrung     — robot --variable │  │  │  │  │
+│  │  │  │  │  5. Execution       — robot --variable │  │  │  │  │
 │  │  │  │  └─────────────────────────────────────┘  │  │  │  │
 │  │  │  └───────────────────────────────────────────┘  │  │  │
 │  │  └─────────────────────────────────────────────────┘  │  │
 │  └───────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 
-Spezifischer Scope gewinnt:  Global < Projekt < Widget < Testfall < Ausfuehrung
+More specific scope wins:  Global < Project < Widget < Test case < Execution
 ```
 
 ---
 
-### Scope 1: Global (OKW-Default)
+### Scope 1: Global (OKW Default)
 
-Die in OKW hardcodierten Standardwerte. Sie gelten, wenn kein anderer Scope
-einen Parameter ueberschreibt. Es ist nichts zu tun — diese Werte sind immer da.
+The default values hard-coded in OKW. They apply when no other scope
+overrides a parameter. Nothing to do — these values are always present.
 
 | Parameter | Default |
 |-----------|---------|
@@ -89,21 +90,21 @@ einen Parameter ueberschreibt. Es ist nichts zu tun — diese Werte sind immer d
 | `${OKW_TIMEOUT_VERIFY_EXIST}` | 2.0 |
 | `${OKW_POLL_VERIFY}` | 0.1 |
 | `${OKW_IGNORE_EMPTY}` | NO |
-| ... | (siehe Referenz unten) |
+| ... | (see reference below) |
 
 ---
 
-### Scope 2: Projekt
+### Scope 2: Project
 
-Projektweite Einstellungen, die fuer **alle Tests des Projekts** gelten.
-Zwei Varianten:
+Project-wide settings that apply to **all tests in the project**.
+Two variants:
 
-#### a) Resource-Datei (empfohlen)
+#### a) Resource file (recommended)
 
-Eine zentrale Resource-Datei, die von allen Test-Suites importiert wird:
+A central resource file imported by all test suites:
 
 ```robotframework
-# resources/projekt_timeouts.resource
+# resources/project_timeouts.resource
 *** Variables ***
 ${OKW_TIMEOUT_VERIFY_VALUE}          15
 ${OKW_TIMEOUT_VERIFY_PLACEHOLDER}    10
@@ -114,45 +115,45 @@ ${OKW_POLL_VERIFY}                   0.1
 ```
 
 ```robotframework
-# tests/MeineTests.robot
+# tests/MyTests.robot
 *** Settings ***
 Library     okw_web_selenium.library.OkwWebSeleniumLibrary
-Resource    ../resources/projekt_timeouts.resource
+Resource    ../resources/project_timeouts.resource
 
 *** Test Cases ***
 Login Test
-    StartApp    MeineApp
-    SetValue    Benutzer    testuser
-    # Alle Verify-Keywords nutzen jetzt die Projekt-Timeouts
-    VerifyValue  Willkommen    Hallo testuser
+    StartApp    MyApp
+    SetValue    Username    testuser
+    # All verify keywords now use the project timeouts
+    VerifyValue  Welcome    Hello testuser
     StopApp
 ```
 
-#### b) Suite-Init (`__init__.robot`)
+#### b) Suite init (`__init__.robot`)
 
-Fuer Projekte, die eine Verzeichnisstruktur mit `__init__.robot` verwenden:
+For projects that use a directory structure with `__init__.robot`:
 
 ```robotframework
 # tests/__init__.robot
 *** Settings ***
 Library       okw_web_selenium.library.OkwWebSeleniumLibrary
-Suite Setup   Projekt Timeouts setzen
+Suite Setup   Set Project Timeouts
 
 *** Keywords ***
-Projekt Timeouts setzen
+Set Project Timeouts
     SetOKWParameter    TimeOutVerifyValue    15
     SetOKWParameter    TimeOutVerifyExist     5
 ```
 
-**Wann verwenden?** Die Applikation ist generell langsamer/schneller als der
-OKW-Default und alle Tests sollen einheitlich konfiguriert werden.
+**When to use?** The application is generally slower/faster than the OKW
+defaults and all tests should be configured uniformly.
 
 ---
 
 ### Scope 3: Widget
 
-Ein **einzelnes GUI-Objekt** bekommt per YAML-Locator individuelle Timeout-Werte.
-Diese ueberschreiben den Projekt-Scope — aber nur fuer dieses eine Widget.
+A **single GUI object** receives individual timeout values via its YAML
+locator. These override the project scope — but only for this one widget.
 
 ```yaml
 # locators/Dashboard.yaml
@@ -161,8 +162,8 @@ Dashboard:
     class: okw_web_selenium.widgets.webse_label.WebSe_Label
     locator: { css: '[data-testid="dashboard"]' }
 
-  # Dieses Widget laedt immer langsam (komplexe Aggregation)
-  Umsatz Monat:
+  # This widget always loads slowly (complex aggregation)
+  Monthly Revenue:
     class: okw_web_selenium.widgets.webse_label.WebSe_Label
     locator: { css: '[data-testid="revenue-month"]' }
     wait:
@@ -171,146 +172,146 @@ Dashboard:
       read:
         timeout: 30
 
-  # Standard-Widget, nutzt Projekt-/Global-Timeouts
-  Seitenname:
+  # Standard widget, uses project/global timeouts
+  Page Title:
     class: okw_web_selenium.widgets.webse_label.WebSe_Label
     locator: { css: '[data-testid="page-title"]' }
 ```
 
-**Wann verwenden?** Ein einzelnes GUI-Objekt zeigt abweichendes Timing-Verhalten
-(z.B. Dashboard-Aggregation, Lazy-Loading), waehrend der Rest der Applikation
-mit den Projekt-Timeouts gut funktioniert.
+**When to use?** A single GUI object shows divergent timing behavior
+(e.g. dashboard aggregation, lazy loading), while the rest of the
+application works fine with the project timeouts.
 
-> Siehe auch [synchronization_strategy.md](synchronization_strategy.md) fuer die
-> vollstaendige `wait:`-Konfiguration inkl. Sync-Checks (exists, visible, enabled, ...).
+> See also [synchronization_strategy.md](synchronization_strategy.md) for the
+> full `wait:` configuration including sync checks (exists, visible, enabled, ...).
 
 ---
 
-### Scope 4: Testfall
+### Scope 4: Test Case
 
-Ein **einzelner Testfall** (oder ein Abschnitt darin) braucht abweichende Werte.
-Gesetzt mit dem Keyword `SetOKWParameter` direkt im Test Case oder im `[Setup]`.
+A **single test case** (or a section within it) needs different values.
+Set with the keyword `SetOKWParameter` directly in the test case or in `[Setup]`.
 
 ```robotframework
 *** Settings ***
 Library    okw_web_selenium.library.OkwWebSeleniumLibrary
 
 *** Test Cases ***
-Report-Generierung abwarten
-    SetValue     Von-Datum     01.01.2025
-    SetValue     Bis-Datum     31.12.2025
-    ClickOn      Report erstellen
-    # Report-Generierung dauert bis zu 60 Sekunden
+Wait For Report Generation
+    SetValue     From-Date     01.01.2025
+    SetValue     To-Date       31.12.2025
+    ClickOn      Generate Report
+    # Report generation takes up to 60 seconds
     SetOKWParameter    TimeOutVerifyValue    60
-    VerifyValue  Status    Report fertig
-    # Zuruecksetzen auf Projekt-/Global-Wert
+    VerifyValue  Status    Report complete
+    # Reset to project/global value
     SetOKWParameter    TimeOutVerifyValue    10
 
-Normaler Test
-    # Dieser Test nutzt wieder den Projekt-/Global-Timeout (10s)
-    SetValue     Benutzer    admin
-    VerifyValue  Status      Angemeldet
+Normal Test
+    # This test uses the project/global timeout again (10s)
+    SetValue     Username    admin
+    VerifyValue  Status      Logged in
 ```
 
-Alternativ mit `[Setup]` und `[Teardown]` fuer saubere Kapselung:
+Alternatively with `[Setup]` and `[Teardown]` for clean encapsulation:
 
 ```robotframework
 *** Test Cases ***
-Langsamer Export
+Slow Export
     [Setup]       SetOKWParameter    TimeOutVerifyValue    60
     [Teardown]    SetOKWParameter    TimeOutVerifyValue    10
-    ClickOn       CSV exportieren
-    VerifyValue   Status    Export abgeschlossen
+    ClickOn       Export CSV
+    VerifyValue   Status    Export complete
 ```
 
-**Wann verwenden?** Ein bestimmter Test hat spezielle Anforderungen
-(langsame Operation, bekannt traeger Schritt), aber alle anderen Tests im
-Projekt sollen davon nicht beeinflusst werden.
+**When to use?** A specific test has special requirements (slow operation,
+known sluggish step), but all other tests in the project should remain
+unaffected.
 
-> **Hinweis:** `SetOKWParameter` setzt eine Suite-Variable. Der Wert bleibt
-> bis zum naechsten Aufruf oder Suite-Ende bestehen. Bei testfallspezifischer
-> Nutzung empfiehlt sich ein explizites Zuruecksetzen im `[Teardown]`.
+> **Note:** `SetOKWParameter` sets a suite variable. The value persists until
+> the next call or suite end. For test-case-specific usage, an explicit reset
+> in `[Teardown]` is recommended.
 
 ---
 
-### Scope 5: Ausfuehrung (Kommandozeile)
+### Scope 5: Execution (Command Line)
 
-Parameter werden beim `robot`-Aufruf per `--variable` gesetzt. Dieser Scope
-ueberschreibt **alle** anderen — das ist Standard-Robot-Framework-Verhalten.
+Parameters are set via `--variable` on the `robot` command line. This scope
+overrides **all** others — this is standard Robot Framework behavior.
 
 ```bash
-# CI-Pipeline: Timeouts erhoehen
+# CI pipeline: increase timeouts
 robot --variable OKW_TIMEOUT_VERIFY_VALUE:30 \
       --variable OKW_TIMEOUT_VERIFY_EXIST:10 \
       --variable OKW_POLL_VERIFY:0.2 \
       tests/
 
-# Debugging: Einzelnen Test mit viel Zeit ausfuehren
+# Debugging: run a single test with plenty of time
 robot --variable OKW_TIMEOUT_VERIFY_VALUE:120 \
-      --test "Report-Generierung abwarten" \
+      --test "Wait For Report Generation" \
       tests/
 
-# Schnelllauf: Timeouts minimieren fuer Smoke-Test
+# Quick run: minimize timeouts for smoke test
 robot --variable OKW_TIMEOUT_VERIFY_VALUE:3 \
       --variable OKW_TIMEOUT_VERIFY_EXIST:1 \
       --include smoke \
       tests/
 ```
 
-**Wann verwenden?** Wenn die gleichen Tests in verschiedenen Umgebungen
-mit unterschiedlichen Timeouts laufen sollen — **ohne eine einzige Datei
-zu aendern**. Typische Szenarien:
+**When to use?** When the same tests should run in different environments
+with different timeouts — **without changing a single file**. Typical
+scenarios:
 
-- CI/CD-Pipeline (langsamere VMs)
-- Debugging (sehr hohe Timeouts, damit der Test nicht abbricht)
-- Smoke-Tests (minimale Timeouts fuer schnelles Feedback)
+- CI/CD pipeline (slower VMs)
+- Debugging (very high timeouts so the test does not abort)
+- Smoke tests (minimal timeouts for fast feedback)
 
-> **Wichtig:** `--variable` hat in Robot Framework **immer** die hoechste
-> Prioritaet und ueberschreibt Variables-Sections, Resource-Dateien und
-> `SetOKWParameter`-Aufrufe.
-
----
-
-## Zusammenfassung: Wann welchen Scope verwenden?
-
-| Scope | Mechanismus | Wann | Dateien aendern? |
-|-------|------------|------|------------------|
-| **1. Global** | — (Default) | Passt meistens | Nein |
-| **2. Projekt** | Resource-Datei / `__init__.robot` | App generell langsam/schnell | Einmal zentral |
-| **3. Widget** | YAML `wait:`-Block | Ein Widget ist Sonderfall | Nur die YAML-Datei |
-| **4. Testfall** | `SetOKWParameter` im Test | Ein Test braucht mehr/weniger Zeit | Nur den Test |
-| **5. Ausfuehrung** | `robot --variable` | CI, Debug, Smoke | Keine |
+> **Important:** `--variable` **always** has the highest priority in Robot
+> Framework and overrides variables sections, resource files, and
+> `SetOKWParameter` calls.
 
 ---
 
-## Zusammenspiel mit Synchronisation
+## Summary: When to Use Which Scope?
 
-Die Verify-Timeouts steuern die **inhaltliche** Pruefung: „Hat das Element den
-richtigen Wert?" Die Sync-Timeouts (dokumentiert in
-[synchronization_strategy.md](synchronization_strategy.md)) steuern die
-**technische** Vorbedingung: „Ist das Element ueberhaupt da, sichtbar, klickbar?"
+| Scope | Mechanism | When | Change files? |
+|-------|-----------|------|---------------|
+| **1. Global** | — (Default) | Works most of the time | No |
+| **2. Project** | Resource file / `__init__.robot` | App generally slow/fast | Once, centrally |
+| **3. Widget** | YAML `wait:` block | One widget is a special case | Only the YAML file |
+| **4. Test case** | `SetOKWParameter` in test | One test needs more/less time | Only that test |
+| **5. Execution** | `robot --variable` | CI, debug, smoke | None |
+
+---
+
+## Interaction with Synchronization
+
+The verify timeouts control the **content check**: "Does the element have
+the right value?" The sync timeouts (documented in
+[synchronization_strategy.md](synchronization_strategy.md)) control the
+**technical precondition**: "Is the element present, visible, clickable?"
 
 ```
-Ablauf bei VerifyValue:
+Flow for VerifyValue:
 
-1. _wait_before("read")     ← Sync-Timeouts (OKW_SYNC_TIMEOUT_READ)
-   └── exists? visible?        Stellt sicher, dass das Element bereit ist
+1. _wait_before("read")     ← Sync timeouts (OKW_SYNC_TIMEOUT_READ)
+   └── exists? visible?        Ensures the element is ready
 
-2. Verify-Loop               ← Verify-Timeout (OKW_TIMEOUT_VERIFY_VALUE)
-   └── Wert lesen, vergleichen, ggf. wiederholen
-       bis Match oder Timeout
+2. Verify loop               ← Verify timeout (OKW_TIMEOUT_VERIFY_VALUE)
+   └── Read value, compare, repeat if needed
+       until match or timeout
 ```
 
-Beide Timeout-Gruppen sind unabhaengig konfigurierbar und addieren sich im
-Worst Case.
+Both timeout groups are independently configurable and add up in the
+worst case.
 
 ---
 
-## Ignore-Regel (${OKW_IGNORE_EMPTY})
+## Ignore Rule (${OKW_IGNORE_EMPTY})
 
-Steuert, ob leere Werte (`""`, reine Leerzeichen) als „nichts tun" interpretiert
-werden. Nuetzlich fuer datengetriebene Tests, bei denen nicht alle Felder in jedem
-Datensatz gefuellt werden:
+Controls whether empty values (`""`, whitespace only) are interpreted as
+"do nothing". Useful for data-driven tests where not every field is filled
+in every data set:
 
 ```robotframework
 *** Settings ***
@@ -320,33 +321,33 @@ Library    okw_web_selenium.library.OkwWebSeleniumLibrary
 ${OKW_IGNORE_EMPTY}    YES
 
 *** Test Cases ***
-Datengetriebener Test
-    [Template]    Felder befuellen
-    Max       Mustermann    max@test.de
-    Anna      ${EMPTY}      anna@test.de
+Data-Driven Test
+    [Template]    Fill Fields
+    Max       Smith       max@test.com
+    Anna      ${EMPTY}    anna@test.com
 
 *** Keywords ***
-Felder befuellen
-    [Arguments]    ${vorname}    ${nachname}    ${email}
-    SetValue    Vorname     ${vorname}
-    # Bei "Anna" wird SetValue fuer Nachname uebersprungen (No-Op)
-    SetValue    Nachname    ${nachname}
-    SetValue    Email       ${email}
+Fill Fields
+    [Arguments]    ${first_name}    ${last_name}    ${email}
+    SetValue    First Name    ${first_name}
+    # For "Anna", SetValue for Last Name is skipped (No-Op)
+    SetValue    Last Name     ${last_name}
+    SetValue    Email         ${email}
 ```
 
-Akzeptierte Werte: `YES`, `NO`, `TRUE`, `FALSE`, `1`, `0`
+Accepted values: `YES`, `NO`, `TRUE`, `FALSE`, `1`, `0`
 
-> **Hinweis:** Der spezielle Wert `$IGNORE` wird **immer** als No-Op behandelt,
-> unabhaengig von `${OKW_IGNORE_EMPTY}`.
+> **Note:** The special value `$IGNORE` is **always** treated as No-Op,
+> regardless of `${OKW_IGNORE_EMPTY}`.
 
 ---
 
-## Parameter-Referenz
+## Parameter Reference
 
-### Verify-Timeouts (Wert-Pruefungen)
+### Verify Timeouts (Value Checks)
 
-| Variable | Default | Betroffene Keywords |
-|----------|---------|---------------------|
+| Variable | Default | Affected Keywords |
+|----------|---------|-------------------|
 | `${OKW_TIMEOUT_VERIFY_VALUE}` | 10 | VerifyValue, VerifyValueWCM, VerifyValueREGX |
 | `${OKW_TIMEOUT_VERIFY_PLACEHOLDER}` | 10 | VerifyPlaceholder, VerifyPlaceholderWCM, VerifyPlaceholderREGX |
 | `${OKW_TIMEOUT_VERIFY_TOOLTIP}` | 10 | VerifyTooltip, VerifyTooltipWCM, VerifyTooltipREGX |
@@ -354,10 +355,10 @@ Akzeptierte Werte: `YES`, `NO`, `TRUE`, `FALSE`, `1`, `0`
 | `${OKW_TIMEOUT_VERIFY_CAPTION}` | 10 | VerifyCaption, VerifyCaptionWCM, VerifyCaptionREGX |
 | `${OKW_TIMEOUT_VERIFY_ATTRIBUTE}` | 10 | VerifyAttribute |
 
-### Verify-Timeouts (Zustands-Pruefungen)
+### Verify Timeouts (State Checks)
 
-| Variable | Default | Betroffene Keywords |
-|----------|---------|---------------------|
+| Variable | Default | Affected Keywords |
+|----------|---------|-------------------|
 | `${OKW_TIMEOUT_VERIFY_EXIST}` | 2.0 | VerifyExist |
 | `${OKW_TIMEOUT_VERIFY_VISIBLE}` | 2.0 | VerifyVisible |
 | `${OKW_TIMEOUT_VERIFY_ENABLED}` | 2.0 | VerifyEnabled |
@@ -367,19 +368,19 @@ Akzeptierte Werte: `YES`, `NO`, `TRUE`, `FALSE`, `1`, `0`
 | `${OKW_TIMEOUT_VERIFY_FOCUS}` | 2.0 | VerifyHasFocus |
 | `${OKW_TIMEOUT_VERIFY_TABLE}` | 2.0 | VerifyTableCellValue, VerifyTableHeaders |
 
-### Polling und Steuerung
+### Polling and Control
 
-| Variable | Default | Beschreibung |
-|----------|---------|--------------|
-| `${OKW_POLL_VERIFY}` | 0.1 | Polling-Intervall (Sekunden) fuer alle Verify-Schleifen |
-| `${OKW_IGNORE_EMPTY}` | NO | Leere Werte global ignorieren (No-Op) fuer Set/Select/TypeKey/Verify* |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `${OKW_POLL_VERIFY}` | 0.1 | Poll interval (seconds) for all verify loops |
+| `${OKW_IGNORE_EMPTY}` | NO | Globally ignore empty values (No-Op) for Set/Select/TypeKey/Verify* |
 
-### SetOKWParameter-Mapping
+### SetOKWParameter Mapping
 
-Das Keyword `SetOKWParameter` akzeptiert folgende Namen (case-insensitive):
+The keyword `SetOKWParameter` accepts the following names (case-insensitive):
 
-| Name | Setzt Variable |
-|------|---------------|
+| Name | Sets Variable |
+|------|--------------|
 | `TimeOutVerifyValue` | `${OKW_TIMEOUT_VERIFY_VALUE}` |
 | `TimeOutVerifyPlaceholder` | `${OKW_TIMEOUT_VERIFY_PLACEHOLDER}` |
 | `TimeOutVerifyTooltip` | `${OKW_TIMEOUT_VERIFY_TOOLTIP}` |
@@ -396,9 +397,9 @@ Das Keyword `SetOKWParameter` akzeptiert folgende Namen (case-insensitive):
 | `TimeOutVerifyTable` | `${OKW_TIMEOUT_VERIFY_TABLE}` |
 | `PollVerify` | `${OKW_POLL_VERIFY}` |
 
-### Wertformate
+### Value Formats
 
-Timeouts akzeptieren:
-- **Ganzzahlen**: `10` (Sekunden)
-- **Dezimalzahlen**: `2.5` (Sekunden)
-- **Robot-Zeitformat**: `10s`, `1 min`, `1 min 30s`, `500 ms`
+Timeouts accept:
+- **Integers**: `10` (seconds)
+- **Decimals**: `2.5` (seconds)
+- **Robot time format**: `10s`, `1 min`, `1 min 30s`, `500 ms`
