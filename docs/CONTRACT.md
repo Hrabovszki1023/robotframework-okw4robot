@@ -91,42 +91,296 @@ und ueberschreiben die benoetigten Methoden.
 
 ### Treiber-Pakete
 
-| Paket                           | Namespace           | Treiber          |
-|---------------------------------|---------------------|------------------|
-| `robotframework-okw-web-selenium` | `okw_web_selenium`  | Selenium/Browser |
-| `robotframework-okw-java-swing`   | `okw_java_swing`    | JavaRPC/Swing    |
+| Paket                                | Namespace                | Treiber               |
+|--------------------------------------|--------------------------|-----------------------|
+| `robotframework-okw-web-selenium`    | `okw_web_selenium`       | Selenium/Browser      |
+| `robotframework-okw-java-swing`      | `okw_java_swing`         | JavaRPC/Swing         |
+| `robotframework-okw-java-remoteswing`| `okw_java_remoteswing`   | RemoteSwingLibrary/Swing |
+
+---
+
+## Window-Modell: „Ein Fenster ist das, was man als Fenster definiert."
+
+### Grundsatz
+
+In OKW ist ein **Fenster** (Window) kein technischer Begriff, sondern ein
+**logisches Konzept**. Ein Fenster ist jeder GUI-Bereich, den das Projekt als
+eigenstaendigen Kontext definiert. Das kann sein:
+
+| Technologie | Fenster kann sein |
+|-------------|-------------------|
+| Java Swing | JFrame, JDialog, JPanel, JTabbedPane, ... |
+| HTML/Web | Browserfenster, `<div>`-Bereich, iFrame, Shadow-DOM-Host, ... |
+| Windows Desktop | Window, Dialog, UserControl, Panel, ... |
+| Mobile | Activity, Fragment, Screen, Modal, ... |
+
+**OKW erzwingt keine 1:1-Abbildung auf physische Fenster.** Das Projekt
+entscheidet, wie es seine GUI in logische Fenster „schneidet".
+
+### Fenster als Widget
+
+Ein Fenster hat — wie jedes Widget — eine eigene `class` und einen `locator`
+in der YAML-Definition:
+
+```yaml
+MeineApp:
+  __self__:
+    class: okw_web_selenium.adapters.selenium_web.SeleniumWebAdapter
+    browser: chrome
+
+  # Physisches Browserfenster
+  MainPage:
+    class: okw_web_selenium.widgets.webse_frame.WebSe_Frame
+    locator: { css: "body" }
+
+    txtSearch:
+      class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
+      locator: { id: search_input }
+
+  # Logisches "Fenster" — eine Navigationsleiste (immer sichtbar)
+  NavBar:
+    class: okw_web_selenium.widgets.webse_panel.WebSe_Panel
+    locator: { css: "nav#main-nav" }
+
+    btnHome:
+      class: okw_web_selenium.widgets.webse_button.WebSe_Button
+      locator: { css: "a[href='/']" }
+    btnSettings:
+      class: okw_web_selenium.widgets.webse_button.WebSe_Button
+      locator: { css: "a[href='/settings']" }
+
+  # Logisches "Fenster" — der Detailbereich (wechselt je nach Ansicht)
+  DetailView:
+    class: okw_web_selenium.widgets.webse_panel.WebSe_Panel
+    locator: { css: "div#detail-content" }
+
+    lblTitle:
+      class: okw_web_selenium.widgets.webse_label.WebSe_Label
+      locator: { css: "h1.title" }
+```
+
+### SelectWindow mit Widget-Semantik
+
+`SelectWindow` ist nicht nur ein Kontext-Wechsel, sondern loest das Fenster
+als Widget auf:
+
+1. Liest `class` + `locator` aus dem YAML
+2. Instanziiert die Widget-Klasse (z.B. `WebSe_Panel`, `RemoteSw_Frame`)
+3. Kann das Fenster aktiv selektieren/fokussieren (ueber den Adapter)
+4. Setzt den Window-Context fuer alle nachfolgenden Widget-Keywords
+
+Dadurch kann ein Fenster auch geprueft werden:
+
+```robot
+# Pruefen ob die NavBar existiert und sichtbar ist
+SelectWindow    NavBar
+VerifyExist     NavBar    YES
+VerifyIsVisible NavBar    YES
+
+# Dann mit Widgets innerhalb der NavBar arbeiten
+ClickOn         btnHome
+
+# Zu einem anderen logischen Fenster wechseln
+SelectWindow    DetailView
+VerifyValue     lblTitle    Willkommen
+```
+
+### Beispiele fuer Fenster-Schnitt
+
+**Beispiel 1: Web-Anwendung mit Sidebar + Content**
+
+```robot
+SelectWindow    Sidebar
+ClickOn         btnDashboard
+
+SelectWindow    ContentArea
+VerifyValue     lblHeading    Dashboard
+SetValue        txtFilter     2024
+```
+
+**Beispiel 2: Java-Swing mit mehreren Dialogen**
+
+```robot
+SelectWindow    MainFrame
+ClickOn         btnOpenSettings
+
+SelectWindow    SettingsDialog
+SetValue        txtTimeout    30
+ClickOn         btnSave
+
+SelectWindow    MainFrame
+VerifyValue     lblStatus     Gespeichert
+```
+
+**Beispiel 3: Wiederverwendbare Teilbereiche**
+
+Eine Navigationsleiste ist aus jedem Kontext erreichbar — sie ist immer gleich
+definiert, egal welche Detail-Ansicht gerade aktiv ist:
+
+```robot
+# Egal wo wir gerade sind:
+SelectWindow    NavBar
+ClickOn         btnHome
+```
+
+### Reservierte Keys in Window/Widget-Definitionen
+
+Auf jeder Ebene im YAML-Baum sind folgende Keys reserviert:
+
+| Key | Bedeutung |
+|-----|-----------|
+| `class` | Vollqualifizierter Klassenname der Widget-Implementierung |
+| `locator` | Treiberspezifischer Locator (dict) |
+| `__self__` | Adapter-Konfiguration (nur auf App-Root-Ebene) |
+
+Alle anderen Keys auf derselben Ebene sind **Kind-Widgets**.
+
+### Scoping: Fenster-Context begrenzt die Widget-Suche
+
+`SelectWindow` setzt nicht nur den logischen Context, sondern begrenzt auch
+den **Suchbereich** fuer nachfolgende Widget-Keywords. Dadurch koennen
+mehrere Fenster/Dialoge gleichzeitig existieren, die Widgets mit identischen
+Namen enthalten — der Fenster-Context stellt sicher, dass das richtige
+Widget gefunden wird.
+
+**Problem ohne Scoping:**
+
+```
+┌─ MainFrame ────────────┐   ┌─ SettingsDialog ──────────┐
+│  [txtUser] name="user" │   │  [txtUser] name="user"    │
+└────────────────────────┘   └──────────────────────────┘
+
+SetValue  txtUser  admin   → Welches "user"??
+```
+
+**Loesung mit Fenster-Context:**
+
+```robot
+SelectWindow    MainFrame           # Scope = MainFrame
+SetValue        txtUser    admin    # findet "user" in MainFrame ✓
+
+SelectWindow    SettingsDialog      # Scope = SettingsDialog
+SetValue        txtUser    root     # findet "user" in SettingsDialog ✓
+```
+
+### Scoping-Umsetzung pro Treiber
+
+OKW gibt den logischen Context vor (Window → Widget). Der Treiber setzt
+das Scoping konkret um. Die Container-Widget-Klasse entscheidet in
+`okw_select_window()`, wie der Suchbereich eingeschraenkt wird:
+
+| Treiber | Widget-Klasse | Scoping-Mechanismus |
+|---------|--------------|---------------------|
+| **Swing (RemoteSwing)** | `RemoteSw_Frame` | `Select Window <name>` (SwingLibrary) |
+| | `RemoteSw_Dialog` | `Select Dialog <name>` (SwingLibrary) |
+| | `RemoteSw_Panel` | `Select Context <name>` (SwingLibrary) |
+| **Web (Selenium)** | `WebSe_Frame` | `find_element(locator)` als Parent-Element |
+| | `WebSe_Panel` | `find_element(locator)` als Parent-Element |
+| | `WebSe_Dialog` | `find_element(locator)` als Parent-Element |
+
+**Swing:** SwingLibrary hat eingebautes Context-Scoping. `Select Window`,
+`Select Dialog` und `Select Context` begrenzen alle nachfolgenden
+Komponentensuchen auf den gewaehlten Container. Komponenten mit identischen
+Namen in verschiedenen Containern werden korrekt unterschieden.
+
+**Web/Selenium:** Selenium hat kein eingebautes Context-Scoping. Die
+Container-Widget-Klasse merkt sich das Parent-Element (`find_element(locator)`)
+und Kind-Widgets suchen relativ dazu (`parent.find_element(...)`).
+
+### Treiber-Unabhaengigkeit
+
+Dieses Modell gilt fuer **alle** OKW-Treiber. Jeder Treiber implementiert
+die passenden Container-Widget-Klassen:
+
+| Treiber | Container-Widget-Klassen |
+|---------|-------------------------|
+| `okw-web-selenium` | `WebSe_Frame`, `WebSe_Panel`, `WebSe_Dialog` |
+| `okw-java-remoteswing` | `RemoteSw_Frame`, `RemoteSw_Dialog`, `RemoteSw_Panel` |
+| `okw-java-swing` | `JavaSw_Frame`, `JavaSw_Dialog`, `JavaSw_Panel` |
 
 ---
 
 ## Keywords (Public API)
 
-### Host Lifecycle
-
-| Keyword       | Parameters      | Description |
-|---------------|----------------|-------------|
-| `StartHost`   | `<name>`        | Loads the host YAML (`locators/<name>.yaml`), instantiates the adapter and registers it in the global Context. |
-| `SelectHost`  | `<name>`        | Asserts that the named host/adapter is currently active. |
-| `StopHost`    |                 | Stops the active host/adapter and clears the Context. |
-
 ### App Lifecycle
 
 | Keyword        | Parameters      | Description |
 |----------------|----------------|-------------|
-| `StartApp`     | `<name>`        | Loads the app YAML (`locators/<name>.yaml`), sets the active app model in the Context. |
-| `SelectWindow` | `<name>`        | Selects the named window/view from the active app model. All widget keywords operate on this window. |
+| `StartApp`     | `<name>`        | Loads the app YAML (`locators/<name>.yaml`), sets the active app model in the Context. If the YAML contains a `__self__` section and no adapter is active, the adapter is instantiated automatically. |
+| `SelectWindow` | `<name>`        | Selects the named window/view from the active app model. Resolves the window as a widget (class + locator). Can verify and focus the window via the adapter. All widget keywords operate on this window. |
 | `StopApp`      |                 | Clears the active app context. |
+
+### Host Lifecycle (optional, rueckwaertskompatibel)
+
+| Keyword       | Parameters      | Description |
+|---------------|----------------|-------------|
+| `StartHost`   | `<name>`        | Loads the host YAML (`locators/<name>.yaml`), instantiates the adapter and registers it in the global Context. Optional if `StartApp` YAML contains `__self__`. |
+| `SelectHost`  | `<name>`        | Asserts that the named host/adapter is currently active. |
+| `StopHost`    |                 | Stops the active host/adapter and clears the Context. |
+
+### Adapter-Auto-Start via `__self__`
+
+When `StartApp` loads a YAML that contains a `__self__` section and no adapter is
+currently active, the adapter is created automatically:
+
+```yaml
+DemoApp:
+  __self__:
+    class: okw_java_remoteswing.adapters.remote_swing_adapter.RemoteSwingAdapter
+    app_alias: demo
+    app_command: java -jar DemoApp.jar
+
+  MainFrame:
+    class: okw_java_remoteswing.widgets.remotesw_frame.RemoteSw_Frame
+    locator: { name: "MainFrame" }
+
+    txtName:
+      class: okw_java_remoteswing.widgets.remotesw_textfield.RemoteSw_TextField
+      locator: { name: "txtName" }
+```
+
+All parameters in `__self__` (except `class`) are passed as kwargs to the adapter
+constructor. The adapter decides how to use them (e.g. `RemoteSwingAdapter` starts
+the Java app, `SeleniumWebAdapter` opens a browser).
+
+A separate `StartHost` call is **not required** if `__self__` is present in the
+app YAML.
 
 ### Widget – Write / Interact
 
-| Keyword         | Parameters          | Delegiert an             |
-|-----------------|---------------------|--------------------------|
-| `SetValue`      | `<name>` `<value>`  | `okw_set_value(value)`   |
-| `Select`        | `<name>` `<value>`  | `okw_select(value)`      |
-| `TypeKey`       | `<name>` `<key>`    | `okw_type_key(key)`      |
-| `TypeKey`       | `<name>` `$DELETE`  | `okw_delete()`           |
-| `ClickOn`       | `<name>`            | `okw_click()`            |
-| `DoubleClickOn` | `<name>`            | `okw_double_click()`     |
-| `SetFocus`      | `<name>`            | `okw_set_focus()`        |
+| Keyword              | Parameters                  | Delegiert an                        |
+|----------------------|-----------------------------|-------------------------------------|
+| `SetValue`           | `<name>` `<value>`          | `okw_set_value(value)`              |
+| `Select`             | `<name>` `<value>`          | `okw_select(value)`                 |
+| `TypeKey`            | `<name>` `<key>`            | `okw_type_key(key)`                 |
+| `TypeKey`            | `<name>` `$DELETE`          | `okw_delete()`                      |
+| `ClickOn`            | `<name>`                    | `okw_click()`                       |
+| `DoubleClickOn`      | `<name>`                    | `okw_double_click()`                |
+| `DoubleClickOn`      | `<name>` `<value>`          | `okw_double_click_value(value)`     |
+| `SetFocus`           | `<name>`                    | `okw_set_focus()`                   |
+| `SelectContextMenu`  | `<name>` `<path>`           | `okw_select_context_menu(path)`     |
+
+### Window – Keyboard (NEU)
+
+| Keyword              | Parameters                  | Delegiert an                        |
+|----------------------|-----------------------------|-------------------------------------|
+| `TypeKeyWindow`      | `<key>`                     | _(Fenster-level Tastaturkommando)_  |
+
+`TypeKeyWindow` sendet Tastaturkommandos an das aktuelle Fenster (nicht an
+ein bestimmtes Widget). Typische Anwendungsfaelle: Menue-Shortcuts, Hotkeys,
+Tastenkombinationen (z.B. `<Strg+P>`, `<Strg+S>`, `<Enter>`).
+
+Im Gegensatz zu `TypeKey` wird kein Widget aufgeloest — das Kommando geht
+direkt an das aktive Fenster.
+
+```robot
+# Beispiel
+SelectWindow     MainFrame
+TypeKeyWindow    <Strg+P>    # Druckdialog oeffnen
+TypeKeyWindow    <Strg+S>    # Speichern
+```
+
+**Status:** NEU — noch zu implementieren.
 
 ### Widget – Verify Value
 
@@ -250,25 +504,50 @@ Siehe **OKW-CONTRACT.md** (Abschnitt "YES/NO-Modell").
 
 ## Locator YAML Format
 
-Widgets werden in YAML-Dateien beschrieben. Die `class`-Eigenschaft referenziert
-die **treiberspezifische** Widget-Klasse:
+Widgets werden in YAML-Dateien beschrieben. Jeder Knoten mit `class` + `locator`
+ist ein Widget — das gilt fuer Fenster und fuer Blatt-Widgets gleichermassen:
 
 ```yaml
-# locators/web/LoginApp.yaml – Selenium-Treiber
+# locators/LoginApp.yaml – Selenium-Treiber
 LoginApp:
+  __self__:
+    class: okw_web_selenium.adapters.selenium_web.SeleniumWebAdapter
+    browser: chrome
+    url: https://example.com/login
+
   LoginDialog:
+    class: okw_web_selenium.widgets.webse_panel.WebSe_Panel
+    locator: { css: "div#login-form" }
+
     Username:
       class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
       locator: { id: user_input }
     Password:
       class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
       locator: { id: password_input }
-    OK:
-      class: okw_web_selenium.widgets.webse_button.WebSe_Button
-      locator: { id: login_btn }
-    SubmitButton:
+    Login:
       class: okw_web_selenium.widgets.webse_button.WebSe_Button
       locator: { css: "button[type=submit]" }
+```
+
+```yaml
+# locators/DemoApp.yaml – RemoteSwing-Treiber
+DemoApp:
+  __self__:
+    class: okw_java_remoteswing.adapters.remote_swing_adapter.RemoteSwingAdapter
+    app_alias: demo
+    app_command: java -jar DemoApp.jar
+
+  MainFrame:
+    class: okw_java_remoteswing.widgets.remotesw_frame.RemoteSw_Frame
+    locator: { name: "MainFrame" }
+
+    txtName:
+      class: okw_java_remoteswing.widgets.remotesw_textfield.RemoteSw_TextField
+      locator: { name: "txtName" }
+    btnOk:
+      class: okw_java_remoteswing.widgets.remotesw_button.RemoteSw_Button
+      locator: { name: "btnOk" }
 ```
 
 ### YAML-Suche (Fallback)
@@ -277,6 +556,7 @@ LoginApp:
 1. Projektverzeichnis (`locators/`)
 2. `okw_web_selenium.locators` (falls installiert)
 3. `okw_java_swing.locators` (falls installiert)
+4. `okw_java_remoteswing.locators` (falls installiert)
 
 ---
 

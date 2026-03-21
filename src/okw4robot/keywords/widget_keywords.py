@@ -37,24 +37,38 @@ class WidgetKeywords:
         resolve_widget(name).okw_click()
 
     @keyword("DoubleClickOn")
-    def double_click_on(self, name: str):
-        """Double‑click on a widget.
+    def double_click_on(self, name: str, value: str | None = None):
+        """Double‑click on a widget, optionally on a specific value/entry.
 
         Arguments:
         - ``name``: Logical widget name from the current window (YAML model).
+        - ``value``: (Optional) Value/entry to find within the widget and
+          double‑click on. Used for list‑like widgets (ListView, TreeView, etc.)
+          where a specific entry matching this value should be double‑clicked.
 
         Behavior:
-        - Resolves the widget by name and triggers its ``okw_double_click()``.
+        - Without ``value``: Resolves the widget and triggers ``okw_double_click()``.
+          Direct double‑click on the widget itself.
+        - With ``value``: Resolves the widget and triggers
+          ``okw_double_click_value(value)``. The widget searches for the
+          matching entry and double‑clicks it.
         - Write intent: underlying widget/adapter typically performs the same
           pre‑action sync as for clicks (exists → visible → enabled → optional scroll).
 
-        Example (with window context):
-        | SelectWindow  | LoginDialog |
-        | SetValue      | Benutzer    | admin  |
-        | SetValue      | Passwort    | geheim |
-        | *DoubleClickOn* | *OK*      |
+        Examples:
+        | # Direct double‑click on widget
+        | SelectWindow    | FileExplorer |
+        | *DoubleClickOn* | *MyFile*     |
+        |                 |              |
+        | # Double‑click on a specific entry within a list widget
+        | SelectWindow    | FileExplorer      |
+        | *DoubleClickOn* | *FileList*        | *document.txt* |
         """
-        resolve_widget(name).okw_double_click()
+        widget = resolve_widget(name)
+        if value is None:
+            widget.okw_double_click()
+        else:
+            widget.okw_double_click_value(value)
 
     @keyword("SetValue")
     def set_value(self, name, value):
@@ -102,6 +116,23 @@ class WidgetKeywords:
             print(f"[SetValue] '{name}' ignored (blank or $IGNORE)")
             return
         resolve_widget(name).okw_set_value(value)
+
+    @keyword("Delete")
+    def delete(self, name):
+        """Deletes / clears the content of a widget.
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+
+        Behavior:
+        - Resolves the widget and calls ``okw_delete()`` to clear its content.
+        - Functionally equivalent to ``TypeKey  name  $DELETE``.
+
+        Examples:
+        | SelectWindow | MainFrame |
+        | Delete       | txtName   |
+        """
+        resolve_widget(name).okw_delete()
 
     @keyword("Select")
     def select(self, name, value):

@@ -1,4 +1,9 @@
 from okw4robot.utils.logging_mixin import LoggingMixin
+from okw4robot.utils.loader import load_class
+
+
+# Reservierte Keys auf Fenster-/Widget-Ebene (keine Kind-Widgets)
+_RESERVED_KEYS = frozenset({"class", "locator", "__self__"})
 
 
 class Context(LoggingMixin):
@@ -13,6 +18,8 @@ class Context(LoggingMixin):
         self._adapter = None
         self._app_model = None
         self._app_name = None
+        self._app_config_name = None
+        self._app_config_data = None
         self._window = None
 
     # === HOST / ADAPTER ===
@@ -24,6 +31,8 @@ class Context(LoggingMixin):
         self._adapter = adapter
         self._app_model = None
         self._app_name = None
+        self._app_config_name = None
+        self._app_config_data = None
         self._window = None
 
         self.log_info(f"[Context] Adapter '{adapter.__class__.__name__}' wurde gesetzt.")
@@ -43,6 +52,8 @@ class Context(LoggingMixin):
         self._adapter = None
         self._app_model = None
         self._app_name = None
+        self._app_config_name = None
+        self._app_config_data = None
         self._window = None
 
         print(f"[Context] Adapter '{adapter_name}' wurde gestoppt.")
@@ -59,6 +70,26 @@ class Context(LoggingMixin):
         if not self._adapter:
             raise RuntimeError("No host/adapter is active.")
         return self._adapter
+
+    # === APP CONFIG ===
+    def set_app_config(self, config_name: str, config_data: dict):
+        """Speichert die aktive App-Konfiguration.
+
+        Args:
+            config_name: Name der Konfiguration (z.B. 'staging').
+            config_data: Konfigurationsdaten als dict aus dem YAML.
+        """
+        self._app_config_name = config_name
+        self._app_config_data = config_data
+        print(f"[Context] App-Konfiguration '{config_name}' gesetzt.")
+
+    def get_app_config(self) -> dict | None:
+        """Gibt die aktive App-Konfiguration zurueck oder None."""
+        return self._app_config_data
+
+    def get_app_config_name(self) -> str | None:
+        """Gibt den Namen der aktiven App-Konfiguration zurueck oder None."""
+        return self._app_config_name
 
     # === APP ===
     def set_app(self, name: str, model: dict):
@@ -109,17 +140,21 @@ class Context(LoggingMixin):
 
         self._app_model = None
         self._app_name = None
+        self._app_config_name = None
+        self._app_config_data = None
         self._window = None
 
 
     # === WINDOW ===
     def set_window(self, window_name: str):
-        """
-        Setzt den Fenster-/Widget-Kontext anhand des window_name.
+        """Setzt den Fenster-/Widget-Kontext und selektiert das Fenster.
 
-        Gültig für:
-        - Fenster aus App-YAMLs (z.B. LoginDialog)
-        - Virtuelle Widgets aus Host-YAMLs (z.B. URL, Maximize Window)
+        1. Validiert, dass App-Modell und Adapter aktiv sind.
+        2. Loeest das Fenster als Widget auf (class + locator aus YAML).
+        3. Ruft ``okw_select_window()`` auf dem Widget auf -- die
+           treiberspezifische Klasse entscheidet, welche Aktion
+           ausgefuehrt wird (z.B. SwingLibrary ``Select Window``).
+        4. Setzt den Fensterkontext fuer nachfolgende Widget-Zugriffe.
         """
         if not self._app_model:
             raise RuntimeError(
@@ -132,6 +167,22 @@ class Context(LoggingMixin):
             raise KeyError(
                 f"[Context] Fenster oder Host-Element '{window_name}' wurde im Modell "
                 f"'{modell_name}' nicht gefunden."
+            )
+
+        window_model = self._app_model[window_name]
+
+        # --- Fenster als Widget aufloesen und selektieren ---
+        if isinstance(window_model, dict) and "class" in window_model:
+            widget_cls = load_class(window_model["class"])
+            adapter = self.get_adapter()
+            locator = window_model.get("locator")
+            extras = {k: v for k, v in window_model.items()
+                      if k not in _RESERVED_KEYS and not isinstance(v, dict)}
+            window_widget = widget_cls(adapter, locator, **extras)
+            window_widget.okw_select_window()
+            self.log_info(
+                f"[Context] Fenster '{window_name}' selektiert via "
+                f"{widget_cls.__name__}.okw_select_window()."
             )
 
         self._window = window_name
@@ -162,6 +213,7 @@ class Context(LoggingMixin):
         return {
             "adapter": type(self._adapter).__name__ if self._adapter else None,
             "app": self._app_name,
+            "config": self._app_config_name,
             "window": self._window
         }
 

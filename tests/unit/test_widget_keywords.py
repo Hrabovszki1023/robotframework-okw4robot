@@ -27,6 +27,22 @@ class TestDoubleClickOn:
         kw.double_click_on("Btn")
         assert ("okw_double_click",) == w.calls[0][:1]
 
+    def test_double_click_with_value_delegates(self):
+        w = MockWidget()
+        register_widget("Liste", w)
+        from okw4robot.keywords.widget_keywords import WidgetKeywords
+        kw = WidgetKeywords()
+        kw.double_click_on("Liste", "Eintrag42")
+        assert ("okw_double_click_value", ("Eintrag42",)) == w.calls[0]
+
+    def test_double_click_without_value_uses_okw_double_click(self):
+        w = MockWidget()
+        register_widget("Btn", w)
+        from okw4robot.keywords.widget_keywords import WidgetKeywords
+        kw = WidgetKeywords()
+        kw.double_click_on("Btn", None)
+        assert ("okw_double_click",) == w.calls[0][:1]
+
 
 class TestSetValue:
     def test_set_value_delegates(self):

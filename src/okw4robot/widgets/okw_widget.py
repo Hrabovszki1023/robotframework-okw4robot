@@ -8,9 +8,40 @@ Aktion umgesetzt wird (Delegation statt Steuerung).
 Nicht implementierte Methoden werfen ``NotImplementedError``.  Da Python
 keine harte Pruefung erzwingt, koennen Projekte beliebige neue Methoden
 hinzufuegen, ohne die Framework-Klasse aendern zu muessen.
+
+Pre-Condition-Kette
+--------------------
+Vor jeder Aktion prueft das Widget Vorbedingungen per Polling:
+
+- **_pre_write()** (SetValue, ClickOn, TypeKey, Select, ...):
+  exists → visible → enabled
+
+- **_pre_read()** (VerifyValue, LogValue, MemorizeValue, ...):
+  exists
+
+Die Standard-Kette ist hier in ``OkwWidget`` implementiert.
+Treiber- oder Projekt-Klassen koennen sie ueberschreiben oder
+erweitern (z.B. ``scroll_into_view`` fuer Selenium).
 """
 
+import time
+
 from okw4robot.utils.logging_mixin import LoggingMixin
+
+
+def _get_timeout(var_name: str, default: float) -> float:
+    """Liest einen Timeout-Wert aus dem Robot-Kontext (falls verfuegbar)."""
+    try:
+        from robot.libraries.BuiltIn import BuiltIn
+        val = BuiltIn().get_variable_value(var_name, default=default)
+        return float(val) if isinstance(val, (int, float)) else BuiltIn().convert_time(str(val))
+    except Exception:
+        return float(default)
+
+
+def _get_poll() -> float:
+    """Liest ``${OKW_POLL_PRECONDITION}`` aus dem Robot-Kontext."""
+    return _get_timeout("${OKW_POLL_PRECONDITION}", 0.1)
 
 
 class OkwWidget(LoggingMixin):
@@ -22,6 +53,63 @@ class OkwWidget(LoggingMixin):
         self.options = options or {}
 
     # ------------------------------------------------------------------
+    # Pre-Condition Hooks
+    # ------------------------------------------------------------------
+    def _pre_write(self):
+        """Vorbedingungen fuer schreibende Aktionen.
+
+        Standard-Kette: exists → visible → enabled.
+        Jede Stufe pollt bis zum konfigurierten Timeout.
+
+        Ueberschreibbar in Treiber- oder Projekt-Klassen, z.B.::
+
+            def _pre_write(self):
+                super()._pre_write()
+                self._scroll_into_view()   # Selenium-spezifisch
+        """
+        timeout = _get_timeout("${OKW_TIMEOUT_PRECONDITION}", 5.0)
+        poll = _get_poll()
+        cls = self.__class__.__name__
+
+        # 1. exists
+        self._wait_for(self.okw_exists, True, timeout, poll,
+                       f"[{cls}._pre_write] Element existiert nicht (Timeout {timeout}s).")
+
+        # 2. visible
+        self._wait_for(self.okw_is_visible, True, timeout, poll,
+                       f"[{cls}._pre_write] Element nicht sichtbar (Timeout {timeout}s).")
+
+        # 3. enabled
+        self._wait_for(self.okw_is_enabled, True, timeout, poll,
+                       f"[{cls}._pre_write] Element nicht aktiviert (Timeout {timeout}s).")
+
+    def _pre_read(self):
+        """Vorbedingungen fuer lesende Aktionen.
+
+        Standard-Kette: exists.
+
+        Ueberschreibbar in Treiber- oder Projekt-Klassen.
+        """
+        timeout = _get_timeout("${OKW_TIMEOUT_PRECONDITION}", 5.0)
+        poll = _get_poll()
+        cls = self.__class__.__name__
+
+        # 1. exists
+        self._wait_for(self.okw_exists, True, timeout, poll,
+                       f"[{cls}._pre_read] Element existiert nicht (Timeout {timeout}s).")
+
+    def _wait_for(self, predicate, expected: bool, timeout: float,
+                  poll: float, error_msg: str):
+        """Pollt *predicate()* bis es *expected* liefert oder Timeout."""
+        end = time.monotonic() + timeout
+        while True:
+            if bool(predicate()) == expected:
+                return
+            if time.monotonic() >= end:
+                raise RuntimeError(error_msg)
+            time.sleep(poll)
+
+    # ------------------------------------------------------------------
     # Interaktion
     # ------------------------------------------------------------------
     def okw_click(self):
@@ -29,6 +117,18 @@ class OkwWidget(LoggingMixin):
 
     def okw_double_click(self):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_double_click()")
+
+    def okw_double_click_value(self, value: str):
+        """Doppelklick auf einen bestimmten Eintrag/Wert innerhalb des Widgets.
+
+        Wird fuer Listen-artige Widgets verwendet (ListView, TreeView, etc.),
+        bei denen ein Eintrag anhand seines Werts gefunden und per Doppelklick
+        aktiviert wird.
+
+        Arguments:
+        - ``value``: Der gesuchte Wert/Eintrag im Widget.
+        """
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_double_click_value()")
 
     def okw_set_value(self, value: str):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_set_value()")
@@ -93,6 +193,26 @@ class OkwWidget(LoggingMixin):
 
     def okw_set_focus(self):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_set_focus()")
+
+    # ------------------------------------------------------------------
+    # Fenster-Selektion (Window-as-Widget)
+    # ------------------------------------------------------------------
+    def okw_select_window(self):
+        """Selektiert/fokussiert dieses Widget als Fenster-Kontext.
+
+        Wird von ``SelectWindow`` aufgerufen, wenn das Fenster in der YAML
+        eine eigene ``class`` und ``locator`` hat.  Die treiberspezifische
+        Implementierung entscheidet, welche Aktion ausgefuehrt wird:
+
+        - Swing/RemoteSwingLibrary: ``Select Window``, ``Select Dialog``
+          oder ``Select Context``
+        - Selenium/Web: scroll-into-view + Fokus auf den Container
+        - Desktop/Mobile: plattformspezifische Fensterfokussierung
+
+        Widgets, die nicht als Fenster dienen, muessen diese Methode nicht
+        implementieren (Default: NotImplementedError).
+        """
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_select_window()")
 
     # ------------------------------------------------------------------
     # Listen

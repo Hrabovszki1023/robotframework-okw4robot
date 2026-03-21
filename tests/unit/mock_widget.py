@@ -61,6 +61,9 @@ class MockWidget(OkwWidget):
     def okw_double_click(self):
         self._record("okw_double_click")
 
+    def okw_double_click_value(self, value: str):
+        self._record("okw_double_click_value", value)
+
     def okw_set_value(self, value: str):
         self._record("okw_set_value", value)
         self.mock_value = value

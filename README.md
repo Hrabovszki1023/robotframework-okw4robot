@@ -15,7 +15,7 @@ lives in the respective driver package.
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Robot Tests (.robot)                   │
-│     StartHost Chrome / SetValue Name "Smith"             │
+│     StartApp MyApp / SetValue Name "Smith"               │
 └──────────────────────────┬──────────────────────────────┘
                            │
                ┌───────────▼───────────┐
@@ -63,18 +63,17 @@ Library    okw_web_selenium.library.OkwWebSeleniumLibrary
 
 *** Test Cases ***
 Login Test
-    StartHost     Chrome
-    StartApp      Chrome
-    SelectWindow  Chrome
-    SetValue      URL              https://example.com/login
     StartApp      MyApp
     SelectWindow  LoginDialog
     SetValue      Username         admin
     SetValue      Password         secret
     ClickOn       Login
     VerifyValue   Status           Logged in
-    StopHost
 ```
+
+`StartApp` loads the app YAML. If the YAML contains a `__self__` section with
+the adapter class, the adapter is started automatically — no separate `StartHost`
+needed.
 
 > **Note:** The test imports the *driver library* (`OkwWebSeleniumLibrary`),
 > not `OKW4RobotLibrary` directly. The driver library inherits all keywords
