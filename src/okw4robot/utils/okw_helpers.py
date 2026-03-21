@@ -91,12 +91,29 @@ def resolve_widget(name: str):
     Looks up *name* in the current window model, loads the widget class and
     returns an instantiated widget bound to the active adapter.
 
+    **Self-reference**: If *name* matches the currently selected window name,
+    the window itself is returned as a widget. This allows keywords like
+    ``VerifyCaption`` or ``VerifyActive`` to operate on the window:
+
+        SelectWindow   MainFrame
+        VerifyCaption  MainFrame    Demo App Title
+
     Raises:
     - ``RuntimeError``: if no adapter/app/window is active.
     - ``KeyError``: if *name* is not found in the current window model.
     """
     from ..runtime.context import context
     from ..utils.loader import load_class
+
+    # --- Self-reference: name matches the current window ---
+    if name == context._window:
+        model = context.get_current_window_model()
+        if isinstance(model, dict) and "class" in model:
+            widget_class = load_class(model["class"])
+            adapter = context.get_adapter()
+            extras = {k: v for k, v in model.items()
+                      if k not in ("class", "locator") and not isinstance(v, dict)}
+            return widget_class(adapter, model.get("locator"), **extras)
 
     model = context.get_current_window_model()
     if name not in model:
