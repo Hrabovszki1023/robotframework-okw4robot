@@ -3,7 +3,7 @@
 Diese Datei fasst alle Keywords zusammen und dient als **Contract-Referenz**
 fuer `robotframework-okw4robot`.
 
-> Ziel: **technik-unabhaengige Keywords** – die konkrete Umsetzung erfolgt im jeweiligen Treiber-Paket (z.B. okw-web-selenium, okw-java-swing).
+> Ziel: **technik-unabhaengige Keywords** – die konkrete Umsetzung erfolgt im jeweiligen Treiber-Paket (z.B. okw-web-selenium, okw-java-remoteswing).
 
 ---
 

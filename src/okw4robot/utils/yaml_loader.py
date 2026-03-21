@@ -6,7 +6,6 @@ from importlib.resources import files
 # Diese werden optional importiert (try/except ImportError).
 _DRIVER_PACKAGES = [
     "okw_web_selenium.locators",
-    "okw_java_swing.locators",
     "okw_java_remoteswing.locators",
 ]
 
@@ -57,7 +56,7 @@ def load_yaml_with_fallback(name: str) -> dict:
 
     Suchreihenfolge:
     1. Projektverzeichnis: ./locators/<name>.yaml
-    2. Treiber-Pakete: okw_web_selenium.locators, okw_java_swing.locators (falls installiert)
+    2. Treiber-Pakete: okw_web_selenium.locators, okw_java_remoteswing.locators (falls installiert)
 
     Unterstuetzt ``!include`` in allen YAML-Dateien.
     """

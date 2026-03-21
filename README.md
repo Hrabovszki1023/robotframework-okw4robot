@@ -26,8 +26,8 @@ lives in the respective driver package.
                    │               │
         ┌──────────▼──┐     ┌─────▼──────────┐
         │ okw-web-    │     │ okw-java-      │     (more drivers
-        │ selenium    │     │ swing          │      e.g. okw-web-
-        │ WebSe_*     │     │ JavaSw_*       │      playwright)
+        │ selenium    │     │ remoteswing    │      e.g. okw-web-
+        │ WebSe_*     │     │ RemoteSw_*     │      playwright)
         └─────────────┘     └────────────────┘
 ```
 
@@ -35,7 +35,7 @@ lives in the respective driver package.
 |---------|-----------|--------|-------------|
 | **okw4robot** | `okw4robot` | Stable | Core: keywords, OkwWidget interface, context, contracts |
 | **okw-web-selenium** | `okw_web_selenium` | Stable (53 tests) | Selenium WebDriver + WebSe_* widgets |
-| **okw-java-swing** | `okw_java_swing` | WIP | Java Swing via JSON-RPC |
+| **okw-java-remoteswing** | `okw_java_remoteswing` | Stable (106 tests) | Java Swing via RemoteSwingLibrary + RemoteSw_* widgets |
 | **okw-contract-utils** | `okw_contract_utils` | Stable (PyPI) | Shared contracts (matchers, tokens, YES/NO) |
 | **okw-remote-ssh** | `robotframework_okw_remote_ssh` | Beta (PyPI) | SSH commands and SFTP |
 

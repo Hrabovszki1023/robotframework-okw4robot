@@ -74,11 +74,12 @@ package "okw_web_selenium" {
   class "WebSe_*" as WebSeOther
 }
 
-package "okw_java_swing" {
-  class JavaRpcAdapter {
-    +_rpc_call(method, params)
+package "okw_java_remoteswing" {
+  class RemoteSwingAdapter {
+    +swing_keyword(name, *args)
+    +call_component_method(name, method, *args)
   }
-  class "JavaSw_*" as JavaSwOther
+  class "RemoteSw_*" as RemoteSwOther
 }
 
 HostKeywords --> Context : set_adapter(adapter)
@@ -94,7 +95,8 @@ WebSe_Base <|-- WebSe_ComboBox
 WebSe_Base <|-- WebSeOther
 WebSe_Base *--> SeleniumWebAdapter : adapter
 
-OkwWidget <|-- JavaSwOther
+OkwWidget <|-- RemoteSwOther
+RemoteSwOther *--> RemoteSwingAdapter : adapter
 
 note right of WidgetKeywords
 resolve_widget(name):
@@ -107,7 +109,7 @@ note bottom of OkwWidget
 OkwWidget definiert die Schnittstelle.
 Nicht implementierte Methoden werfen
 NotImplementedError.
-Treiber-Pakete (okw_web_selenium, okw_java_swing)
+Treiber-Pakete (okw_web_selenium, okw_java_remoteswing)
 erben und implementieren die Methoden.
 end note
 

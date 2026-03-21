@@ -55,7 +55,7 @@ Stellt ein LoggingMixin zur Verfuegung fuer strukturiertes Logging.
 
 ## `okw4robot/utils/yaml_loader.py`
 Laedt YAML-Dateien mit Fallback-Strategie:
-Projektverzeichnis → Treiber-Pakete (okw_web_selenium, okw_java_swing).
+Projektverzeichnis → Treiber-Pakete (okw_web_selenium, okw_java_remoteswing).
 
 ## `okw4robot/utils/okw_helpers.py`
 Zentrale Helfer: `resolve_widget()`, `verify_with_timeout()`,

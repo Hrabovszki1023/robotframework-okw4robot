@@ -34,10 +34,10 @@ OkwWidget                              okw4robot (Interface / Vertrag)
     │       ├── WebSe_Table            Globale Implementierung fuer <table>
     │       └── ...
     │
-    ├── JavaSw_Base                    okw-java-swing (Treiber-Paket)
+    ├── RemoteSw_Base                  okw-java-remoteswing (Treiber-Paket)
     │       │
-    │       ├── JavaSw_Button          Globale Implementierung fuer JButton
-    │       ├── JavaSw_TextField       Globale Implementierung fuer JTextField
+    │       ├── RemoteSw_Button        Globale Implementierung fuer JButton
+    │       ├── RemoteSw_TextField     Globale Implementierung fuer JTextField
     │       └── ...
     │
     └── (weitere Treiber: Playwright, WinUI, ...)

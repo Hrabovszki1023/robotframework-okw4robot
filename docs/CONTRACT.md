@@ -38,7 +38,7 @@ Regeln:
    andere Version zeitnah nachgezogen werden.
 5. **README.md** verlinkt auf beide Sprachversionen (sofern vorhanden).
 6. **Gilt fuer alle OKW-Pakete** (`okw4robot`, `okw-web-selenium`,
-   `okw-java-swing`, etc.).
+   `okw-java-remoteswing`, etc.).
 
 ### Verzeichnisstruktur (Beispiel)
 
@@ -94,7 +94,6 @@ und ueberschreiben die benoetigten Methoden.
 | Paket                                | Namespace                | Treiber               |
 |--------------------------------------|--------------------------|-----------------------|
 | `robotframework-okw-web-selenium`    | `okw_web_selenium`       | Selenium/Browser      |
-| `robotframework-okw-java-swing`      | `okw_java_swing`         | JavaRPC/Swing         |
 | `robotframework-okw-java-remoteswing`| `okw_java_remoteswing`   | RemoteSwingLibrary/Swing |
 
 ---
@@ -296,7 +295,6 @@ die passenden Container-Widget-Klassen:
 |---------|-------------------------|
 | `okw-web-selenium` | `WebSe_Frame`, `WebSe_Panel`, `WebSe_Dialog` |
 | `okw-java-remoteswing` | `RemoteSw_Frame`, `RemoteSw_Dialog`, `RemoteSw_Panel` |
-| `okw-java-swing` | `JavaSw_Frame`, `JavaSw_Dialog`, `JavaSw_Panel` |
 
 ---
 
@@ -555,8 +553,7 @@ DemoApp:
 `okw4robot` sucht YAML-Dateien in dieser Reihenfolge:
 1. Projektverzeichnis (`locators/`)
 2. `okw_web_selenium.locators` (falls installiert)
-3. `okw_java_swing.locators` (falls installiert)
-4. `okw_java_remoteswing.locators` (falls installiert)
+3. `okw_java_remoteswing.locators` (falls installiert)
 
 ---
 

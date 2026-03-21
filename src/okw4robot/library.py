@@ -137,7 +137,7 @@ class OKW4RobotLibrary(
 
     | *Treiber*                       | *Paket*                                  | *Installation*                                  |
     | Selenium (Chrome, Firefox, ...) | ``robotframework-okw-web-selenium``      | ``pip install robotframework-okw-web-selenium``  |
-    | Java Swing (JavaRPC)            | ``robotframework-okw-java-swing``        | ``pip install robotframework-okw-java-swing``    |
+    | Java Swing (RemoteSwingLibrary) | ``robotframework-okw-java-remoteswing``  | ``pip install robotframework-okw-java-remoteswing`` |
 
     = Abhängigkeiten =
 

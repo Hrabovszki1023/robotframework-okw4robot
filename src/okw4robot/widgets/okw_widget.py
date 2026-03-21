@@ -1,6 +1,6 @@
 """OkwWidget -- Zentrale Schnittstelle fuer alle OKW-Widgets.
 
-Treiber-Pakete (okw_web_selenium, okw_java_swing, ...) liefern konkrete
+Treiber-Pakete (okw_web_selenium, okw_java_remoteswing, ...) liefern konkrete
 Implementierungen dieser Klasse.  Keywords rufen ausschliesslich ``okw_*``
 Methoden auf -- die treiber-spezifische Klasse entscheidet **wie** die
 Aktion umgesetzt wird (Delegation statt Steuerung).

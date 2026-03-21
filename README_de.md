@@ -15,7 +15,7 @@ im jeweiligen Treiber-Paket.
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Robot-Tests (.robot)                  │
-│     StartHost Chrome / SetValue Name "Mustermann"       │
+│     StartApp MyApp / SetValue Name "Mustermann"         │
 └──────────────────────────┬──────────────────────────────┘
                            │
                ┌───────────▼───────────┐
@@ -26,8 +26,8 @@ im jeweiligen Treiber-Paket.
                    │               │
         ┌──────────▼──┐     ┌─────▼──────────┐
         │ okw-web-    │     │ okw-java-      │     (weitere Treiber
-        │ selenium    │     │ swing          │      z.B. okw-web-
-        │ WebSe_*     │     │ JavaSw_*       │      playwright)
+        │ selenium    │     │ remoteswing    │      z.B. okw-web-
+        │ WebSe_*     │     │ RemoteSw_*     │      playwright)
         └─────────────┘     └────────────────┘
 ```
 
@@ -35,7 +35,7 @@ im jeweiligen Treiber-Paket.
 |-------|-----------|--------|-------------|
 | **okw4robot** | `okw4robot` | Stabil | Kern: Keywords, OkwWidget-Interface, Context, Contracts |
 | **okw-web-selenium** | `okw_web_selenium` | Stabil (53 Tests) | Selenium WebDriver + WebSe_*-Widgets |
-| **okw-java-swing** | `okw_java_swing` | In Arbeit | Java Swing via JSON-RPC |
+| **okw-java-remoteswing** | `okw_java_remoteswing` | Stabil (106 Tests) | Java Swing via RemoteSwingLibrary + RemoteSw_*-Widgets |
 | **okw-contract-utils** | `okw_contract_utils` | Stabil (PyPI) | Shared Contracts (Matchers, Tokens, YES/NO) |
 | **okw-remote-ssh** | `robotframework_okw_remote_ssh` | Beta (PyPI) | SSH-Kommandos und SFTP |
 
