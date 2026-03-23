@@ -168,6 +168,36 @@ class WidgetKeywords:
             return
         resolve_widget(name).okw_select(value)
 
+    @keyword("SelectMenu")
+    def select_menu(self, name, value=""):
+        """Selects a menu item by its logical name.
+
+        Arguments:
+        - ``name``: Logical menu-item name from the current window (YAML model).
+        - ``value``: Optional target state for checkable menu items.
+          Without value the menu item is clicked (toggled).
+          With value (``Checked``/``Unchecked``) the state is set idempotently.
+
+        The menu item is identified by its locator (typically the component
+        ``name`` attribute). The test code never references the visible menu
+        text or the menu path -- only the abstract functional name defined
+        in the YAML model.
+
+        This keyword corresponds to the BA keyword
+        ``Waehle aus: "MENUE" = "fachlicher Bezeichner"``.
+
+        Examples:
+        | SelectWindow | MainFrame             |
+        | SelectMenu   | TabellenzeileLoeschen |                # click
+        | SelectMenu   | Schnellsuche          |                # click
+        | SelectMenu   | Statusleiste          | Checked   |    # idempotent
+        | SelectMenu   | Statusleiste          | Unchecked |    # idempotent
+        """
+        if value and should_ignore(value):
+            print(f"[SelectMenu] '{name}' ignored ($IGNORE)")
+            return
+        resolve_widget(name).okw_select_menu(value)
+
     @keyword("TypeKey")
     def type_key(self, name, key):
         """Simulates keyboard input on a widget.

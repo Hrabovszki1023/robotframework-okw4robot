@@ -136,6 +136,21 @@ class OkwWidget(LoggingMixin):
     def okw_select(self, value: str):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_select()")
 
+    def okw_select_menu(self, value: str = ""):
+        """Waehlt einen Menue-Eintrag aus.
+
+        Im Gegensatz zu ``okw_click()`` ist ``okw_select_menu()`` semantisch
+        fuer Menue-Eintraege reserviert. Der Locator im YAML-Modell bestimmt
+        den konkreten Menue-Eintrag -- der Testcode verwendet nur den
+        fachlichen Widget-Namen.
+
+        ``value`` ist optional:
+        - Leer/nicht angegeben: Menue-Eintrag wird geklickt (Toggle).
+        - ``Checked``/``Unchecked``: Zustand wird idempotent gesetzt
+          (nur fuer checkbare Menue-Eintraege).
+        """
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_select_menu()")
+
     def okw_type_key(self, key: str):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_type_key()")
 
