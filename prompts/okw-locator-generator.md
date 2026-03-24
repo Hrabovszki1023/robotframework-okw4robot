@@ -213,7 +213,7 @@ treeDateien:
 ```yaml
 class: okw_java_remoteswing.widgets.remotesw_frame.RemoteSw_Frame
 locator: { name: "frmMainWindow" }   # Komponenten-Name (setName)
-title: "Meine Anwendung"             # Fenstertitel (Select Window)
+title: "Meine Anwendung"             # Fenstertitel (SelectWindow)
 ```
 
 ### `group` -- RadioList Name-Gruppierung (nur Web)

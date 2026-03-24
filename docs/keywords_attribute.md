@@ -24,13 +24,13 @@ Library    okw4robot.keywords.attribute_keywords.AttributeKeywords    WITH NAME 
 
 *** Test Cases ***
 Attribute Prüfen
-    Select Window        WidgetsDemo
+    SelectWindow        WidgetsDemo
     ATTR.VerifyAttribute       Name        placeholder    Nachname
     ATTR.VerifyAttributeWCM    Vorname     placeholder    *name*
     ATTR.VerifyAttributeREGX   OK          data-state     ^(idle|ready)$
 
 Attribute Merken/Loggen
-    Select Window        WidgetsDemo
+    SelectWindow        WidgetsDemo
     ATTR.MemorizeAttribute   OK    data-state    BtnState
     ATTR.LogAttribute        OK    data-state
 ```

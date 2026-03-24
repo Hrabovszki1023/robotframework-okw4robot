@@ -8,11 +8,11 @@ Ziel: Dieses Dokument beschreibt die OKW4Robot‑Schlüsselwörter und deren Not
 
 - Tests verwenden Robot Framework. Ein Schritt ist ein Keyword mit Argumenten, getrennt durch mindestens zwei Spaces.
 - Vor Widget‑Aktionen immer die Umgebung initialisieren:
-  1) `Start Host <HostKonfig>` → Adapter starten
-  2) `Start App <AppKonfig>` → App‑/Fenster‑Modell laden
-  3) `Select Window <FensterName>` → Kontext setzen
+  1) `StartHost <HostKonfig>` → Adapter starten
+  2) `StartApp <AppKonfig>` → App‑/Fenster‑Modell laden
+  3) `SelectWindow <FensterName>` → Kontext setzen
 - Widget‑Namen beziehen sich auf das aktuell gewählte Fenster im YAML‑Modell. Keine direkten Locator‑Strings im Test schreiben.
-- Am Ende optional: `Stop App`, `Stop Host`.
+- Am Ende optional: `StopApp`, `StopHost`.
 
 ---
 
@@ -36,12 +36,12 @@ Ziel: Dieses Dokument beschreibt die OKW4Robot‑Schlüsselwörter und deren Not
 ## Keyword‑Gruppen (Signaturen & Semantik)
 
 - Host/App
-  - `Start Host    <HostKonfig>`: Lädt Host‑YAML, instanziiert Adapter und setzt Host‑Kontext.
-  - `Select Host   <AdapterName>`: Verifiziert, dass der aktive Adapter dem Namen entspricht.
-  - `Stop Host`: Beendet den aktiven Host.
-  - `Start App     <AppKonfig>`: Lädt App‑YAML, setzt App‑/Fenster‑Modell.
-  - `Select Window <FensterName>`: Wählt Fenster/Widget‑Kontext aus dem App‑Modell.
-  - `Stop App`: Setzt App‑Kontext zurück.
+  - `StartHost    <HostKonfig>`: Lädt Host‑YAML, instanziiert Adapter und setzt Host‑Kontext.
+  - `SelectHost   <AdapterName>`: Verifiziert, dass der aktive Adapter dem Namen entspricht.
+  - `StopHost`: Beendet den aktiven Host.
+  - `StartApp     <AppKonfig>`: Lädt App‑YAML, setzt App‑/Fenster‑Modell.
+  - `SelectWindow <FensterName>`: Wählt Fenster/Widget‑Kontext aus dem App‑Modell.
+  - `StopApp`: Setzt App‑Kontext zurück.
 
 - Widget‑Aktionen
   - `ClickOn      <Name>`: Klickt Widget.
@@ -109,7 +109,7 @@ Hinweise zu WCM/REGX:
 ## Prompt‑Hinweise für die Testfall‑Generierung
 
 - Nutze ausschließlich die oben gelisteten Keywords; keine Low‑Level‑Selenium‑Aufrufe.
-- Beginne Tests immer mit `Start Host`, `Start App`, `Select Window` im korrekten Kontext.
+- Beginne Tests immer mit `StartHost`, `StartApp`, `SelectWindow` im korrekten Kontext.
 - Verwende `$IGNORE` (oder `${IGNORE}`) bei optionalen/irrelevanten Eingaben und Erwartungen.
 - Nutze `...WCM` für grobe/robuste Prüfungen und `...REGX` für komplexe Muster.
 - Speichere dynamische Werte mit `Memorize*` in Robot‑Variablen und referenziere sie später.
@@ -131,9 +131,9 @@ ${IGNORE}    $IGNORE
 
 *** Test Cases ***
 Login Prüfen (Beispiel)
-    Start Host         SeleniumWeb
-    Start App          demo/app.yaml
-    Select Window      Login
+    StartHost         SeleniumWeb
+    StartApp          demo/app.yaml
+    SelectWindow      Login
     SetValue           Benutzername      alice
     TypeKey            Passwort          $DELETE
     SetValue           Passwort          geheim
@@ -142,7 +142,7 @@ Login Prüfen (Beispiel)
     VerifyLabelWCM     Begrüßung         Hallo, *
     MemorizeLabel      Begrüßung         ${GREETING}
     LogValue           Begrüßung
-    Stop App
-    Stop Host
+    StopApp
+    StopHost
 ```
 

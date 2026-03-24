@@ -40,13 +40,13 @@ Library    okw4robot.keywords.label_keywords.LabelKeywords    WITH NAME    LAB
 
 *** Test Cases ***
 Beschriftung Prüfen
-    Select Window     WidgetsDemo
+    SelectWindow     WidgetsDemo
     VerifyLabel       Name       Name
     VerifyLabelWCM    Verheiratet    *heirat*
     VerifyLabelREGX   Zahlungsmethode    ^Zahlung
 
 Beschriftung Merken
-    Select Window     WidgetsDemo
+    SelectWindow     WidgetsDemo
     MemorizeLabel     OK         OkLabel
     LogLabel          OK
 ```

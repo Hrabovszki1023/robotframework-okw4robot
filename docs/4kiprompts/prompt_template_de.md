@@ -8,7 +8,7 @@ Kurze, praxistaugliche Vorlagen, um eine KI anzuweisen, Robot‑Tests mit OKW4Ro
 
 Erzeuge Robot‑Framework‑Testfälle mit OKW4Robot. Anforderungen:
 - Nutze nur OKW4Robot‑Keywords (Host/App, Widget‑Aktionen, Verify‑Keywords inkl. WCM/REGX, Memorize/Log, Fokus/Existenz).
-- Initialisiere jeden Test mit `Start Host`, `Start App`, `Select Window`. Beende optional mit `Stop App`, `Stop Host`.
+- Initialisiere jeden Test mit `StartHost`, `StartApp`, `SelectWindow`. Beende optional mit `StopApp`, `StopHost`.
 - Verwende `$IGNORE` (oder `${IGNORE}`) für optionale/irrelevante Felder; `${OKW_IGNORE_EMPTY}` kann leerwerte global ignorieren.
 - Setze Zeitouts bei Bedarf mit `SetOKWParameter`.
 - Nutze `…WCM` für Wildcards (`*`, `?`) und `…REGX` für komplexe Regex.
@@ -47,15 +47,15 @@ Regeln:
 Ausgabeformat: Nur `.robot`‑Schritte, z. B.:
 
 ```
-Start Host         {HOST_NAME}
-Start App          {APP_CONFIG_PATH}
-Select Window      {WINDOW_NAME}
+StartHost         {HOST_NAME}
+StartApp          {APP_CONFIG_PATH}
+SelectWindow      {WINDOW_NAME}
 {ACTION_1}
 {ACTION_2}
 {VERIFY_1}
 {VERIFY_2}
-Stop App
-Stop Host
+StopApp
+StopHost
 ```
 
 ---

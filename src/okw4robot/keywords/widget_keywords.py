@@ -29,9 +29,9 @@ class WidgetKeywords:
           sync (exists → visible → enabled → optional scroll_into_view).
 
         Example (with window context):
-        | SelectWindow | LoginDialog |
-        | SetValue     | Benutzer    | admin  |
-        | SetValue     | Passwort    | geheim |
+        | SelectWindow  | LoginDialog |
+        | SetValue      | Benutzer    | admin  |
+        | SetValue      | Passwort    | geheim |
         | *ClickOn*    | *OK*        |
         """
         resolve_widget(name).okw_click()

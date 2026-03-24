@@ -270,14 +270,14 @@ das Scoping konkret um. Die Container-Widget-Klasse entscheidet in
 
 | Treiber | Widget-Klasse | Scoping-Mechanismus |
 |---------|--------------|---------------------|
-| **Swing (RemoteSwing)** | `RemoteSw_Frame` | `Select Window <name>` (SwingLibrary) |
+| **Swing (RemoteSwing)** | `RemoteSw_Frame` | `SelectWindow <name>` (SwingLibrary) |
 | | `RemoteSw_Dialog` | `Select Dialog <name>` (SwingLibrary) |
 | | `RemoteSw_Panel` | `Select Context <name>` (SwingLibrary) |
 | **Web (Selenium)** | `WebSe_Frame` | `find_element(locator)` als Parent-Element |
 | | `WebSe_Panel` | `find_element(locator)` als Parent-Element |
 | | `WebSe_Dialog` | `find_element(locator)` als Parent-Element |
 
-**Swing:** SwingLibrary hat eingebautes Context-Scoping. `Select Window`,
+**Swing:** SwingLibrary hat eingebautes Context-Scoping. `SelectWindow`,
 `Select Dialog` und `Select Context` begrenzen alle nachfolgenden
 Komponentensuchen auf den gewaehlten Container. Komponenten mit identischen
 Namen in verschiedenen Containern werden korrekt unterschieden.

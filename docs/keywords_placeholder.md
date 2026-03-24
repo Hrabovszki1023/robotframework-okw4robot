@@ -31,7 +31,7 @@ Library    okw4robot.keywords.placeholder_keywords.PlaceholderKeywords    WITH N
 
 *** Test Cases ***
 Placeholder Prüfen
-    Select Window           WidgetsDemo
+    SelectWindow           WidgetsDemo
     VerifyPlaceholder       Name         Nachname
     VerifyPlaceholderWCM    Vorname      *name*
     VerifyPlaceholderREGX   Anmerkung    ^Mehrzeilige\s+Eingabe

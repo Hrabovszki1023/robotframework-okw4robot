@@ -7,10 +7,10 @@ Initialisiert das OKW4Robot-Paket.
 Initialisiert die Robot Framework Schluesselwortmodule.
 
 ## `okw4robot/keywords/app.py`
-Stellt App-bezogene Keywords bereit (Start App, Select Window etc.).
+Stellt App-bezogene Keywords bereit (StartApp, SelectWindow etc.).
 
 ## `okw4robot/keywords/host.py`
-Stellt Host-bezogene Keywords bereit (Start Host, Stop Host etc.).
+Stellt Host-bezogene Keywords bereit (StartHost, StopHost etc.).
 
 ## `okw4robot/keywords/widget_keywords.py`
 Widget-Interaktions-Keywords (ClickOn, SetValue, VerifyValue etc.).

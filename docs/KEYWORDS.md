@@ -139,6 +139,7 @@ Diese Keywords steuern den Ausführungskontext (Host/App/Window), siehe Kontext-
 - `StopApp       <App>`
 - `SelectHost    <Host>`
 - `SelectWindow  <Window>`
+- `SelectMenu    <MenuItemName>  [Value]`
 
 ---
 

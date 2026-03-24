@@ -30,14 +30,14 @@ Library    okw4robot.keywords.tooltip_keywords.TooltipKeywords    WITH NAME    T
 
 *** Test Cases ***
 Tooltip PrÃ¼fen
-    Select Window         WidgetsDemo
+    SelectWindow         WidgetsDemo
     VerifyTooltip         Name         Hinweis: Nachname eingeben
     VerifyTooltipWCM      Vorname      Hinweis: *
     VerifyTooltipREGX     OK           ^Klick.*
 
 
 Merken Und Nutzen
-    Select Window         WidgetsDemo
+    SelectWindow         WidgetsDemo
     MemorizeTooltip       OK           OkTip
     LogTooltip            OK
     # Verwendung: ${OkTip}

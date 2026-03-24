@@ -1,5 +1,5 @@
 @startuml AdaptersSequence
-title OKW4Robot – Sequenz: Start Host -> Start App -> Select Window -> SetValue
+title OKW4Robot – Sequenz: StartHost -> StartApp -> SelectWindow -> SetValue
 
 actor Tester as T
 participant "HostKeywords" as HK
@@ -10,8 +10,8 @@ participant "WebSe_TextField\n(OkwWidget)" as W
 participant "SeleniumWebAdapter" as AD
 participant "Browser/DOM" as DOM
 
-' Start Host
-T -> HK: Start Host("Chrome")
+' StartHost
+T -> HK: StartHost("Chrome")
 HK -> C: set_adapter(SeleniumWebAdapter(browser=chrome))
 activate C
 C --> HK: adapter set
@@ -19,13 +19,13 @@ deactivate C
 HK -> AD: open browser about:blank (constructor)
 AD -> DOM: open_browser
 
-' Start App
-T -> AK: Start App("web/WidgetsDemo")
+' StartApp
+T -> AK: StartApp("web/WidgetsDemo")
 AK -> C: set_app(app_name, app_model)
 C --> AK: app set
 
-' Select Window
-T -> AK: Select Window("WidgetsDemo")
+' SelectWindow
+T -> AK: SelectWindow("WidgetsDemo")
 AK -> C: set_window("WidgetsDemo")
 C --> AK: window set
 

@@ -12,14 +12,14 @@ package "okw4robot.runtime" {
 
 package "okw4robot.keywords" {
   class HostKeywords {
-    +Start Host(name)
-    +Select Host(name)
-    +Stop Host()
+    +StartHost(name)
+    +SelectHost(name)
+    +StopHost()
   }
   class AppKeywords {
-    +Start App(name)
-    +Select Window(name)
-    +Stop App()
+    +StartApp(name)
+    +SelectWindow(name)
+    +StopApp()
   }
   class WidgetKeywords {
     +ClickOn(name)
