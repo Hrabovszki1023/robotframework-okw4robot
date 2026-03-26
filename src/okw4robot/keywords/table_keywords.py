@@ -94,6 +94,85 @@ def _get_row_key_column_index(tbl) -> int:
 
 
 class TableKeywords:
+    # ------------------------------------------------------------------
+    # SetTableCellValue -- Wert in eine Tabellenzelle schreiben
+    # ------------------------------------------------------------------
+
+    @keyword("SetTableCellValue")
+    def set_table_cell_value(self, name: str, row: int, col: int, value: str):
+        """Sets a value into a table cell identified by row and column index.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: 1-based row index.
+        - ``col``: 1-based column index.
+        - ``value``: Value to set. ``$DELETE`` clears the cell, ``$IGNORE`` skips.
+
+        Examples:
+        | SetTableCellValue | Items | 2 | 3 | Hello |
+        | SetTableCellValue | Items | 1 | 1 | $DELETE |
+        """
+        from ..utils.okw_helpers import should_ignore, is_delete, is_empty
+        if should_ignore(value):
+            print(f"[SetTableCellValue] '{name}' r{row}c{col} ignored ($IGNORE)")
+            return
+        tbl = _resolve_table(name)
+        if is_delete(value) or is_empty(value):
+            tbl.set_cell_value(int(row), int(col), "")
+        else:
+            tbl.set_cell_value(int(row), int(col), value)
+
+    @keyword("SetTableCellValueByHeaders")
+    def set_table_cell_value_by_headers(self, name: str, row: str, col: str, value: str):
+        """Sets a value into a table cell identified by row key and column header.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: Row key pattern (wildcard match, applied to the row key column).
+        - ``col``: Exact column header name (case-sensitive).
+        - ``value``: Value to set. ``$DELETE`` clears the cell, ``$IGNORE`` skips.
+
+        Behavior:
+        - Uses the row key column (``get_row_key_column_index()`` if provided
+          by the widget; otherwise column 1) to find exactly one matching row
+          via wildcard pattern.
+        - Resolves the column index by exact header name.
+        - Raises if no row or multiple rows match the key pattern.
+
+        Examples:
+        | SetTableCellValueByHeaders | Items | Müller | Vorname | Hans |
+        | SetTableCellValueByHeaders | Items | ID*123 | Price   | 9.99 |
+        """
+        from ..utils.okw_helpers import should_ignore, is_delete, is_empty
+        if should_ignore(value):
+            print(f"[SetTableCellValueByHeaders] '{name}' row='{row}' col='{col}' ignored ($IGNORE)")
+            return
+        tbl = _resolve_table(name)
+        headers = _get_header_names(tbl)
+        try:
+            col_idx = headers.index(str(col)) + 1
+        except ValueError:
+            raise ValueError(f"[SetTableCellValueByHeaders] Column header not found: '{col}'")
+        rk_idx = _get_row_key_column_index(tbl)
+        rc = int(tbl.get_row_count())
+        matches = []
+        for r in range(1, rc + 1):
+            key_val = tbl.get_cell_text(r, rk_idx)
+            if _match_wcm(key_val, row):
+                matches.append(r)
+        if len(matches) == 0:
+            raise ValueError(f"[SetTableCellValueByHeaders] No row matched key pattern '{row}'")
+        if len(matches) > 1:
+            raise ValueError(f"[SetTableCellValueByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        if is_delete(value) or is_empty(value):
+            tbl.set_cell_value(matches[0], col_idx, "")
+        else:
+            tbl.set_cell_value(matches[0], col_idx, value)
+
+    # ------------------------------------------------------------------
+    # VerifyTable* -- Tabellenwerte pruefen
+    # ------------------------------------------------------------------
+
     @keyword("VerifyTableRowContent")
     def verify_table_row_content(self, name: str, row: int, expected_row_pattern: str):
         """Verifies a row's cell contents using a wildcard pattern list.
