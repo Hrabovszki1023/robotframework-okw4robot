@@ -166,10 +166,14 @@ LogCaption         BtnOK
 |---|---|
 | `ClickOnTableCell` | `<Name>` `<Row>` `<Col>` |
 | `ClickOnTableCellByHeaders` | `<Name>` `<RowKey>` `<ColHeader>` |
+| `DoubleClickOnTableCell` | `<Name>` `<Row>` `<Col>` |
+| `DoubleClickOnTableCellByHeaders` | `<Name>` `<RowKey>` `<ColHeader>` |
 
 ```robot
-ClickOnTableCell            tblPersonen    2    1
-ClickOnTableCellByHeaders   tblPersonen    Mueller    Stadt
+ClickOnTableCell                  tblPersonen    2    1
+ClickOnTableCellByHeaders         tblPersonen    Mueller    Stadt
+DoubleClickOnTableCell            tblPersonen    1    2
+DoubleClickOnTableCellByHeaders   tblPersonen    Schmidt    Alter
 ```
 
 ### Set (write values into cells)

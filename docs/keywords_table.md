@@ -66,6 +66,18 @@ Timeout: Alle Table‑Keywords verwenden `${OKW_TIMEOUT_VERIFY_TABLE}` (Default 
 
 ---
 
+## DoubleClick Keywords (Zellen doppelklicken)
+
+- `DoubleClickOnTableCell    <Name>    <Row>    <Col>`
+  - Doppelklick auf eine Zelle per Index (1-basiert).
+  - Beispiel: `DoubleClickOnTableCell    DemoTable    1    2`
+
+- `DoubleClickOnTableCellByHeaders    <Name>    <RowKey>    <ColHeader>`
+  - Doppelklick auf eine Zelle per Zeilen‑Key (WCM) und Spalten‑Header (exakt).
+  - Beispiel: `DoubleClickOnTableCellByHeaders    DemoTable    Schmidt    Alter`
+
+---
+
 ## Set Keywords (Werte in Zellen schreiben)
 
 - `SetTableCellValue    <Name>    <Row>    <Col>    <Value>`

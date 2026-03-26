@@ -110,8 +110,10 @@ Loggt Werte/Attribute für Diagnosezwecke.
 Tabellen-Keywords (technologieuebergreifend). Syntax/Token siehe `docs/table_tokens.md`.
 
 ### Click (Zellen anklicken)
-- `ClickOnTableCell            <Name>  <Row>  <Col>`
-- `ClickOnTableCellByHeaders   <Name>  <RowKeyWCM>  <ColHeaderExact>`
+- `ClickOnTableCell                 <Name>  <Row>  <Col>`
+- `ClickOnTableCellByHeaders        <Name>  <RowKeyWCM>  <ColHeaderExact>`
+- `DoubleClickOnTableCell           <Name>  <Row>  <Col>`
+- `DoubleClickOnTableCellByHeaders  <Name>  <RowKeyWCM>  <ColHeaderExact>`
 
 ### Set (Werte schreiben)
 - `SetTableCellValue            <Name>  <Row>  <Col>  <Value>`

@@ -153,6 +153,63 @@ class TableKeywords:
         tbl.click_cell(matches[0], col_idx)
 
     # ------------------------------------------------------------------
+    # DoubleClickOnTableCell -- Tabellenzelle doppelklicken
+    # ------------------------------------------------------------------
+
+    @keyword("DoubleClickOnTableCell")
+    def double_click_on_table_cell(self, name: str, row: int, col: int):
+        """Double-clicks on a table cell identified by row and column index.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: 1-based row index.
+        - ``col``: 1-based column index.
+
+        Examples:
+        | DoubleClickOnTableCell | Items | 2 | 3 |
+        """
+        tbl = _resolve_table(name)
+        tbl.double_click_cell(int(row), int(col))
+
+    @keyword("DoubleClickOnTableCellByHeaders")
+    def double_click_on_table_cell_by_headers(self, name: str, row: str, col: str):
+        """Double-clicks on a table cell identified by row key and column header.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: Row key pattern (wildcard match, applied to the row key column).
+        - ``col``: Exact column header name (case-sensitive).
+
+        Behavior:
+        - Uses the row key column (``get_row_key_column_index()`` if provided
+          by the widget; otherwise column 1) to find exactly one matching row
+          via wildcard pattern.
+        - Resolves the column index by exact header name.
+        - Raises if no row or multiple rows match the key pattern.
+
+        Examples:
+        | DoubleClickOnTableCellByHeaders | Items | Mueller | Stadt |
+        """
+        tbl = _resolve_table(name)
+        headers = _get_header_names(tbl)
+        try:
+            col_idx = headers.index(str(col)) + 1
+        except ValueError:
+            raise ValueError(f"[DoubleClickOnTableCellByHeaders] Column header not found: '{col}'")
+        rk_idx = _get_row_key_column_index(tbl)
+        rc = int(tbl.get_row_count())
+        matches = []
+        for r in range(1, rc + 1):
+            key_val = tbl.get_cell_text(r, rk_idx)
+            if _match_wcm(key_val, row):
+                matches.append(r)
+        if len(matches) == 0:
+            raise ValueError(f"[DoubleClickOnTableCellByHeaders] No row matched key pattern '{row}'")
+        if len(matches) > 1:
+            raise ValueError(f"[DoubleClickOnTableCellByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        tbl.double_click_cell(matches[0], col_idx)
+
+    # ------------------------------------------------------------------
     # SetTableCellValue -- Wert in eine Tabellenzelle schreiben
     # ------------------------------------------------------------------
 
