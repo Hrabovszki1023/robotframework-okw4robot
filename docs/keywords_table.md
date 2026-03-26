@@ -1,6 +1,6 @@
-# Table Verify Keywords
+# Table Keywords
 
-Diese Seite dokumentiert die Tabellen‑bezogenen Verify‑Keywords und ihre Muster‑Syntax.
+Diese Seite dokumentiert die Tabellen‑Keywords (Click, Set, Verify) und ihre Muster‑Syntax.
 
 Siehe auch: `docs/table_tokens.md` für Token‑Definitionen ($TAB, $LF, $EMPTY, …) und Escaping.
 
@@ -50,6 +50,19 @@ Timeout: Alle Table‑Keywords verwenden `${OKW_TIMEOUT_VERIFY_TABLE}` (Default 
 - `VerifyTableContent    <Name>    <TablePattern>`
   - Prüft den gesamten Tabelleninhalt (nur Datenzeilen): Zeilen per `$LF`, Zellen per `$TAB`.
   - Beispiel: `VerifyTableContent    DemoTable    A11$TABA12$TABA13$LFA21$TAB$EMPTY$TABA23$LFA31$TABA32$TABA33`
+
+---
+
+## Click Keywords (Zellen anklicken)
+
+- `ClickOnTableCell    <Name>    <Row>    <Col>`
+  - Klickt auf eine Zelle per Index (1-basiert).
+  - Beispiel: `ClickOnTableCell    DemoTable    2    3`
+
+- `ClickOnTableCellByHeaders    <Name>    <RowKey>    <ColHeader>`
+  - Klickt auf eine Zelle per Zeilen‑Key (WCM) und Spalten‑Header (exakt).
+  - Der Zeilen‑Key muss exakt eine Zeile matchen, sonst Fehler.
+  - Beispiel: `ClickOnTableCellByHeaders    DemoTable    Mueller    Stadt`
 
 ---
 

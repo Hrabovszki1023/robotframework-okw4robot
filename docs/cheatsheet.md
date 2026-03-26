@@ -160,6 +160,18 @@ LogCaption         BtnOK
 | `VerifyTableHasRow` | `<Name>` `<RowPattern>` |
 | `VerifyTableContent` | `<Name>` `<TablePattern>` |
 
+### Click (select cells)
+
+| Keyword | Parameters |
+|---|---|
+| `ClickOnTableCell` | `<Name>` `<Row>` `<Col>` |
+| `ClickOnTableCellByHeaders` | `<Name>` `<RowKey>` `<ColHeader>` |
+
+```robot
+ClickOnTableCell            tblPersonen    2    1
+ClickOnTableCellByHeaders   tblPersonen    Mueller    Stadt
+```
+
 ### Set (write values into cells)
 
 | Keyword | Parameters |
