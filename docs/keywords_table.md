@@ -53,6 +53,23 @@ Timeout: Alle Table‑Keywords verwenden `${OKW_TIMEOUT_VERIFY_TABLE}` (Default 
 
 ---
 
+## Set Keywords (Werte in Zellen schreiben)
+
+- `SetTableCellValue    <Name>    <Row>    <Col>    <Value>`
+  - Setzt den Wert einer Zelle per Index (1-basiert).
+  - `$DELETE` und `$EMPTY` leeren die Zelle. `$IGNORE` überspringt.
+  - Beispiel: `SetTableCellValue    DemoTable    2    3    Hello`
+  - Beispiel: `SetTableCellValue    DemoTable    1    1    $DELETE`
+
+- `SetTableCellValueByHeaders    <Name>    <RowKey>    <ColHeader>    <Value>`
+  - Setzt den Wert einer Zelle per Zeilen‑Key (WCM) und Spalten‑Header (exakt).
+  - `$DELETE` und `$EMPTY` leeren die Zelle. `$IGNORE` überspringt.
+  - Der Zeilen‑Key muss exakt eine Zeile matchen, sonst Fehler.
+  - Beispiel: `SetTableCellValueByHeaders    DemoTable    Mueller    Vorname    Hans`
+  - Beispiel: `SetTableCellValueByHeaders    DemoTable    ID*123    Price    9.99`
+
+---
+
 ## Code‑Referenzen
 
 - Keywords: `src/okw4robot/keywords/table_keywords.py`

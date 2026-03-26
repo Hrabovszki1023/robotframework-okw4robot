@@ -160,7 +160,21 @@ LogCaption         BtnOK
 | `VerifyTableHasRow` | `<Name>` `<RowPattern>` |
 | `VerifyTableContent` | `<Name>` `<TablePattern>` |
 
-### Header-based
+### Set (write values into cells)
+
+| Keyword | Parameters |
+|---|---|
+| `SetTableCellValue` | `<Name>` `<Row>` `<Col>` `<Value>` |
+| `SetTableCellValueByHeaders` | `<Name>` `<RowKey>` `<ColHeader>` `<Value>` |
+
+`$DELETE` and `$EMPTY` clear the cell. `$IGNORE` skips.
+
+```robot
+SetTableCellValue           tblPersonen    1    3    Koeln
+SetTableCellValueByHeaders  tblPersonen    Mueller    Stadt    Koeln
+```
+
+### Header-based (Verify)
 
 | Keyword | Parameters |
 |---|---|

@@ -26,6 +26,8 @@ Aktionen, die einen Wert/Parameter benötigen (Eingaben, Auswahlen).
 
 - `SetValue    <Name>    <Value>`
 - `Select      <Name>    <Value>`
+- `SelectMenu  <Name>    [Value]`
+- `Delete      <Name>`
 - `TypeKey     <Name>    <Key>`
 
 Hinweis (aus Doku):
@@ -67,9 +69,14 @@ Prüfungen warten bis zum Sollzustand oder Timeout (Polling).
 - `VerifyAttributeWCM     <Name>  <AttributeName>  <ExpectedWCM>`
 - `VerifyAttributeREGX    <Name>  <AttributeName>  <ExpectedRegex>`
 
-### Exist / Focus
-- `VerifyExist     <Name>`
-- `VerifyHasFocus  <Name>`
+### Exist / State
+- `VerifyExist        <Name>  <YES/NO>`
+- `VerifyHasFocus     <Name>  <YES/NO>`
+- `VerifyIsVisible    <Name>  <YES/NO>`
+- `VerifyIsEnabled    <Name>  <YES/NO>`
+- `VerifyIsEditable   <Name>  <YES/NO>`
+- `VerifyIsFocusable  <Name>  <YES/NO>`
+- `VerifyIsClickable  <Name>  <YES/NO>`
 
 ---
 
@@ -81,7 +88,8 @@ Liest Werte/Attribute und speichert sie in Robot-Variablen.
 - `MemorizeTooltip   <Name>  <VarName>`
 - `MemorizeLabel     <Name>  <VarName>`
 - `MemorizeCaption   <Name>  <VarName>`
-- `MemorizeAttribute <Name>  <AttributeName>  <VarName>`
+- `MemorizePlaceholder <Name>  <VarName>`
+- `MemorizeAttribute   <Name>  <AttributeName>  <VarName>`
 
 ---
 
@@ -97,11 +105,15 @@ Loggt Werte/Attribute für Diagnosezwecke.
 
 ---
 
-## 6. Tabellen (Web)
+## 6. Tabellen
 
-Tabellen-Verifikationen (nur Web). Syntax/Token siehe Tabellen-Doku.
+Tabellen-Keywords (technologieuebergreifend). Syntax/Token siehe `docs/table_tokens.md`.
 
-### Basis (Index-basiert; 1-basiert, Header ist Zeile 0)
+### Set (Werte schreiben)
+- `SetTableCellValue            <Name>  <Row>  <Col>  <Value>`
+- `SetTableCellValueByHeaders   <Name>  <RowKeyWCM>  <ColHeaderExact>  <Value>`
+
+### Verify -- Basis (Index-basiert; 1-basiert, Header ist Zeile 0)
 - `VerifyTableCellValue      <Name>  <Row>  <Col>  <ExpectedWCM>`
 - `VerifyTableRowContent     <Name>  <Row>  <RowPatternWCM>`
 - `VerifyTableColumnContent  <Name>  <Col>  <ColumnPatternWCM>`
@@ -122,7 +134,7 @@ Tabellen-Verifikationen (nur Web). Syntax/Token siehe Tabellen-Doku.
 
 ---
 
-## 7. Listen (Web)
+## 7. Listen
 
 - `VerifyListCount     <Name>  <ExpectedCount>`
 - `VerifySelectedCount <Name>  <ExpectedCount>`
@@ -139,7 +151,6 @@ Diese Keywords steuern den Ausführungskontext (Host/App/Window), siehe Kontext-
 - `StopApp       <App>`
 - `SelectHost    <Host>`
 - `SelectWindow  <Window>`
-- `SelectMenu    <MenuItemName>  [Value]`
 
 ---
 
