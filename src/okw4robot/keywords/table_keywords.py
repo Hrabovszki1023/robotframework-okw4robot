@@ -285,6 +285,124 @@ class TableKeywords:
             tbl.set_cell_value(matches[0], col_idx, value)
 
     # ------------------------------------------------------------------
+    # LogTableCellValue -- Zellwert loggen
+    # ------------------------------------------------------------------
+
+    @keyword("LogTableCellValue")
+    def log_table_cell_value(self, name: str, row: int, col: int):
+        """Logs a table cell value to the console.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: 1-based row index.
+        - ``col``: 1-based column index.
+
+        Examples:
+        | LogTableCellValue | Items | 2 | 3 |
+        """
+        tbl = _resolve_table(name)
+        value = tbl.get_cell_text(int(row), int(col))
+        print(f"[LogTableCellValue] '{name}' r{row}c{col} = '{value}'")
+
+    @keyword("LogTableCellValueByHeaders")
+    def log_table_cell_value_by_headers(self, name: str, row: str, col: str):
+        """Logs a table cell value selected by row key and column header.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: Row key pattern (wildcard match, applied to the row key column).
+        - ``col``: Exact column header name (case-sensitive).
+
+        Behavior:
+        - Uses the row key column to find exactly one matching row.
+        - Resolves the column index by exact header name.
+
+        Examples:
+        | LogTableCellValueByHeaders | Items | Mueller | Stadt |
+        """
+        tbl = _resolve_table(name)
+        headers = _get_header_names(tbl)
+        try:
+            col_idx = headers.index(str(col)) + 1
+        except ValueError:
+            raise ValueError(f"[LogTableCellValueByHeaders] Column header not found: '{col}'")
+        rk_idx = _get_row_key_column_index(tbl)
+        rc = int(tbl.get_row_count())
+        matches = []
+        for r in range(1, rc + 1):
+            key_val = tbl.get_cell_text(r, rk_idx)
+            if _match_wcm(key_val, row):
+                matches.append(r)
+        if len(matches) == 0:
+            raise ValueError(f"[LogTableCellValueByHeaders] No row matched key pattern '{row}'")
+        if len(matches) > 1:
+            raise ValueError(f"[LogTableCellValueByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        value = tbl.get_cell_text(matches[0], col_idx)
+        print(f"[LogTableCellValueByHeaders] '{name}' row='{row}' col='{col}' = '{value}'")
+
+    # ------------------------------------------------------------------
+    # MemorizeTableCellValue -- Zellwert merken
+    # ------------------------------------------------------------------
+
+    @keyword("MemorizeTableCellValue")
+    def memorize_table_cell_value(self, name: str, row: int, col: int, variable: str):
+        """Stores a table cell value into a Robot Framework variable.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: 1-based row index.
+        - ``col``: 1-based column index.
+        - ``variable``: Target variable name without ``${}`` brackets.
+
+        Examples:
+        | MemorizeTableCellValue | Items | 2 | 3 | CELL_VAL |
+        | Should Be Equal | ${CELL_VAL} | Hello |
+        """
+        tbl = _resolve_table(name)
+        value = tbl.get_cell_text(int(row), int(col))
+        from robot.libraries.BuiltIn import BuiltIn
+        BuiltIn().set_test_variable(f"${{{variable}}}", value)
+
+    @keyword("MemorizeTableCellValueByHeaders")
+    def memorize_table_cell_value_by_headers(self, name: str, row: str, col: str, variable: str):
+        """Stores a table cell value (selected by row key and column header) into a Robot Framework variable.
+
+        Arguments:
+        - ``name``: Logical table name from the current window (YAML model).
+        - ``row``: Row key pattern (wildcard match, applied to the row key column).
+        - ``col``: Exact column header name (case-sensitive).
+        - ``variable``: Target variable name without ``${}`` brackets.
+
+        Behavior:
+        - Uses the row key column to find exactly one matching row.
+        - Resolves the column index by exact header name.
+
+        Examples:
+        | MemorizeTableCellValueByHeaders | Items | Mueller | Stadt | CITY |
+        | Should Be Equal | ${CITY} | Berlin |
+        """
+        tbl = _resolve_table(name)
+        headers = _get_header_names(tbl)
+        try:
+            col_idx = headers.index(str(col)) + 1
+        except ValueError:
+            raise ValueError(f"[MemorizeTableCellValueByHeaders] Column header not found: '{col}'")
+        rk_idx = _get_row_key_column_index(tbl)
+        rc = int(tbl.get_row_count())
+        matches = []
+        for r in range(1, rc + 1):
+            key_val = tbl.get_cell_text(r, rk_idx)
+            if _match_wcm(key_val, row):
+                matches.append(r)
+        if len(matches) == 0:
+            raise ValueError(f"[MemorizeTableCellValueByHeaders] No row matched key pattern '{row}'")
+        if len(matches) > 1:
+            raise ValueError(f"[MemorizeTableCellValueByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        value = tbl.get_cell_text(matches[0], col_idx)
+        from robot.libraries.BuiltIn import BuiltIn
+        BuiltIn().set_test_variable(f"${{{variable}}}", value)
+
+    # ------------------------------------------------------------------
     # VerifyTable* -- Tabellenwerte pruefen
     # ------------------------------------------------------------------
 

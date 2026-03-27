@@ -119,6 +119,14 @@ Tabellen-Keywords (technologieuebergreifend). Syntax/Token siehe `docs/table_tok
 - `SetTableCellValue            <Name>  <Row>  <Col>  <Value>`
 - `SetTableCellValueByHeaders   <Name>  <RowKeyWCM>  <ColHeaderExact>  <Value>`
 
+### Log (Zellwert loggen)
+- `LogTableCellValue            <Name>  <Row>  <Col>`
+- `LogTableCellValueByHeaders   <Name>  <RowKeyWCM>  <ColHeaderExact>`
+
+### Memorize (Zellwert merken)
+- `MemorizeTableCellValue            <Name>  <Row>  <Col>  <VarName>`
+- `MemorizeTableCellValueByHeaders   <Name>  <RowKeyWCM>  <ColHeaderExact>  <VarName>`
+
 ### Verify -- Basis (Index-basiert; 1-basiert, Header ist Zeile 0)
 - `VerifyTableCellValue      <Name>  <Row>  <Col>  <ExpectedWCM>`
 - `VerifyTableRowContent     <Name>  <Row>  <RowPatternWCM>`

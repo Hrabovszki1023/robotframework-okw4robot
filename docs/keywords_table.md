@@ -95,6 +95,30 @@ Timeout: Alle Table‑Keywords verwenden `${OKW_TIMEOUT_VERIFY_TABLE}` (Default 
 
 ---
 
+## Log Keywords (Zellwerte loggen)
+
+- `LogTableCellValue    <Name>    <Row>    <Col>`
+  - Loggt den Wert einer Zelle per Index (1-basiert) in die Konsole.
+  - Beispiel: `LogTableCellValue    DemoTable    2    3`
+
+- `LogTableCellValueByHeaders    <Name>    <RowKey>    <ColHeader>`
+  - Loggt den Wert einer Zelle per Zeilen‑Key (WCM) und Spalten‑Header (exakt).
+  - Beispiel: `LogTableCellValueByHeaders    DemoTable    Mueller    Stadt`
+
+---
+
+## Memorize Keywords (Zellwerte merken)
+
+- `MemorizeTableCellValue    <Name>    <Row>    <Col>    <VarName>`
+  - Speichert den Zellwert in einer Robot-Variable `${VarName}`.
+  - Beispiel: `MemorizeTableCellValue    DemoTable    1    1    CELL_VAL`
+
+- `MemorizeTableCellValueByHeaders    <Name>    <RowKey>    <ColHeader>    <VarName>`
+  - Speichert den Zellwert (per Header) in einer Robot-Variable `${VarName}`.
+  - Beispiel: `MemorizeTableCellValueByHeaders    DemoTable    Mueller    Stadt    CITY`
+
+---
+
 ## Code‑Referenzen
 
 - Keywords: `src/okw4robot/keywords/table_keywords.py`

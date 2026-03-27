@@ -190,6 +190,22 @@ SetTableCellValue           tblPersonen    1    3    Koeln
 SetTableCellValueByHeaders  tblPersonen    Mueller    Stadt    Koeln
 ```
 
+### Log & Memorize (cell values)
+
+| Keyword | Parameters |
+|---|---|
+| `LogTableCellValue` | `<Name>` `<Row>` `<Col>` |
+| `LogTableCellValueByHeaders` | `<Name>` `<RowKey>` `<ColHeader>` |
+| `MemorizeTableCellValue` | `<Name>` `<Row>` `<Col>` `<VarName>` |
+| `MemorizeTableCellValueByHeaders` | `<Name>` `<RowKey>` `<ColHeader>` `<VarName>` |
+
+```robot
+LogTableCellValue                    tblPersonen    1    1
+MemorizeTableCellValue               tblPersonen    1    1    NAME
+MemorizeTableCellValueByHeaders      tblPersonen    Mueller    Stadt    CITY
+Should Be Equal    ${CITY}    Berlin
+```
+
 ### Header-based (Verify)
 
 | Keyword | Parameters |
