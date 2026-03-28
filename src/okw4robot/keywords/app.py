@@ -122,4 +122,9 @@ class AppKeywords(LoggingMixin):
         else:
             self.log_info(f"Beende alle aktiven Apps (aktiv: '{context._app_name}').")
 
+        # Adapter-Shutdown (z.B. Swing-App beenden, Browser schliessen)
+        adapter = context.get_adapter()
+        if hasattr(adapter, 'shutdown'):
+            adapter.shutdown()
+
         context.stop_app()

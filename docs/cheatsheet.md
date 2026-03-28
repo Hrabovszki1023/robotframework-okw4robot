@@ -5,6 +5,56 @@
 
 ---
 
+## 0. Library Import
+
+Test files only need `OKW4RobotLibrary`. The adapter (Swing, Selenium, FlaUI, ...)
+auto-imports its underlying library — no technology-specific imports needed.
+
+```robot
+*** Settings ***
+Library    okw4robot.library.OKW4RobotLibrary    WITH NAME    OKW
+
+Suite Setup       Starte App
+Suite Teardown    Beende App
+
+*** Keywords ***
+Starte App
+    OKW.StartApp    DemoApp
+
+Beende App
+    OKW.StopApp
+```
+
+| Technology | Adapter (YAML `__self__.class`) | Auto-imports |
+|---|---|---|
+| Java Swing | `okw_java_remoteswing.adapters.remote_swing_adapter.RemoteSwingAdapter` | RemoteSwingLibrary + JAR |
+| Web Selenium | `okw_web_selenium.adapters.selenium_web.SeleniumWebAdapter` | SeleniumLibrary |
+| Windows FlaUI | `okw_windows_flaui.adapters.flaui_adapter.FlaUIAdapter` | FlaUILibrary |
+
+**JAR/native dependencies:** Place in `lib/` relative to working directory.
+Optionally configure `jar_path` in YAML `__self__` section.
+
+Example project structure (Java Swing):
+
+```
+my-test-project/
+  lib/
+    remoteswinglibrary.jar        # NOT in pip package — stays here
+  locators/
+    DemoApp.yaml                  # __self__.class → RemoteSwingAdapter
+    dialogs/
+      MainFrame.yaml              # Widget definitions
+  tests/
+    durchstich_textfield.robot    # Library  okw4robot...OKW4RobotLibrary
+    durchstich_button.robot
+  results/                        # robot output (gitignored)
+```
+
+The adapter finds `lib/remoteswinglibrary.jar` automatically.
+No `--pythonpath`, no explicit `RemoteSwingLibrary` import needed.
+
+---
+
 ## 1. Context (Host / App / Window)
 
 | Keyword | Parameters | Description |
@@ -14,7 +64,7 @@
 | `StopHost` | | Stop active host |
 | `StartApp` | `<App>` `[Config]` | Load app model (from YAML), auto-start adapter |
 | `SelectWindow` | `<Window>` | Set active window context |
-| `StopApp` | `[App]` | Stop active app |
+| `StopApp` | `[App]` | Stop active app (calls `adapter.shutdown()` automatically) |
 
 ```robot
 *** Test Cases ***

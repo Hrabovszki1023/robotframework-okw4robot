@@ -29,6 +29,9 @@ class HostKeywords(LoggingMixin):
     @keyword("StopHost")
     def stop_host(self):
         self.log_info("Stoppe aktuellen Host...")
+        adapter = context.get_adapter()
+        if hasattr(adapter, 'shutdown'):
+            adapter.shutdown()
         context.stop_adapter()
         self.log_info("Host wurde gestoppt.")
 
