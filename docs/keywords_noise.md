@@ -37,7 +37,25 @@ fuehrt es aus, und faengt bei Fehler die Exception ab. Die Fehlermeldung
 wird mit `[N]` Prefix neu geworfen. Zusaetzlich wird der Tag `NOISE`
 auf den Testfall gesetzt.
 
-## Beispiel
+## Elementare und abstrakte Schluesselwoerter
+
+`OnFailNOISE` funktioniert mit **jedem** Keyword — egal ob elementar
+(z.B. `SelectWindow`, `SetValue`) oder abstrakt (ein selbst definiertes
+Keyword, das intern weitere Keywords aufruft).
+
+Die NOISE-Klassifizierung wird auf **Testfall-Ebene** bestimmt, nicht
+im Keyword selbst. Wenn ein abstraktes Keyword wie `Login` intern
+`SelectWindow`, `SetValue` und `ClickOn` aufruft und eines davon
+fehlschlaegt, steigt die Exception nach oben bis zu `OnFailNOISE`
+und wird dort als `[N]` klassifiziert.
+
+Das bedeutet: Dasselbe Keyword kann in einem Testfall als NOISE gelten
+(Vorbereitung) und in einem anderen als FAIL (Testaktion) — die
+Entscheidung trifft der Testfall, nicht das Keyword.
+
+## Beispiele
+
+### Elementare Keywords
 
 ```robotframework
 *** Test Cases ***
@@ -52,6 +70,37 @@ Kunde Anlegen
     ClickOn        Speichern
     VerifyValue    Status        Gespeichert
 ```
+
+### Abstrakte Keywords
+
+```robotframework
+*** Keywords ***
+Login
+    [Arguments]    ${user}    ${password}
+    SelectWindow    LoginDialog
+    SetValue        Benutzer    ${user}
+    SetValue        Passwort    ${password}
+    ClickOn         Anmelden
+
+*** Test Cases ***
+Kunde Anlegen Nach Login
+    # Phase 1-3: Login ist Vorbereitung — komplett NOISE
+    OnFailNOISE    Login    ${AdminUser}    ${AdminPasswort}
+    OnFailNOISE    SelectWindow    Kundenverwaltung
+
+    # Phase 4-5: Test & Verifikation — FAIL [X]
+    SetValue       Kundenname    Mueller
+    VerifyValue    Status        Gespeichert
+
+Login Pruefung
+    # Hier ist Login die eigentliche Testaktion — FAIL [X]
+    Login          ${TestUser}    ${TestPasswort}
+    VerifyValue    Status         Angemeldet
+```
+
+Im ersten Testfall ist `Login` Vorbereitung (NOISE). Im zweiten ist
+`Login` selbst der Test (FAIL). Dasselbe Keyword — unterschiedliche
+Klassifizierung, gesteuert auf Testfall-Ebene.
 
 ## Fehlermeldungen
 
