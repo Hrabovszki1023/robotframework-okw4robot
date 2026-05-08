@@ -17,6 +17,7 @@ from .keywords.placeholder_keywords import PlaceholderKeywords
 from .keywords.tooltip_keywords import TooltipKeywords
 from .keywords.table_keywords import TableKeywords
 from .keywords.params import ParamsKeywords
+from .keywords.noise_keywords import NoiseKeywords
 
 
 @library(scope="GLOBAL")
@@ -32,6 +33,7 @@ class OKW4RobotLibrary(
     TooltipKeywords,
     TableKeywords,
     ParamsKeywords,
+    NoiseKeywords,
 ):
     """Driver-agnostic Robot Framework library for GUI test automation.
 

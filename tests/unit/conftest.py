@@ -29,6 +29,12 @@ class FakeBuiltIn:
     def convert_time(self, value):
         return float(value)
 
+    def run_keyword(self, name, *args):
+        pass
+
+    def set_tags(self, *tags):
+        pass
+
 
 @pytest.fixture(autouse=True)
 def _patch_robot():
