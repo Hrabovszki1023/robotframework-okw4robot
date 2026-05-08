@@ -155,7 +155,17 @@ Tabellen-Keywords (technologieuebergreifend). Syntax/Token siehe `docs/table_tok
 
 ---
 
-## 8. Host / App / Window (Kontext-Keywords)
+## 8. Fail-Klassifizierung (NOISE / FAIL)
+
+- `OnFailNOISE    <Keyword>    [Param1]    [Param2]    ...`
+
+Wraps ein beliebiges Keyword. Bei Fehler wird die Meldung mit `[N]`
+(NOISE) prefixed statt `[X]` (FAIL). Fuer Vorbereitungsphasen (Reset,
+Umgebung, Navigation). Siehe [keywords_noise.md](keywords_noise.md).
+
+---
+
+## 9. Host / App / Window (Kontext-Keywords)
 
 Diese Keywords steuern den Ausführungskontext (Host/App/Window), siehe Kontext-Doku.
 

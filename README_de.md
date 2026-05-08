@@ -8,6 +8,10 @@ im jeweiligen Treiber-Paket.
 
 > **English version:** [README.md](README.md)
 
+> **ISO/IEC/IEEE 29119-5:2024:** OKW4Robot setzt den internationalen Standard
+> fuer Keyword-Driven Testing um — strukturell seit 2003.
+> Siehe [ISO 29119-5 Konformitaet](docs/iso-29119-5-conformity.md).
+
 ---
 
 ## OKW-Oekosystem
@@ -123,6 +127,7 @@ robotframework-okw4robot/
       tooltip_keywords.py       # VerifyTooltip, ...
       table_keywords.py         # VerifyTableCellValue, ...
       list_keywords.py          # VerifyListCount, VerifySelectedCount
+      noise_keywords.py         # OnFailNOISE (NOISE/FAIL-Klassifizierung)
       params.py                 # SetOKWParameter (Timeouts)
     runtime/
       context.py                # Zentraler Laufzeitkontext (Adapter, App, Window)
@@ -150,6 +155,10 @@ robotframework-okw4robot/
 
 ## Dokumentation
 
+### Standards
+
+- [iso-29119-5-conformity.md](docs/iso-29119-5-conformity.md) – ISO/IEC/IEEE 29119-5:2024 Konformitaet (Architektur, Keyword-Mapping, Framework-Komponenten)
+
 ### Vertraege und Spezifikation
 
 - [CONTRACT.md](docs/CONTRACT.md) – Oeffentlicher Vertrag (Architektur, YAML-Fallback)
@@ -168,6 +177,7 @@ robotframework-okw4robot/
 - [keywords_table_headers.md](docs/keywords_table_headers.md) – Tabellen-Keywords (header-basiert)
 - [keywords_list.md](docs/keywords_list.md) – VerifyListCount, VerifySelectedCount
 - [keywords_ignore_rule.md](docs/keywords_ignore_rule.md) – $IGNORE, $EMPTY, $DELETE
+- [keywords_noise.md](docs/keywords_noise.md) – OnFailNOISE (NOISE/FAIL-Klassifizierung)
 
 ### Konzepte
 
