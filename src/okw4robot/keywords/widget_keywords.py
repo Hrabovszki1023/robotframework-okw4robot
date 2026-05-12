@@ -34,7 +34,8 @@ class WidgetKeywords:
         | SetValue      | Passwort    | geheim |
         | *ClickOn*    | *OK*        |
         """
-        resolve_widget(name).okw_click()
+        w = resolve_widget(name)
+        w._with_screenshots("ClickOn", w.okw_click)
 
     @keyword("DoubleClickOn")
     def double_click_on(self, name: str, value: str | None = None):
@@ -66,9 +67,9 @@ class WidgetKeywords:
         """
         widget = resolve_widget(name)
         if value is None:
-            widget.okw_double_click()
+            widget._with_screenshots("DoubleClickOn", widget.okw_double_click)
         else:
-            widget.okw_double_click_value(value)
+            widget._with_screenshots("DoubleClickOn", widget.okw_double_click_value, value)
 
     @keyword("SetValue")
     def set_value(self, name, value):
@@ -110,12 +111,14 @@ class WidgetKeywords:
         """
         # $EMPTY explizit unterstützen und NICHT ignorieren
         if isinstance(value, str) and value.strip().upper() in ("$EMPTY", "${EMPTY}"):
-            resolve_widget(name).okw_set_value("")
+            w = resolve_widget(name)
+            w._with_screenshots("SetValue", w.okw_set_value, "")
             return
         if should_ignore(value):
             print(f"[SetValue] '{name}' ignored (blank or $IGNORE)")
             return
-        resolve_widget(name).okw_set_value(value)
+        w = resolve_widget(name)
+        w._with_screenshots("SetValue", w.okw_set_value, value)
 
     @keyword("Delete")
     def delete(self, name):
@@ -132,7 +135,8 @@ class WidgetKeywords:
         | SelectWindow | MainFrame |
         | Delete       | txtName   |
         """
-        resolve_widget(name).okw_delete()
+        w = resolve_widget(name)
+        w._with_screenshots("Delete", w.okw_delete)
 
     @keyword("Select")
     def select(self, name, value):
@@ -166,7 +170,8 @@ class WidgetKeywords:
         if should_ignore(value):
             print(f"[Select] '{name}' ignored (blank or $IGNORE)")
             return
-        resolve_widget(name).okw_select(value)
+        w = resolve_widget(name)
+        w._with_screenshots("Select", w.okw_select, value)
 
     @keyword("SelectMenu")
     def select_menu(self, name, value=""):
@@ -196,7 +201,8 @@ class WidgetKeywords:
         if value and should_ignore(value):
             print(f"[SelectMenu] '{name}' ignored ($IGNORE)")
             return
-        resolve_widget(name).okw_select_menu(value)
+        w = resolve_widget(name)
+        w._with_screenshots("SelectMenu", w.okw_select_menu, value)
 
     @keyword("TypeKey")
     def type_key(self, name, key):
@@ -230,12 +236,14 @@ class WidgetKeywords:
         """
         # Handle special delete token -- delegiert an Widget
         if is_delete(key):
-            resolve_widget(name).okw_delete()
+            w = resolve_widget(name)
+            w._with_screenshots("TypeKey($DELETE)", w.okw_delete)
             return
         if should_ignore(key):
             print(f"[TypeKey] '{name}' ignored (blank or $IGNORE)")
             return
-        resolve_widget(name).okw_type_key(key)
+        w = resolve_widget(name)
+        w._with_screenshots("TypeKey", w.okw_type_key, key)
 
     @keyword("VerifyValue")
     def verify_value(self, name, expected):
@@ -267,6 +275,7 @@ class WidgetKeywords:
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_VALUE}", 10.0)
         verify_with_timeout(w.okw_get_value, expected, MatchMode.EXACT, timeout, f"[VerifyValue] '{name}'")
+        w._log_current_screenshot("VerifyValue")
 
     @keyword("VerifyValueWCM")
     def verify_value_wcm(self, name, expected):
@@ -296,6 +305,7 @@ class WidgetKeywords:
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_VALUE}", 10.0)
         verify_with_timeout(w.okw_get_value, expected, MatchMode.WCM, timeout, f"[VerifyValueWCM] '{name}'")
+        w._log_current_screenshot("VerifyValueWCM")
 
     @keyword("VerifyValueREGX")
     def verify_value_regx(self, name, expected):
@@ -325,6 +335,7 @@ class WidgetKeywords:
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_VALUE}", 10.0)
         verify_with_timeout(w.okw_get_value, expected, MatchMode.REGX, timeout, f"[VerifyValueREGX] '{name}'")
+        w._log_current_screenshot("VerifyValueREGX")
 
     @keyword("VerifyExist")
     def verify_exist(self, name, expected):
@@ -370,7 +381,9 @@ class WidgetKeywords:
         Examples:
         | LogValue | Username |
         """
-        resolve_widget(name).okw_log_value()
+        w = resolve_widget(name)
+        w.okw_log_value()
+        w._log_current_screenshot("LogValue")
 
     @keyword("HasValue")
     def has_value(self, name):

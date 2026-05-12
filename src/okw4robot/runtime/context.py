@@ -180,10 +180,21 @@ class Context(LoggingMixin):
                       if k not in _RESERVED_KEYS and not isinstance(v, dict)}
             window_widget = widget_cls(adapter, locator, **extras)
             window_widget.okw_select_window()
+            window_widget._log_current_screenshot(f"SelectWindow [{window_name}]")
             self.log_info(
                 f"[Context] Fenster '{window_name}' selektiert via "
                 f"{widget_cls.__name__}.okw_select_window()."
             )
+        elif isinstance(window_model, dict):
+            self_cfg = window_model.get("__self__", {})
+            if "class" in self_cfg and "locator" in self_cfg:
+                widget_cls = load_class(self_cfg["class"])
+                adapter = self.get_adapter()
+                locator = self_cfg.get("locator")
+                window_widget = widget_cls(adapter, locator)
+                window_widget._log_current_screenshot(
+                    f"SelectWindow [{window_name}]"
+                )
 
         self._window = window_name
         modell_name = self._app_name or "<Host-Modell>"

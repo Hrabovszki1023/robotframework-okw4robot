@@ -263,6 +263,71 @@ class OkwWidget(LoggingMixin):
         raise NotImplementedError(f"{self.__class__.__name__}.get_row_key_column_index()")
 
     # ------------------------------------------------------------------
+    # Screenshot (Base64-eingebettet im Robot Log)
+    # ------------------------------------------------------------------
+    def okw_get_screenshot_base64(self) -> "str | None":
+        """Base64-kodiertes PNG des Widgets (oder None falls nicht unterstuetzt).
+
+        Treiber-Klassen ueberschreiben diese Methode mit ihrer
+        technologie-spezifischen Implementierung.  Der Default gibt
+        ``None`` zurueck -- das Feature ist opt-in.
+        """
+        return None
+
+    def _log_screenshot(self, label: str, base64_png: "str | None"):
+        """Bettet ein Base64-Screenshot als HTML-Image im Robot Log ein."""
+        if base64_png is None:
+            return
+        try:
+            from robot.libraries.BuiltIn import BuiltIn
+            flag = BuiltIn().get_variable_value(
+                "${OKW_LOG_SCREENSHOTS}", default="YES")
+            if str(flag).strip().upper() in ("NO", "FALSE", "0"):
+                return
+        except Exception:
+            pass
+        from robot.api import logger
+        data_uri = f"data:image/png;base64,{base64_png}"
+        onclick = (
+            "var s=this.parentElement.parentElement.querySelector('img').src;"
+            "var w=window.open('','_blank');"
+            "var d=w.document;"
+            "d.title=this.parentElement.firstChild.textContent;"
+            "d.body.style.cssText="
+            "'margin:0;background:#222;display:flex;"
+            "align-items:center;justify-content:center;min-height:100vh';"
+            "var i=d.createElement('img');"
+            "i.src=s;"
+            "d.body.appendChild(i);"
+            "return false;"
+        )
+        html = (
+            f'<div style="display:inline-block; margin:4px;">'
+            f'<div style="font-size:11px; color:#555;">{label}'
+            f' <a href="#" onclick="{onclick}" '
+            f'style="margin-left:6px; font-size:10px;">&#x29C9; Vollbild</a>'
+            f'</div>'
+            f'<img src="{data_uri}" '
+            f'alt="{label}" style="max-width:400px; border:1px solid #ccc;">'
+            f'</div>'
+        )
+        logger.info(html, html=True)
+
+    def _with_screenshots(self, action_name: str, action_fn, *args, **kwargs):
+        """Fuehrt *action_fn* aus und loggt Vorher/Nachher-Screenshots."""
+        before = self.okw_get_screenshot_base64()
+        self._log_screenshot(f"{action_name} [VORHER]", before)
+        result = action_fn(*args, **kwargs)
+        after = self.okw_get_screenshot_base64()
+        self._log_screenshot(f"{action_name} [NACHHER]", after)
+        return result
+
+    def _log_current_screenshot(self, keyword_name: str):
+        """Loggt einen einzelnen Screenshot des aktuellen Zustands."""
+        img = self.okw_get_screenshot_base64()
+        self._log_screenshot(keyword_name, img)
+
+    # ------------------------------------------------------------------
     # Logging / Memorize -- Defaults mit okw_get_value()
     # ------------------------------------------------------------------
     def okw_log_value(self):

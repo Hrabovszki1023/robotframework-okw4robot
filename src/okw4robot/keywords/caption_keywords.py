@@ -20,6 +20,7 @@ class CaptionKeywords:
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_CAPTION}", 10.0)
         verify_with_timeout(lambda: _get_caption(w), expected, MatchMode.EXACT, timeout, f"[VerifyCaption] '{name}'")
+        w._log_current_screenshot("VerifyCaption")
 
     @keyword("VerifyCaptionWCM")
     def verify_caption_wcm(self, name, expected):
@@ -29,6 +30,7 @@ class CaptionKeywords:
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_CAPTION}", 10.0)
         verify_with_timeout(lambda: _get_caption(w), expected, MatchMode.WCM, timeout, f"[VerifyCaptionWCM] '{name}'")
+        w._log_current_screenshot("VerifyCaptionWCM")
 
     @keyword("VerifyCaptionREGX")
     def verify_caption_regx(self, name, expected):
@@ -38,6 +40,7 @@ class CaptionKeywords:
         w = resolve_widget(name)
         timeout = get_robot_timeout("${OKW_TIMEOUT_VERIFY_CAPTION}", 10.0)
         verify_with_timeout(lambda: _get_caption(w), expected, MatchMode.REGX, timeout, f"[VerifyCaptionREGX] '{name}'")
+        w._log_current_screenshot("VerifyCaptionREGX")
 
     @keyword("MemorizeCaption")
     def memorize_caption(self, name, variable):
@@ -51,3 +54,4 @@ class CaptionKeywords:
         w = resolve_widget(name)
         value = _get_caption(w)
         logger.info(f"[LogCaption] {value}")
+        w._log_current_screenshot("LogCaption")
