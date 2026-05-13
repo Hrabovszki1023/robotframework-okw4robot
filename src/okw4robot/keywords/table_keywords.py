@@ -93,6 +93,19 @@ def _get_row_key_column_index(tbl) -> int:
     return 1
 
 
+def _log_table_screenshots(tbl, label, row=None, col=None):
+    """Loggt Screenshots von Zelle, Zeile und ganzer Tabelle."""
+    if hasattr(tbl, 'get_cell_screenshot_base64') and row is not None and col is not None:
+        tbl._log_screenshot(f"{label} [Zelle r{row}c{col}]",
+                            tbl.get_cell_screenshot_base64(int(row), int(col)))
+    if hasattr(tbl, 'get_row_screenshot_base64') and row is not None:
+        tbl._log_screenshot(f"{label} [Zeile {row}]",
+                            tbl.get_row_screenshot_base64(int(row)))
+    if hasattr(tbl, 'get_table_screenshot_base64'):
+        tbl._log_screenshot(f"{label} [Tabelle]",
+                            tbl.get_table_screenshot_base64())
+
+
 class TableKeywords:
     # ------------------------------------------------------------------
     # ClickOnTableCell -- Tabellenzelle anklicken
@@ -111,7 +124,9 @@ class TableKeywords:
         | ClickOnTableCell | Items | 2 | 3 |
         """
         tbl = _resolve_table(name)
+        _log_table_screenshots(tbl, "ClickOnTableCell [VORHER]", row, col)
         tbl.click_cell(int(row), int(col))
+        _log_table_screenshots(tbl, "ClickOnTableCell [NACHHER]", row, col)
 
     @keyword("ClickOnTableCellByHeaders")
     def click_on_table_cell_by_headers(self, name: str, row: str, col: str):
@@ -150,7 +165,9 @@ class TableKeywords:
             raise ValueError(f"[ClickOnTableCellByHeaders] No row matched key pattern '{row}'")
         if len(matches) > 1:
             raise ValueError(f"[ClickOnTableCellByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        _log_table_screenshots(tbl, "ClickOnTableCellByHeaders [VORHER]", matches[0], col_idx)
         tbl.click_cell(matches[0], col_idx)
+        _log_table_screenshots(tbl, "ClickOnTableCellByHeaders [NACHHER]", matches[0], col_idx)
 
     # ------------------------------------------------------------------
     # DoubleClickOnTableCell -- Tabellenzelle doppelklicken
@@ -169,7 +186,9 @@ class TableKeywords:
         | DoubleClickOnTableCell | Items | 2 | 3 |
         """
         tbl = _resolve_table(name)
+        _log_table_screenshots(tbl, "DoubleClickOnTableCell [VORHER]", row, col)
         tbl.double_click_cell(int(row), int(col))
+        _log_table_screenshots(tbl, "DoubleClickOnTableCell [NACHHER]", row, col)
 
     @keyword("DoubleClickOnTableCellByHeaders")
     def double_click_on_table_cell_by_headers(self, name: str, row: str, col: str):
@@ -207,7 +226,9 @@ class TableKeywords:
             raise ValueError(f"[DoubleClickOnTableCellByHeaders] No row matched key pattern '{row}'")
         if len(matches) > 1:
             raise ValueError(f"[DoubleClickOnTableCellByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        _log_table_screenshots(tbl, "DoubleClickOnTableCellByHeaders [VORHER]", matches[0], col_idx)
         tbl.double_click_cell(matches[0], col_idx)
+        _log_table_screenshots(tbl, "DoubleClickOnTableCellByHeaders [NACHHER]", matches[0], col_idx)
 
     # ------------------------------------------------------------------
     # SetTableCellValue -- Wert in eine Tabellenzelle schreiben
@@ -232,10 +253,12 @@ class TableKeywords:
             print(f"[SetTableCellValue] '{name}' r{row}c{col} ignored ($IGNORE)")
             return
         tbl = _resolve_table(name)
+        _log_table_screenshots(tbl, "SetTableCellValue [VORHER]", row, col)
         if is_delete(value) or is_empty(value):
             tbl.set_cell_value(int(row), int(col), "")
         else:
             tbl.set_cell_value(int(row), int(col), value)
+        _log_table_screenshots(tbl, "SetTableCellValue [NACHHER]", row, col)
 
     @keyword("SetTableCellValueByHeaders")
     def set_table_cell_value_by_headers(self, name: str, row: str, col: str, value: str):
@@ -279,10 +302,12 @@ class TableKeywords:
             raise ValueError(f"[SetTableCellValueByHeaders] No row matched key pattern '{row}'")
         if len(matches) > 1:
             raise ValueError(f"[SetTableCellValueByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
+        _log_table_screenshots(tbl, "SetTableCellValueByHeaders [VORHER]", matches[0], col_idx)
         if is_delete(value) or is_empty(value):
             tbl.set_cell_value(matches[0], col_idx, "")
         else:
             tbl.set_cell_value(matches[0], col_idx, value)
+        _log_table_screenshots(tbl, "SetTableCellValueByHeaders [NACHHER]", matches[0], col_idx)
 
     # ------------------------------------------------------------------
     # LogTableCellValue -- Zellwert loggen
@@ -303,6 +328,7 @@ class TableKeywords:
         tbl = _resolve_table(name)
         value = tbl.get_cell_text(int(row), int(col))
         print(f"[LogTableCellValue] '{name}' r{row}c{col} = '{value}'")
+        _log_table_screenshots(tbl, "LogTableCellValue", row, col)
 
     @keyword("LogTableCellValueByHeaders")
     def log_table_cell_value_by_headers(self, name: str, row: str, col: str):
@@ -339,6 +365,7 @@ class TableKeywords:
             raise ValueError(f"[LogTableCellValueByHeaders] Row not unique for key pattern '{row}': matched {len(matches)} rows")
         value = tbl.get_cell_text(matches[0], col_idx)
         print(f"[LogTableCellValueByHeaders] '{name}' row='{row}' col='{col}' = '{value}'")
+        _log_table_screenshots(tbl, "LogTableCellValueByHeaders", matches[0], col_idx)
 
     # ------------------------------------------------------------------
     # MemorizeTableCellValue -- Zellwert merken
@@ -362,6 +389,7 @@ class TableKeywords:
         value = tbl.get_cell_text(int(row), int(col))
         from robot.libraries.BuiltIn import BuiltIn
         BuiltIn().set_test_variable(f"${{{variable}}}", value)
+        _log_table_screenshots(tbl, "MemorizeTableCellValue", row, col)
 
     @keyword("MemorizeTableCellValueByHeaders")
     def memorize_table_cell_value_by_headers(self, name: str, row: str, col: str, variable: str):
@@ -401,6 +429,7 @@ class TableKeywords:
         value = tbl.get_cell_text(matches[0], col_idx)
         from robot.libraries.BuiltIn import BuiltIn
         BuiltIn().set_test_variable(f"${{{variable}}}", value)
+        _log_table_screenshots(tbl, "MemorizeTableCellValueByHeaders", matches[0], col_idx)
 
     # ------------------------------------------------------------------
     # VerifyTable* -- Tabellenwerte pruefen
@@ -439,11 +468,13 @@ class TableKeywords:
         while time.time() < end:
             act_cells = tbl.get_row_texts(int(row))
             if len(act_cells) == len(exp_cells) and all(_match_wcm(a, e) for a, e in zip(act_cells, exp_cells)):
+                _log_table_screenshots(tbl, "VerifyTableRowContent", row)
                 return
             last = act_cells
             time.sleep(poll)
         if last is None:
             last = tbl.get_row_texts(int(row))
+        _log_table_screenshots(tbl, "VerifyTableRowContent [FAIL]", row)
         if len(last) != len(exp_cells):
             raise AssertionError(f"[VerifyTableRowContent] Row length mismatch: expected {len(exp_cells)}, got {len(last)}")
         for i, (a, e) in enumerate(zip(last, exp_cells), start=1):
@@ -484,11 +515,13 @@ class TableKeywords:
         while time.time() < end:
             act_rows = tbl.get_column_texts(int(col))
             if len(exp_rows) == len(act_rows) and all(_match_wcm(a, e) for a, e in zip(act_rows, exp_rows)):
+                _log_table_screenshots(tbl, "VerifyTableColumnContent")
                 return
             last = act_rows
             time.sleep(poll)
         if last is None:
             last = tbl.get_column_texts(int(col))
+        _log_table_screenshots(tbl, "VerifyTableColumnContent [FAIL]")
         if len(exp_rows) != len(last):
             raise AssertionError(f"[VerifyTableColumnContent] Column length mismatch: expected {len(exp_rows)}, got {len(last)}")
         for i, (a, e) in enumerate(zip(last, exp_rows), start=1):
@@ -528,11 +561,13 @@ class TableKeywords:
         while time.time() < end:
             a = tbl.get_cell_text(int(row), int(col))
             if _match_wcm(a, expected):
+                _log_table_screenshots(tbl, "VerifyTableCellValue", row, col)
                 return
             last = a
             time.sleep(poll)
         if last is None:
             last = tbl.get_cell_text(int(row), int(col))
+        _log_table_screenshots(tbl, "VerifyTableCellValue [FAIL]", row, col)
         raise AssertionError(f"[VerifyTableCellValue] Expected '{expected}', got '{last}' at r{row}c{col}")
 
     @keyword("VerifyTableRowCount")
@@ -561,9 +596,11 @@ class TableKeywords:
         while time.time() < end:
             got = int(tbl.get_row_count())
             if got == exp:
+                _log_table_screenshots(tbl, "VerifyTableRowCount")
                 return
             time.sleep(poll)
         got = int(tbl.get_row_count())
+        _log_table_screenshots(tbl, "VerifyTableRowCount [FAIL]")
         raise AssertionError(f"[VerifyTableRowCount] Expected {exp} rows, got {got}")
 
     @keyword("VerifyTableColumnCount")
@@ -592,9 +629,11 @@ class TableKeywords:
         while time.time() < end:
             got = int(tbl.get_column_count())
             if got == exp:
+                _log_table_screenshots(tbl, "VerifyTableColumnCount")
                 return
             time.sleep(poll)
         got = int(tbl.get_column_count())
+        _log_table_screenshots(tbl, "VerifyTableColumnCount [FAIL]")
         raise AssertionError(f"[VerifyTableColumnCount] Expected {exp} columns, got {got}")
 
     @keyword("VerifyTableHasRow")
@@ -630,8 +669,10 @@ class TableKeywords:
                 if len(act) != len(exp_cells):
                     continue
                 if all(_match_wcm(a, e) for a, e in zip(act, exp_cells)):
+                    _log_table_screenshots(tbl, "VerifyTableHasRow", r)
                     return
             time.sleep(poll)
+        _log_table_screenshots(tbl, "VerifyTableHasRow [FAIL]")
         raise AssertionError("[VerifyTableHasRow] No row matched the expected pattern")
 
     @keyword("VerifyTableContent")
@@ -678,12 +719,14 @@ class TableKeywords:
                         ok = False
                         break
             if ok:
+                _log_table_screenshots(tbl, "VerifyTableContent")
                 return
             last_rows = act_rows
             time.sleep(poll)
         if last_rows is None:
             rc = tbl.get_row_count()
             last_rows = [tbl.get_row_texts(r) for r in range(1, rc + 1)]
+        _log_table_screenshots(tbl, "VerifyTableContent [FAIL]")
         if len(last_rows) != len(exp_rows):
             raise AssertionError(f"[VerifyTableContent] Row count mismatch: expected {len(exp_rows)}, got {len(last_rows)}")
         for i, (act, exp) in enumerate(zip(last_rows, exp_rows), start=1):
@@ -738,6 +781,7 @@ class TableKeywords:
             if len(matches) == 1:
                 val = tbl.get_cell_text(matches[0], col_idx)
                 if _match_wcm(val, expected):
+                    _log_table_screenshots(tbl, "VerifyTableCellValueByHeaders", matches[0], col_idx)
                     return
                 last_val = val
             last_rows = matches
@@ -745,6 +789,8 @@ class TableKeywords:
         if last_rows is None:
             rc = int(tbl.get_row_count())
             last_rows = [r for r in range(1, rc + 1) if _match_wcm(tbl.get_cell_text(r, rk_idx), row)]
+        _log_table_screenshots(tbl, "VerifyTableCellValueByHeaders [FAIL]",
+                               last_rows[0] if len(last_rows) == 1 else None)
         if len(last_rows) == 0:
             raise AssertionError(f"[VerifyTableCellValueByHeaders] No row matched key pattern '{row}'")
         if len(last_rows) > 1:
@@ -793,6 +839,7 @@ class TableKeywords:
             if len(matches) == 1:
                 act_cells = tbl.get_row_texts(matches[0])
                 if len(act_cells) == len(exp_cells) and all(_match_wcm(a, e) for a, e in zip(act_cells, exp_cells)):
+                    _log_table_screenshots(tbl, "VerifyTableRowContentByHeader", matches[0])
                     return
                 last_row_vals = act_cells
             last_matches = matches
@@ -800,6 +847,8 @@ class TableKeywords:
         if last_matches is None:
             rc = int(tbl.get_row_count())
             last_matches = [r for r in range(1, rc + 1) if _match_wcm(tbl.get_cell_text(r, key_col), row_value)]
+        _log_table_screenshots(tbl, "VerifyTableRowContentByHeader [FAIL]",
+                               last_matches[0] if len(last_matches) == 1 else None)
         if len(last_matches) == 0:
             raise AssertionError(f"[VerifyTableRowContentByHeader] No row matched pattern '{row_value}' in column '{row_header}'")
         if len(last_matches) > 1:
@@ -843,11 +892,13 @@ class TableKeywords:
         while time.time() < end:
             act_rows = tbl.get_column_texts(int(col_idx))
             if len(exp_rows) == len(act_rows) and all(_match_wcm(a, e) for a, e in zip(act_rows, exp_rows)):
+                _log_table_screenshots(tbl, "VerifyTableColumnContentByHeader")
                 return
             last_vals = act_rows
             time.sleep(poll)
         if last_vals is None:
             last_vals = tbl.get_column_texts(int(col_idx))
+        _log_table_screenshots(tbl, "VerifyTableColumnContentByHeader [FAIL]")
         if len(exp_rows) != len(last_vals):
             raise AssertionError(f"[VerifyTableColumnContentByHeader] Column length mismatch: expected {len(exp_rows)}, got {len(last_vals)}")
         for i, (a, e) in enumerate(zip(last_vals, exp_rows), start=1):
@@ -901,6 +952,7 @@ class TableKeywords:
                 val = tbl.get_cell_text(matches[0], col_idx)
                 ok = (val == "") if want_empty else bool(rx.search(val or ""))
                 if ok:
+                    _log_table_screenshots(tbl, "VerifyTableCellValueByHeadersREGX", matches[0], col_idx)
                     return
                 last_val = val
             last_rows = matches
@@ -908,6 +960,8 @@ class TableKeywords:
         if last_rows is None:
             rc = int(tbl.get_row_count())
             last_rows = [r for r in range(1, rc + 1) if _match_wcm(tbl.get_cell_text(r, rk_idx), row)]
+        _log_table_screenshots(tbl, "VerifyTableCellValueByHeadersREGX [FAIL]",
+                               last_rows[0] if len(last_rows) == 1 else None)
         if len(last_rows) == 0:
             raise AssertionError(f"[VerifyTableCellValueByHeadersREGX] No row matched key pattern '{row}'")
         if len(last_rows) > 1:
@@ -973,6 +1027,7 @@ class TableKeywords:
                             if not rx.search(a or ""):
                                 ok = False; break
                     if ok:
+                        _log_table_screenshots(tbl, "VerifyTableRowContentByHeaderREGX", matches[0])
                         return
                 last_vals = act
             last_matches = matches
@@ -980,6 +1035,8 @@ class TableKeywords:
         if last_matches is None:
             rc = int(tbl.get_row_count())
             last_matches = [r for r in range(1, rc + 1) if _match_wcm(tbl.get_cell_text(r, key_col), row_value)]
+        _log_table_screenshots(tbl, "VerifyTableRowContentByHeaderREGX [FAIL]",
+                               last_matches[0] if len(last_matches) == 1 else None)
         if len(last_matches) == 0:
             raise AssertionError(f"[VerifyTableRowContentByHeaderREGX] No row matched pattern '{row_value}' in column '{row_header}'")
         if len(last_matches) > 1:
@@ -1042,11 +1099,13 @@ class TableKeywords:
                         if not rx.search(a or ""):
                             ok = False; break
                 if ok:
+                    _log_table_screenshots(tbl, "VerifyTableColumnContentByHeaderREGX")
                     return
             last_vals = act
             time.sleep(poll)
         if last_vals is None:
             last_vals = tbl.get_column_texts(int(col_idx))
+        _log_table_screenshots(tbl, "VerifyTableColumnContentByHeaderREGX [FAIL]")
         if len(last_vals) != len(rx_list):
             raise AssertionError(f"[VerifyTableColumnContentByHeaderREGX] Column length mismatch: expected {len(rx_list)}, got {len(last_vals)}")
         for i, (a, rx) in enumerate(zip(last_vals, rx_list), start=1):

@@ -46,6 +46,45 @@ _IncludeLoader.add_constructor("!include", _include_constructor)
 
 
 # -----------------------------------------------------------------------
+# !include-merge Tag -- Bindet externe YAML ein und merged flach
+# -----------------------------------------------------------------------
+class _MergeMarker:
+    """Marker fuer !include-merge — wird beim Post-Processing aufgeloest."""
+    def __init__(self, data: dict):
+        self.data = data
+
+
+def _include_merge_constructor(loader: _IncludeLoader, node: yaml.ScalarNode):
+    """Laedt eine YAML-Datei und markiert den Inhalt zum flachen Mergen."""
+    content = _include_constructor(loader, node)
+    if not isinstance(content, dict):
+        raise TypeError(
+            f"!include-merge: Datei muss ein dict liefern, "
+            f"bekommen: {type(content).__name__}"
+        )
+    return _MergeMarker(content)
+
+
+_IncludeLoader.add_constructor("!include-merge", _include_merge_constructor)
+
+
+def _resolve_merges(data):
+    """Loest _MergeMarker rekursiv auf: merged Inhalt flach in den Parent."""
+    if isinstance(data, dict):
+        merged = {}
+        for key, value in data.items():
+            if isinstance(value, _MergeMarker):
+                for mk, mv in value.data.items():
+                    merged[mk] = _resolve_merges(mv)
+            else:
+                merged[key] = _resolve_merges(value)
+        return merged
+    if isinstance(data, list):
+        return [_resolve_merges(item) for item in data]
+    return data
+
+
+# -----------------------------------------------------------------------
 # Oeffentliche API
 # -----------------------------------------------------------------------
 def load_yaml_with_fallback(name: str) -> dict:
@@ -66,7 +105,7 @@ def load_yaml_with_fallback(name: str) -> dict:
     local_path = Path("locators") / f"{name}.yaml"
     if local_path.exists():
         with open(local_path, "r", encoding="utf-8") as f:
-            return yaml.load(f, _IncludeLoader)
+            return _resolve_merges(yaml.load(f, _IncludeLoader))
 
     # 2. Treiber-Pakete (optional installiert)
     for pkg in _DRIVER_PACKAGES:
@@ -92,7 +131,7 @@ def _try_load_from_package(base_pkg: str, parts: list[str]) -> dict | None:
 
         if res_path.exists():
             with open(res_path, "r", encoding="utf-8") as f:
-                return yaml.load(f, _IncludeLoader)
+                return _resolve_merges(yaml.load(f, _IncludeLoader))
     except (ImportError, ModuleNotFoundError, TypeError):
         # Paket nicht installiert - ueberspringen
         pass

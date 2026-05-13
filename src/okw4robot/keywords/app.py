@@ -128,3 +128,4 @@ class AppKeywords(LoggingMixin):
             adapter.shutdown()
 
         context.stop_app()
+        context._adapter = None
