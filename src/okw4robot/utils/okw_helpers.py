@@ -85,6 +85,40 @@ def normalize_var_name(variable: str) -> str:
     return "${" + var + "}"
 
 
+def _apply_context_locator(child_locator, context_locator, placeholders):
+    # TODO: CSS context locator support (currently XPath only)
+    if not context_locator or not child_locator:
+        return child_locator
+
+    ctx_loc = dict(context_locator) if isinstance(context_locator, dict) else context_locator
+    child_loc = dict(child_locator) if isinstance(child_locator, dict) else child_locator
+
+    if isinstance(ctx_loc, dict) and len(ctx_loc) == 1:
+        ctx_strategy = list(ctx_loc.keys())[0]
+        ctx_value = str(list(ctx_loc.values())[0])
+    else:
+        return child_locator
+
+    if placeholders:
+        ctx_value = ctx_value.format(**placeholders)
+
+    if isinstance(child_loc, dict) and len(child_loc) == 1:
+        child_strategy = list(child_loc.keys())[0]
+        child_value = str(list(child_loc.values())[0])
+    else:
+        return child_locator
+
+    if ctx_strategy == "xpath" and child_value.startswith("."):
+        combined_value = f"({ctx_value})/{child_value}"
+        return {"xpath": combined_value}
+
+    if ctx_strategy == "xpath":
+        combined_value = f"({ctx_value})//{child_value}"
+        return {"xpath": combined_value}
+
+    return child_locator
+
+
 def resolve_widget(name: str):
     """Resolve a logical widget name to a widget instance using the current context.
 
@@ -116,6 +150,23 @@ def resolve_widget(name: str):
             return widget_class(adapter, model.get("locator"), **extras)
 
     model = context.get_current_window_model()
+
+    # --- Context-aware resolve: look in context group first ---
+    if context._context_group and context._context_group in model:
+        group = model[context._context_group]
+        if isinstance(group, dict) and name in group:
+            entry = group[name]
+            widget_class = load_class(entry["class"])
+            adapter = context.get_adapter()
+            locator = _apply_context_locator(
+                entry.get("locator"),
+                context._context_locator,
+                context._context_placeholders,
+            )
+            extras = {k: v for k, v in entry.items()
+                      if k not in ("class", "locator")}
+            return widget_class(adapter, locator, **extras)
+
     if name not in model:
         raise KeyError(f"Widget '{name}' not found in current window.")
     entry = model[name]

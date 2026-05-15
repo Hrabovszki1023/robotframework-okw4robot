@@ -3,7 +3,7 @@ from okw4robot.utils.loader import load_class
 
 
 # Reservierte Keys auf Fenster-/Widget-Ebene (keine Kind-Widgets)
-_RESERVED_KEYS = frozenset({"class", "locator", "__self__"})
+_RESERVED_KEYS = frozenset({"class", "locator", "__self__", "__context__"})
 
 
 class Context(LoggingMixin):
@@ -21,6 +21,9 @@ class Context(LoggingMixin):
         self._app_config_name = None
         self._app_config_data = None
         self._window = None
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
 
     # === HOST / ADAPTER ===
     def set_adapter(self, adapter):
@@ -34,6 +37,9 @@ class Context(LoggingMixin):
         self._app_config_name = None
         self._app_config_data = None
         self._window = None
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
 
         self.log_info(f"[Context] Adapter '{adapter.__class__.__name__}' wurde gesetzt.")
         print(f"[Context] Adapter '{adapter.__class__.__name__}' wurde gesetzt.")
@@ -55,6 +61,9 @@ class Context(LoggingMixin):
         self._app_config_name = None
         self._app_config_data = None
         self._window = None
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
 
         print(f"[Context] Adapter '{adapter_name}' wurde gestoppt.")
 
@@ -106,6 +115,9 @@ class Context(LoggingMixin):
         self._app_name = name
         self._app_model = model
         self._window = None
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
 
         print(f"[Context] Anwendung '{name}' wurde gestartet.")
 
@@ -126,6 +138,9 @@ class Context(LoggingMixin):
             )
 
         self._window = None
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
         print(f"[Context] Anwendung '{name}' wurde ausgewählt.")
 
 
@@ -143,6 +158,9 @@ class Context(LoggingMixin):
         self._app_config_name = None
         self._app_config_data = None
         self._window = None
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
 
 
     # === WINDOW ===
@@ -197,6 +215,9 @@ class Context(LoggingMixin):
                 )
 
         self._window = window_name
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
         modell_name = self._app_name or "<Host-Modell>"
         print(f"[Context] Fenster/Widget '{window_name}' im Modell '{modell_name}' ausgewählt.")
 
@@ -218,6 +239,35 @@ class Context(LoggingMixin):
             raise RuntimeError("No window selected.")
         return self._app_model[self._window]
 
+    # === CONTEXT (Repeating Structures) ===
+    def set_context(self, group_name: str, placeholders: dict):
+        model = self.get_current_window_model()
+        if group_name not in model:
+            raise KeyError(
+                f"[Context] Context-Gruppe '{group_name}' nicht im Fenster "
+                f"'{self._window}' gefunden."
+            )
+        group = model[group_name]
+        if not isinstance(group, dict) or "__context__" not in group:
+            raise KeyError(
+                f"[Context] Gruppe '{group_name}' hat keinen __context__-Eintrag."
+            )
+        ctx_def = group["__context__"]
+        locator = ctx_def.get("locator")
+        if not locator:
+            raise ValueError(
+                f"[Context] __context__ in '{group_name}' hat keinen Locator."
+            )
+        self._context_group = group_name
+        self._context_placeholders = placeholders
+        self._context_locator = locator
+        print(f"[Context] SetContext '{group_name}' mit {placeholders}.")
+
+    def clear_context(self):
+        self._context_group = None
+        self._context_placeholders = {}
+        self._context_locator = None
+
     # === DIAGNOSTICS ===
     def describe(self):
         """Kurzuebersicht des aktuellen Kontextes fuer Diagnose und Logging."""
@@ -225,7 +275,9 @@ class Context(LoggingMixin):
             "adapter": type(self._adapter).__name__ if self._adapter else None,
             "app": self._app_name,
             "config": self._app_config_name,
-            "window": self._window
+            "window": self._window,
+            "context_group": self._context_group,
+            "context_placeholders": self._context_placeholders if self._context_group else None,
         }
 
 context = Context()

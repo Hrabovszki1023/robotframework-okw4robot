@@ -89,6 +89,43 @@ class AppKeywords(LoggingMixin):
         context.set_window(name)
         self.log_info(f"Fenster/Widget '{name}' aktiviert.")
 
+    @keyword("SetContext")
+    def set_context(self, group: str, *args: str):
+        import re
+        model = context.get_current_window_model()
+        if group not in model:
+            raise KeyError(f"Context group '{group}' not found in current window.")
+        ctx_def = model[group].get("__context__", {})
+        ctx_locator = ctx_def.get("locator", {})
+
+        locator_str = ""
+        if isinstance(ctx_locator, dict):
+            locator_str = str(list(ctx_locator.values())[0]) if ctx_locator else ""
+        elif isinstance(ctx_locator, str):
+            locator_str = ctx_locator
+
+        defined_placeholders = re.findall(r"\{(\w+)\}", locator_str)
+
+        named = {}
+        positional = []
+        for a in args:
+            if "=" in a:
+                k, v = a.split("=", 1)
+                named[k.strip()] = v.strip()
+            else:
+                positional.append(a)
+
+        if named:
+            placeholders = named
+        elif positional and defined_placeholders:
+            value = " ".join(positional)
+            placeholders = {defined_placeholders[0]: value}
+        else:
+            placeholders = {}
+
+        self.log_info(f"SetContext '{group}' mit {placeholders}.")
+        context.set_context(group, placeholders)
+
     @keyword("StopApp")
     def stop_app(self, name: str | None = None):
         """Beendet eine Anwendung.
