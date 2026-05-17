@@ -71,6 +71,26 @@ class WidgetKeywords:
         else:
             widget._with_screenshots("DoubleClickOn", widget.okw_double_click_value, value)
 
+    @keyword("MoveOver")
+    def move_over(self, name: str):
+        """Move the mouse over a widget (hover).
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+
+        Behavior:
+        - Resolves the widget by name and triggers its ``okw_move_over()``.
+        - Useful for revealing hidden elements that appear on mouse hover
+          (tooltips, overlays, dropdown menus).
+
+        Example:
+        | SelectWindow  | HoversPage  |
+        | *MoveOver*    | *Avatar1*   |
+        | VerifyValue   | Username1   | user1 |
+        """
+        w = resolve_widget(name)
+        w._with_screenshots("MoveOver", w.okw_move_over)
+
     @keyword("SetValue")
     def set_value(self, name, value):
         """Sets the value of a widget.

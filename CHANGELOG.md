@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-05-17
+
+### Highlights
+- New `MoveOver` keyword for mouse hover interactions
+- `SetContext` keyword for repeating GUI structures (XPath only)
+- Suite-relative YAML locator search (fixes VS Code CWD issue)
+- Before/after screenshot logging for write keywords
+
+### Features
+- `MoveOver <Name>` — moves the mouse over a widget (hover) to reveal hidden
+  elements (tooltips, overlays, dropdown menus). Widget method: `okw_move_over()`.
+  Pre-condition: `_pre_read()` (exists). Screenshots: before/after in Robot log.
+- `SetContext <Group> <Value>` — scopes subsequent widget operations to a
+  repeating GUI structure (e.g., product cards, list items). Uses `__context__`
+  YAML key with `{Placeholder}` syntax. XPath only.
+- YAML loader: suite-relative search via `${SUITE SOURCE}` — locators are
+  found relative to the `.robot` file, not only relative to CWD.
+- Screenshot logging: write keywords (`ClickOn`, `SetValue`, `TypeKey`,
+  `Delete`, `Select`, `SelectMenu`, `DoubleClickOn`, `MoveOver`) log
+  before/after screenshots as inline Base64 `<img>` tags.
+- `OnFailNOISE` keyword for NOISE/FAIL classification in preparation phases.
+- `DoubleClickOn <Name> <Value>` — double-click on a specific entry
+  within a list-like widget (via `okw_double_click_value()`).
+
+### Docs
+- `cheatsheet.md`: MoveOver added to Actions table with example
+- `KEYWORDS.md`: MoveOver section with description, example, widget method
+- `CONTRACT.md`: MoveOver in keyword → widget mapping table
+- `widgets_common.md`: MoveOver in method and keyword tables
+- `keywords_noise.md`: OnFailNOISE documentation with 5-phase model
+
+### Breaking Changes
+- None
+
 ## [0.4.0] - 2026-02-22
 
 ### Highlights
@@ -75,6 +109,7 @@ All notable changes to this project will be documented in this file.
 ### Compatibility
 - Python: >= 3.10
 
+[0.5.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Hrabovszki1023/robotframework-okw4robot/releases/tag/v0.2.0

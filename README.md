@@ -105,6 +105,7 @@ with `NotImplementedError`. Driver packages implement them:
 |-----------------------|-----------------------------------|
 | `OkwWidget.okw_set_value()` | `WebSe_TextField.okw_set_value()` → Selenium `clear` + `input_text` |
 | `OkwWidget.okw_click()` | `WebSe_Base.okw_click()` → Selenium `click_element` |
+| `OkwWidget.okw_move_over()` | `WebSe_Base.okw_move_over()` → Selenium `ActionChains.move_to_element` |
 | `OkwWidget.okw_exists()` | `WebSe_Base.okw_exists()` → Selenium `find_elements` |
 
 ---
@@ -118,7 +119,7 @@ robotframework-okw4robot/
     keywords/
       host.py                   # StartHost, StopHost, SelectHost
       app.py                    # StartApp, StopApp, SelectWindow
-      widget_keywords.py        # SetValue, ClickOn, VerifyValue, ...
+      widget_keywords.py        # SetValue, ClickOn, MoveOver, VerifyValue, ...
       attribute_keywords.py     # VerifyAttribute, MemorizeAttribute, LogAttribute
       caption_keywords.py       # VerifyCaption, MemorizeCaption, LogCaption
       label_keywords.py         # VerifyLabel, MemorizeLabel, LogLabel

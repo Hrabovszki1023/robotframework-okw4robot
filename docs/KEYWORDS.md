@@ -9,11 +9,28 @@ fuer `robotframework-okw4robot`.
 
 ## 1. Aktionen ohne Eingabewert
 
-Aktionen, die keine Werte übergeben bekommen (z. B. Klicks/Fokus).
+Aktionen, die keine Werte übergeben bekommen (z. B. Klicks/Fokus/Hover).
 
-- `ClickOn    <Name>`
-- `DoubleClickOn    <Name>`
-- `SetFocus    <Name>`
+- `ClickOn       <Name>`
+- `DoubleClickOn <Name>`
+- `MoveOver      <Name>`
+- `SetFocus      <Name>`
+
+### MoveOver
+
+Bewegt den Mauszeiger ueber ein Widget (Hover), ohne zu klicken.
+Nuetzlich, um versteckte Elemente sichtbar zu machen, die erst bei
+Mouse-Hover erscheinen (Tooltips, Overlays, Dropdown-Menues).
+
+```robot
+SelectWindow   HoversPage
+MoveOver       Avatar1
+VerifyValue    Username1    user1
+```
+
+**Widget-Methode:** `okw_move_over()`
+**Pre-Condition:** `_pre_read()` (exists)
+**Screenshots:** Vorher/Nachher automatisch im Robot Log
 
 **Unterstützte Widgets (aus Doku):** Button, TextField, MultilineField, CheckBox,  
 (Fokus: zusätzlich Label, ComboBox, RadioList, ListBox)

@@ -156,6 +156,7 @@ Methoden.
 |---------|-------------|
 | `okw_click()` | Klick auf das Element |
 | `okw_double_click()` | Doppelklick |
+| `okw_move_over()` | Maus ueber das Element bewegen (Hover) |
 | `okw_set_value(value)` | Wert setzen (Eingabe) |
 | `okw_select(value)` | Wert auswaehlen (z.B. Dropdown, RadioList) |
 | `okw_type_key(key)` | Taste druecken |
@@ -212,6 +213,7 @@ Methoden.
 |---------------|---------------|
 | `ClickOn <Name>` | `okw_click()` |
 | `DoubleClickOn <Name>` | `okw_double_click()` |
+| `MoveOver <Name>` | `okw_move_over()` |
 | `SetValue <Name> <Wert>` | `okw_set_value(value)` |
 | `Select <Name> <Wert>` | `okw_select(value)` |
 | `TypeKey <Name> <Key>` | `okw_type_key(key)` |

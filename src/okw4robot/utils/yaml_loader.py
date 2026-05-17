@@ -87,6 +87,19 @@ def _resolve_merges(data):
 # -----------------------------------------------------------------------
 # Oeffentliche API
 # -----------------------------------------------------------------------
+def _get_robot_source_dir() -> "Path | None":
+    """Return the directory of the currently executing .robot file, or None."""
+    try:
+        from robot.libraries.BuiltIn import BuiltIn
+        source = BuiltIn().get_variable_value("${SUITE SOURCE}")
+        if source:
+            p = Path(source)
+            return p.parent if p.is_file() else p
+    except Exception:
+        pass
+    return None
+
+
 def load_yaml_with_fallback(name: str) -> dict:
     """
     Laedt eine YAML-Datei aus dem Projektverzeichnis oder faellt auf
@@ -94,29 +107,44 @@ def load_yaml_with_fallback(name: str) -> dict:
     ``name`` ist ein relativer Pfad ohne ".yaml" - z. B. "LoginDialog"
 
     Suchreihenfolge:
-    1. Projektverzeichnis: ./locators/<name>.yaml
-    2. Treiber-Pakete: okw_web_selenium.locators, okw_java_remoteswing.locators (falls installiert)
+    1. Projektverzeichnis: ./locators/<name>.yaml  (relativ zum CWD)
+    2. Robot-Suite-Verzeichnis: <suite-dir>/locators/<name>.yaml
+    3. Treiber-Pakete: okw_web_selenium.locators, okw_java_remoteswing.locators (falls installiert)
 
     Unterstuetzt ``!include`` in allen YAML-Dateien.
     """
     parts = name.split("/")
+    searched = []
 
     # 1. Projektverzeichnis: ./locators/<name>.yaml
     local_path = Path("locators") / f"{name}.yaml"
+    searched.append(f"CWD ./locators/")
     if local_path.exists():
         with open(local_path, "r", encoding="utf-8") as f:
             return _resolve_merges(yaml.load(f, _IncludeLoader))
 
-    # 2. Treiber-Pakete (optional installiert)
+    # 2. Robot-Suite-Verzeichnis und Elternverzeichnisse
+    #    Sucht locators/ neben und oberhalb der .robot-Datei.
+    #    z.B. tests/Test.robot -> sucht tests/locators/, dann ./locators/
+    suite_dir = _get_robot_source_dir()
+    if suite_dir:
+        for ancestor in [suite_dir, suite_dir.parent, suite_dir.parent.parent]:
+            candidate = ancestor / "locators" / f"{name}.yaml"
+            searched.append(str(ancestor / "locators/"))
+            if candidate.exists():
+                with open(candidate, "r", encoding="utf-8") as f:
+                    return _resolve_merges(yaml.load(f, _IncludeLoader))
+
+    # 3. Treiber-Pakete (optional installiert)
     for pkg in _DRIVER_PACKAGES:
         result = _try_load_from_package(pkg, parts)
         if result is not None:
             return result
+    searched.append(f"driver packages: {', '.join(_DRIVER_PACKAGES)}")
 
     raise FileNotFoundError(
         f"App YAML not found: {name}.yaml "
-        f"(searched: project ./locators/, "
-        f"driver packages: {', '.join(_DRIVER_PACKAGES)})"
+        f"(searched: {', '.join(searched)})"
     )
 
 

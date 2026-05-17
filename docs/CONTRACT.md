@@ -355,6 +355,7 @@ app YAML.
 | `ClickOn`            | `<name>`                    | `okw_click()`                       |
 | `DoubleClickOn`      | `<name>`                    | `okw_double_click()`                |
 | `DoubleClickOn`      | `<name>` `<value>`          | `okw_double_click_value(value)`     |
+| `MoveOver`           | `<name>`                    | `okw_move_over()`                   |
 | `SetFocus`           | `<name>`                    | `okw_set_focus()`                   |
 | `SelectContextMenu`  | `<name>` `<path>`           | `okw_select_context_menu(path)`     |
 

@@ -115,6 +115,9 @@ class OkwWidget(LoggingMixin):
     def okw_click(self):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_click()")
 
+    def okw_move_over(self):
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_move_over()")
+
     def okw_double_click(self):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_double_click()")
 

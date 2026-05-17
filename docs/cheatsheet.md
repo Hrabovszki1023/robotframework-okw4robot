@@ -85,12 +85,23 @@ Login erfolgreich
 |---|---|---|
 | `ClickOn` | `<Name>` | Click widget |
 | `DoubleClickOn` | `<Name>` `[Value]` | Double-click widget (or entry within) |
+| `MoveOver` | `<Name>` | Move mouse over widget (hover) |
 | `SetValue` | `<Name>` `<Value>` | Set widget value |
 | `Select` | `<Name>` `<Value>` | Select option (ComboBox, ListBox, ...) |
 | `SelectMenu` | `<Name>` `[Value]` | Select menu item; with value: idempotent |
 | `TypeKey` | `<Name>` `<Key>` | Type text/keys (appends, does not overwrite) |
 | `Delete` | `<Name>` | Clear widget content |
 | `SetFocus` | `<Name>` | Set keyboard focus |
+
+### MoveOver (Hover)
+
+Moves the mouse over a widget without clicking. Reveals hidden elements
+that appear on mouse hover (tooltips, overlays, dropdown menus).
+
+```robot
+MoveOver       Avatar                           # hover to reveal overlay
+VerifyValue    Username    user1                # verify revealed content
+```
 
 ### SelectMenu Details
 
