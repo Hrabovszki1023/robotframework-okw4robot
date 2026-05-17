@@ -6,21 +6,44 @@ die mit den OKW-Bibliotheken lauffaehig sind.
 
 ---
 
-## Drei-Phasen-Modell
+## Fuenf-Phasen-Modell
 
-Jeder Testfall folgt einem festen Zusammenspiel aus drei Phasen:
+Jeder Testfall folgt einem festen Zusammenspiel aus fuenf Phasen:
 
-| Phase         | Keywords                                                  | Aufgabe                                       |
-|---------------|-----------------------------------------------------------|-----------------------------------------------|
-| Vorbereiten   | `SetValue`, `Select`, `TypeKey`                           | Felder befuellen, Auswahl treffen             |
-| Ausfuehren    | `ClickOn`, `DoubleClickOn`, `ExecuteJS`                   | Aktion ausloesen                              |
-| Pruefen       | `VerifyValue`, `VerifyExist`, `VerifyCaption`, ...        | Ergebnis verifizieren                         |
+| Phase | Nr. | Keywords | Aufgabe | OnFailNOISE? |
+|-------|-----|----------|---------|--------------|
+| Reset/Bereinigung | 1 | `StartApp`, `StopApp` | Testumgebung zuruecksetzen | JA |
+| Testdaten | 2 | `SetValue`, `Select`, `TypeKey` | Felder befuellen, Auswahl treffen | JA |
+| Navigation | 3 | `SelectWindow`, `SetContext` | Zum Testzustand navigieren | JA |
+| Testaktion | 4 | `ClickOn`, `DoubleClickOn`, `MoveOver` | Aktion ausloesen | NEIN |
+| Verifikation | 5 | `VerifyValue`, `VerifyExist`, ... | Ergebnis pruefen | NEIN |
 
 **Regeln:**
-- Jeder Testfall beginnt mit `StartHost` + `StartApp` + `SelectWindow`.
-- Das Drei-Phasen-Modell gilt auch zwischen Fenstern: nach `ClickOn OK` folgt `SelectWindow Dashboard` + Verify.
-- `VerifyValue` prueft mit Timeout bis `${OKW_TIMEOUT_VERIFY_VALUE}` (Standard 10s) – kein manuelles `Sleep` noetig.
-- Test Teardown in Settings setzen: `StopHost` schliesst den Browser/Adapter.
+- Phasen 1-3 werden mit `OnFailNOISE` umschlossen (Vorbereitung).
+- Phasen 4-5 laufen direkt -- hier zeigt ein Fehler einen echten Bug.
+- `VerifyValue` prueft mit Timeout bis `${OKW_TIMEOUT_VERIFY_VALUE}` (Standard 10s) -- kein manuelles `Sleep` noetig.
+- Test Teardown in Settings setzen: `StopApp` schliesst die Anwendung.
+
+### OnFailNOISE
+
+`OnFailNOISE` umschliesst ein Keyword und markiert den Testfall bei
+Fehler als **NOISE** statt **FAIL**. Damit unterscheidet der Report
+zwischen echten Fehlern (Testaktion/Verifikation) und Umgebungsproblemen
+(Browser startet nicht, Seite laedt nicht).
+
+```robot
+# Phase 1-3: Vorbereitung — Fehler = NOISE
+OnFailNOISE    StartApp       MyAppChrome
+OnFailNOISE    SelectWindow   Chrome
+OnFailNOISE    SetValue       URL    ${URL}
+OnFailNOISE    SelectWindow   LoginPage
+# Phase 4: Testaktion — Fehler = FAIL (echter Bug)
+SetValue       Benutzer    admin
+SetValue       Passwort    geheim
+ClickOn        Anmelden
+# Phase 5: Verifikation — Fehler = FAIL
+VerifyValue    Titel    Dashboard
+```
 
 ---
 
@@ -54,9 +77,11 @@ Driver-agnostische GUI-Testautomatisierung fuer Web und Desktop.
 | `TypeKey`        | `<name>` `<key>`       | $IGNORE, $DELETE           | Tastatureingabe simulieren (erweitert).         |
 | `ClickOn`        | `<name>`               | –                          | Klick auf Widget.                               |
 | `DoubleClickOn`  | `<name>`               | –                          | Doppelklick auf Widget.                         |
+| `MoveOver`       | `<name>`               | –                          | Maus ueber Widget bewegen (Hover).              |
 | `SetFocus`       | `<name>`               | –                          | Tastaturfokus setzen.                           |
+| `SetContext`     | `<group>` `<value>`    | –                          | Wiederholende Struktur per Platzhalter waehlen. |
 
-#### Widget – Wert pruefen (Drei-Phasen: Pruefen)
+#### Widget – Wert pruefen (Phase 5: Verifikation)
 
 | Keyword            | Parameter                | Beschreibung                                               |
 |--------------------|--------------------------|------------------------------------------------------------|
@@ -344,8 +369,167 @@ Wenn ein Testfall fehlschlaegt, pruefe in dieser Reihenfolge:
 
 ---
 
+## Ausgearbeitete Referenzloesungen (Real-World)
+
+Die folgenden Beispiele stammen aus dem `okw-examples`-Repository und sind
+mit lauffaehigen Tests verifiziert. Sie zeigen das Zusammenspiel von
+YAML-Locatoren, Keywords und dem Fuenf-Phasen-Modell.
+
+### Referenz 1: SauceDemo Login -- Positiv-/Negativtests
+
+**Seite:** https://www.saucedemo.com
+
+Standard-Loginformular mit verschiedenen Testbenutzern. Zeigt das
+Fuenf-Phasen-Modell, OnFailNOISE und wiederverwendbare Keywords.
+
+```robot
+*** Settings ***
+Library        okw_web_selenium.library.OkwWebSeleniumLibrary
+Test Setup     Login Seite Oeffnen
+Test Teardown  StopApp    MyAppChrome
+
+*** Variables ***
+${URL}    https://www.saucedemo.com
+
+*** Keywords ***
+Login Seite Oeffnen
+    # Phase 1-3: App starten und zur Login-Seite navigieren
+    OnFailNOISE    StartApp       MyAppChrome
+    OnFailNOISE    SelectWindow   Chrome
+    OnFailNOISE    SetValue       URL    ${URL}
+
+Anmelden Mit
+    [Arguments]    ${benutzer}    ${passwort}
+    # Phase 3: Navigation zum Testzustand
+    OnFailNOISE    SelectWindow   SauceDemoLogin
+    # Phase 4: Testaktion
+    SetValue       Benutzer    ${benutzer}
+    SetValue       Passwort    ${passwort}
+    ClickOn        Anmelden
+
+Login Erfolgreich
+    # Phase 3: Fensterwechsel ist Navigation
+    OnFailNOISE    SelectWindow       SauceDemoProducts
+    # Phase 5: Verifikation
+    VerifyValue        Titel    Products
+
+Login Fehlgeschlagen Mit Meldung
+    [Arguments]    ${meldung}
+    OnFailNOISE    SelectWindow       SauceDemoLogin
+    VerifyValue        Fehlermeldung    ${meldung}
+
+*** Test Cases ***
+Login Standard User
+    Anmelden Mit    standard_user    secret_sauce
+    Login Erfolgreich
+
+Login Gesperrter Benutzer
+    Anmelden Mit    locked_out_user    secret_sauce
+    Login Fehlgeschlagen Mit Meldung    Epic sadface: Sorry, this user has been locked out.
+
+Login Ohne Passwort
+    Anmelden Mit    standard_user    ${EMPTY}
+    Login Fehlgeschlagen Mit Meldung    Epic sadface: Password is required
+```
+
+### Referenz 2: Hovers -- MoveOver und SetContext
+
+**Seite:** https://practice.expandtesting.com/hovers
+
+Drei Benutzerkarten mit versteckten Infos, die erst bei Hover erscheinen.
+Zeigt `MoveOver`, `SetContext` und `VerifyExist`.
+
+```robot
+*** Settings ***
+Library        okw_web_selenium.library.OkwWebSeleniumLibrary
+Test Setup     Hovers Seite Oeffnen
+Test Teardown  StopApp    MyAppChrome
+
+*** Variables ***
+${URL}    https://practice.expandtesting.com/hovers
+
+*** Keywords ***
+Hovers Seite Oeffnen
+    OnFailNOISE    StartApp       MyAppChrome
+    OnFailNOISE    SelectWindow   Chrome
+    OnFailNOISE    SetValue       URL    ${URL}
+    OnFailNOISE    SelectWindow   HoversPage
+
+*** Test Cases ***
+MoveOver zeigt User1 Info
+    # Phase 3: Context setzen (Vorbereitung)
+    OnFailNOISE    SetContext      UserCard    user1
+    # Phase 4: Testaktion
+    MoveOver        Avatar
+    # Phase 5: Verifikation
+    VerifyValueWCM  Benutzername    *user1*
+
+MoveOver ProfilLink wird sichtbar
+    OnFailNOISE    SetContext      UserCard    user1
+    MoveOver        Avatar
+    VerifyExist     ProfilLink    YES
+```
+
+### Referenz 3: WebPark -- Projektspezifische Widgets und Boundary-Tests
+
+**Seite:** https://practice.expandtesting.com/webpark
+
+Parking Cost Calculator mit Flatpickr-Datumsfeldern. Zeigt das
+Widget-Override-Pattern und systematische Boundary-Tests.
+
+```robot
+*** Settings ***
+Library        okw_web_selenium.library.OkwWebSeleniumLibrary
+Test Setup     WebPark Seite Oeffnen
+Test Teardown  StopApp    MyAppChrome
+
+*** Variables ***
+${URL}    https://practice.expandtesting.com/webpark
+
+*** Keywords ***
+WebPark Seite Oeffnen
+    OnFailNOISE    StartApp       MyAppChrome
+    OnFailNOISE    SelectWindow   Chrome
+    OnFailNOISE    SetValue       URL    ${URL}
+    OnFailNOISE    SelectWindow   WebParkPage
+
+Parkkosten Berechnen
+    [Arguments]    ${parkplatz}    ${ein_datum}    ${ein_zeit}    ${aus_datum}    ${aus_zeit}
+    # Phase 2: Testdaten eingeben
+    Select         Parkplatz        ${parkplatz}
+    SetValue       EingangDatum     ${ein_datum}
+    SetValue       EingangZeit      ${ein_zeit}
+    SetValue       AusgangDatum     ${aus_datum}
+    SetValue       AusgangZeit      ${aus_zeit}
+    # Phase 4: Testaktion
+    ClickOn        KostenBerechnen
+
+*** Test Cases ***
+Valet Parking Unter 5 Stunden
+    [Documentation]    Valet Parking: 12 Euro fuer 5 Stunden oder weniger.
+    Parkkosten Berechnen    Valet Parking    2026-06-01    10:00    2026-06-01    14:00
+    VerifyValueWCM    Ergebnis    12.00*
+
+Short-Term Parking Tagesmaximum
+    [Documentation]    Short-Term: Ganzer Tag = Maximum 24 Euro.
+    Parkkosten Berechnen    Short-Term Parking    2026-06-01    08:00    2026-06-02    08:00
+    VerifyValueWCM    Ergebnis    24.00*
+
+Economy Parking Eine Woche
+    [Documentation]    Economy: 7 Tage = 54 Euro (7. Tag frei).
+    Parkkosten Berechnen    Economy Parking    2026-06-01    08:00    2026-06-08    08:00
+    VerifyValueWCM    Ergebnis    54.00*
+```
+
+**Hinweis:** Die Flatpickr-Felder (`EingangDatum`, `EingangZeit`, etc.)
+verwenden projektspezifische Widget-Klassen (`widgets/webpark_datefield.py`,
+`widgets/webpark_timefield.py`), die `okw_set_value()` ueberschreiben.
+Standard-`SetValue` funktioniert nicht mit Flatpickr.
+
+---
+
 ## Erweiterbarkeit
 
 Dieser Prompt ist fuer weitere OKW-Bibliotheken vorbereitet. Wenn neue Bibliotheken
 hinzukommen, wird der Abschnitt "Verfuegbare Bibliotheken" ergaenzt. Das
-Drei-Phasen-Modell bleibt fuer alle Bibliotheken gleich.
+Fuenf-Phasen-Modell bleibt fuer alle Bibliotheken gleich.

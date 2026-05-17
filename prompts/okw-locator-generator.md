@@ -269,53 +269,163 @@ Locator-Werte folgen der technischen Konvention des Zielsystems:
 
 ---
 
-## `!include` -- Modularisierung
+## `__context__` -- Wiederholende GUI-Strukturen (SetContext)
 
-Grosse Applikationen werden in separate Dateien aufgeteilt:
+Wenn die GUI wiederholende Strukturen enthaelt (Produktkarten, Listeneintraege,
+Tabellenzeilen), wird eine **Context-Gruppe** mit `__context__` definiert.
+Der Test waehlt zur Laufzeit per `SetContext` die richtige Instanz.
+
+### YAML-Struktur
+
+```yaml
+GruppenName:
+  __context__:
+    locator: { xpath: '//div[@class="item"][.//span[text()="{PlaceholderName}"]]' }
+  KindWidget1:
+    class: <widget_class>
+    locator: { xpath: './/span[@class="name"]' }    # Relativ (.//...)!
+  KindWidget2:
+    class: <widget_class>
+    locator: { xpath: './/button[@class="action"]' }
+```
+
+### Regeln
+
+- `__context__` ist ein reservierter Key (wie `__self__`).
+- Platzhalter verwenden `{Name}`-Syntax und werden per `str.format()` ersetzt.
+- Mehrere Platzhalter moeglich: `SetContext Tbl Zeile=A Spalte=3`.
+- Kind-Locatoren muessen **relative XPath-Pfade** verwenden (`.//...`).
+- **Nur XPath** fuer Context-Locatoren (CSS unterstuetzt keine Textauswahl
+  und keine relative Pfadkomposition).
+- Context wird bei `SelectWindow` zurueckgesetzt.
+
+### Testverwendung
+
+```robot
+SetContext         ProduktKarte    Sauce Labs Backpack
+VerifyValue        Produktpreis    $29.99
+ClickOn            InDenWarenkorb
+SetContext         ProduktKarte    Sauce Labs Bike Light
+VerifyValue        Produktpreis    $9.99
+```
+
+---
+
+## `!include` und `!include-merge` -- Modularisierung
+
+### `!include` -- Datei einbetten
+
+Bindet den Inhalt einer YAML-Datei unter dem angegebenen Key ein:
+
+```yaml
+MainWindow: !include dialogs/MainWindow.yaml
+```
+
+### `!include-merge` -- Flach mergen
+
+Laedt eine YAML-Datei und merged ihre Keys **flach** in den Parent
+(kein zusaetzliches Nesting):
+
+```yaml
+_pages: !include-merge Allpages.yaml
+# Ergebnis: Keys aus Allpages.yaml werden direkte Kinder des Parents
+```
+
+### Modulares Web-Test-Pattern
+
+Fuer Web-Tests empfiehlt sich eine Trennung von App, Browser und Seiten:
 
 ```
 locators/
-  MeineApp.yaml                      # Hauptdatei (Adapter + Fenster-Verweise)
-  dialogs/
-    LoginDialog.yaml                 # Fenster-Definition
-    MainWindow.yaml                  # Fenster-Definition
-    Einstellungen.yaml               # Fenster-Definition
+  Chrome.yaml              # Browser-Fenster (URL-Leiste, Maximize, etc.)
+  Allpages.yaml            # Sammelt alle Seiten via !include
+  MyAppChrome.yaml         # App = __self__ + Chrome + alle Seiten
+  LoginPage.yaml           # Seiten-Widgets (ohne App-Wrapper)
+  DashboardPage.yaml       # Seiten-Widgets
 ```
 
-**Hauptdatei:**
+**Allpages.yaml** (zentrale Sammlung -- neue Seiten nur hier eintragen):
 ```yaml
-MeineApp:
+LoginPage: !include LoginPage.yaml
+DashboardPage: !include DashboardPage.yaml
+```
+
+**MyAppChrome.yaml** (App-Hauptdatei):
+```yaml
+MyAppChrome:
   __self__:
     class: okw_web_selenium.adapters.selenium_web.SeleniumWebAdapter
     browser: chrome
-    url: https://meineapp.example.com
-
-  LoginDialog: !include dialogs/LoginDialog.yaml
-  MainWindow: !include dialogs/MainWindow.yaml
-  Einstellungen: !include dialogs/Einstellungen.yaml
+  Chrome: !include Chrome.yaml
+  _pages: !include-merge Allpages.yaml
 ```
 
-**Dialog-Datei (`dialogs/LoginDialog.yaml`):**
+Ergebnis nach Laden (flach):
 ```yaml
-class: okw_web_selenium.widgets.webse_label.WebSe_Label
-locator: { css: '[data-testid="login-page"]' }
-
-Benutzer:
-  class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
-  locator: { css: '[data-testid="tf-username"]' }
-
-Passwort:
-  class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
-  locator: { css: '[data-testid="tf-password"]' }
-
-Anmelden:
-  class: okw_web_selenium.widgets.webse_button.WebSe_Button
-  locator: { css: '[data-testid="btn-login"]' }
-
-Fehlermeldung:
-  class: okw_web_selenium.widgets.webse_label.WebSe_Label
-  locator: { css: '[data-testid="error-message"]' }
+MyAppChrome:
+  __self__: { class: ..., browser: chrome }
+  Chrome: { URL: ..., ... }
+  LoginPage: { ... }          # Direkt unter MyAppChrome, nicht unter _pages
+  DashboardPage: { ... }
 ```
+
+**Vorteile:**
+- Neue Seiten brauchen nur einen Eintrag in `Allpages.yaml`.
+- `MyAppFirefox.yaml` nutzt die gleichen Seiten, nur anderer Browser.
+- `StartApp MyAppChrome` startet Chrome, `StopApp MyAppChrome` schliesst ihn.
+
+---
+
+## Projektspezifische Widget-Klassen
+
+Wenn Standard-Widgets nicht reichen (z.B. bei JavaScript-UI-Bibliotheken
+wie Flatpickr, Select2, React-Datepicker), koennen **projektspezifische
+Widget-Klassen** erstellt werden.
+
+### Verzeichnisstruktur
+
+```
+projekt/
+  locators/
+    MyPage.yaml
+  widgets/
+    __init__.py
+    my_custom_widget.py
+  tests/
+    MyTest.robot
+```
+
+### YAML-Referenzierung
+
+```yaml
+DatumsFeld:
+  class: widgets.my_custom_widget.MyCustomWidget
+  locator: { id: dateField }
+```
+
+Der `class:`-Key referenziert die projektlokale Klasse. Der YAML-Loader
+fuegt das Projektverzeichnis (Parent von `locators/`) automatisch zu
+`sys.path` hinzu -- kein `--pythonpath` noetig.
+
+### Widget-Klasse
+
+```python
+from okw_web_selenium.widgets.webse_textfield import WebSe_TextField
+
+class MyCustomWidget(WebSe_TextField):
+    def okw_set_value(self, value: str):
+        self._wait_before('write')
+        # Projektspezifische Eingabelogik
+        self.adapter.focus(self.locator)
+        self.adapter.press_keys(self.locator, "CTRL+a")
+        self.adapter.press_keys(None, value)     # None = kein erneuter Click
+        self.adapter.press_keys(None, "ESCAPE")
+```
+
+**Regeln:**
+- Erbt von der naechstliegenden Standard-Widget-Klasse.
+- Ueberschreibt nur die Methode, die anders funktionieren muss.
+- Alle anderen Methoden (get_value, type_key, etc.) bleiben unveraendert.
 
 ---
 
@@ -420,6 +530,107 @@ Verzeichnisse:
   locator: { name: "treeVerzeichnisse" }
   separator: "/"
 ```
+
+---
+
+## Ausgearbeitete Referenzloesungen (Real-World)
+
+Die folgenden Beispiele stammen aus dem `okw-examples`-Repository und sind
+mit lauffaehigen Tests verifiziert.
+
+### Referenz 1: SetContext -- Hovers-Seite (expandtesting.com/hovers)
+
+Drei Benutzerkarten mit versteckten Informationen, die erst bei Hover sichtbar werden.
+
+**Seiten-YAML (`HoversPage.yaml`):**
+```yaml
+__self__:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { css: '.container' }
+
+UserCard:
+  __context__:
+    locator: { xpath: '//div[@class="figure"][.//h5[contains(text(),"{UserName}")]]' }
+  Avatar:
+    class: okw_web_selenium.widgets.webse_label.WebSe_Label
+    locator: { xpath: './/img[@alt="User Avatar"]' }
+  Benutzername:
+    class: okw_web_selenium.widgets.webse_label.WebSe_Label
+    locator: { xpath: './/h5' }
+  ProfilLink:
+    class: okw_web_selenium.widgets.webse_button.WebSe_Button
+    locator: { xpath: './/a[text()="View profile"]' }
+```
+
+**Warum SetContext:** Drei identische Karten -- nur der Username unterscheidet sie.
+Ein Locator-Satz reicht fuer alle drei Karten.
+
+### Referenz 2: Projektspezifische Widgets -- Parking Calculator (expandtesting.com/webpark)
+
+Flatpickr-Datumsfelder erfordern spezielle Eingabelogik.
+
+**Seiten-YAML (`WebParkPage.yaml`):**
+```yaml
+__self__:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { css: '.container' }
+
+Parkplatz:
+  class: okw_web_selenium.widgets.webse_combobox.WebSe_ComboBox
+  locator: { id: parkingLot }
+
+EingangDatum:
+  class: widgets.webpark_datefield.WebPark_DateField
+  locator: { id: entryDate }
+
+EingangZeit:
+  class: widgets.webpark_timefield.WebPark_TimeField
+  locator: { id: entryTime }
+
+AusgangDatum:
+  class: widgets.webpark_datefield.WebPark_DateField
+  locator: { id: exitDate }
+
+AusgangZeit:
+  class: widgets.webpark_timefield.WebPark_TimeField
+  locator: { id: exitTime }
+
+KostenBerechnen:
+  class: okw_web_selenium.widgets.webse_button.WebSe_Button
+  locator: { id: calculateCost }
+
+Ergebnis:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { id: resultValue }
+```
+
+**Warum projektspezifische Widgets:** Flatpickr uebernimmt die Input-Felder
+und faengt Tastatureingaben ab. Standard-`WebSe_TextField` funktioniert nicht.
+Die `WebPark_DateField`/`WebPark_TimeField`-Klassen ueberschreiben nur
+`okw_set_value()` mit einer Flatpickr-kompatiblen Sequenz.
+
+### Referenz 3: Dynamische Tabelle (expandtesting.com/dynamic-table)
+
+Tabelle mit wechselnder Spaltenreihenfolge -- kein SetContext noetig.
+
+**Seiten-YAML (`DynamicTablePage.yaml`):**
+```yaml
+__self__:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { css: '.container' }
+
+TaskManager:
+  class: okw_web_selenium.widgets.webse_table.WebSe_Table
+  locator: { css: 'table' }
+
+ChromeCpuLabel:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { css: '.bg-warning' }
+```
+
+**Warum einfach:** Keine wiederholenden Strukturen, keine Spezial-Widgets.
+Die Tabelle wird ueber `MemorizeTableCellValueByHeaders` header-basiert
+abgefragt -- die wechselnde Spaltenreihenfolge ist kein Problem.
 
 ---
 
