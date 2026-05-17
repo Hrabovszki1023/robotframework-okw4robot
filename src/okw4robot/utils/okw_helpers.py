@@ -233,13 +233,27 @@ def verify_with_timeout(
     poll = get_robot_poll()
     end = time.monotonic() + timeout_s
     last_actual: str = ""
+    last_error: Exception | None = None
     while True:
-        last_actual = get_actual() or ""
-        result = is_match(last_actual, expected, mode)
-        if result.ok:
-            return
+        try:
+            last_actual = get_actual() or ""
+            last_error = None
+        except Exception as exc:
+            # Element may not exist yet (e.g. dynamically created after
+            # a button click).  Keep polling until timeout instead of
+            # aborting immediately.
+            last_error = exc
+            last_actual = ""
+        if last_error is None:
+            result = is_match(last_actual, expected, mode)
+            if result.ok:
+                return
         if time.monotonic() >= end:
             break
         time.sleep(poll)
+    # If the last attempt raised an exception, re-raise it so the caller
+    # sees the original error (e.g. ElementNotFound).
+    if last_error is not None:
+        raise last_error
     # Raise the final mismatch as an assertion error
     assert_match(last_actual, expected, mode, context=context_label)

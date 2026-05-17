@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import yaml
 from importlib.resources import files
 
@@ -100,6 +101,24 @@ def _get_robot_source_dir() -> "Path | None":
     return None
 
 
+def _add_project_to_sys_path(yaml_path: Path):
+    """Fuegt das Projektverzeichnis (Parent von locators/) zu sys.path hinzu.
+
+    Damit koennen projektspezifische Widget-Klassen per ``class:``-Key im
+    YAML importiert werden, z.B.::
+
+        class: widgets.webpark_datefield.WebPark_DateField
+
+    Das ``widgets``-Package liegt neben ``locators/`` im Projektverzeichnis.
+    Durch den automatischen sys.path-Eintrag ist kein ``--pythonpath``
+    noetig.
+    """
+    project_dir = yaml_path.resolve().parent.parent
+    project_str = str(project_dir)
+    if project_str not in sys.path:
+        sys.path.insert(0, project_str)
+
+
 def load_yaml_with_fallback(name: str) -> dict:
     """
     Laedt eine YAML-Datei aus dem Projektverzeichnis oder faellt auf
@@ -112,6 +131,10 @@ def load_yaml_with_fallback(name: str) -> dict:
     3. Treiber-Pakete: okw_web_selenium.locators, okw_java_remoteswing.locators (falls installiert)
 
     Unterstuetzt ``!include`` in allen YAML-Dateien.
+
+    Seiteneffekt: Das Projektverzeichnis (Parent von locators/) wird
+    automatisch zu sys.path hinzugefuegt, damit projektspezifische
+    Widget-Klassen importiert werden koennen.
     """
     parts = name.split("/")
     searched = []
@@ -120,6 +143,7 @@ def load_yaml_with_fallback(name: str) -> dict:
     local_path = Path("locators") / f"{name}.yaml"
     searched.append(f"CWD ./locators/")
     if local_path.exists():
+        _add_project_to_sys_path(local_path)
         with open(local_path, "r", encoding="utf-8") as f:
             return _resolve_merges(yaml.load(f, _IncludeLoader))
 
@@ -132,6 +156,7 @@ def load_yaml_with_fallback(name: str) -> dict:
             candidate = ancestor / "locators" / f"{name}.yaml"
             searched.append(str(ancestor / "locators/"))
             if candidate.exists():
+                _add_project_to_sys_path(candidate)
                 with open(candidate, "r", encoding="utf-8") as f:
                     return _resolve_merges(yaml.load(f, _IncludeLoader))
 

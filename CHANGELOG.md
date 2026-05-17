@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2] - 2026-05-17
+
+### Bug Fixes
+- `verify_with_timeout()`: catch exceptions from `get_actual()` during
+  polling. Previously, if a widget element did not exist yet (e.g.,
+  dynamically created after a button click), the `ElementNotFound`
+  exception aborted polling immediately instead of retrying until timeout.
+- YAML loader: automatically add the project directory (parent of
+  `locators/`) to `sys.path` when loading a locator YAML. This allows
+  project-specific widget classes (e.g., `widgets.my_widget.MyWidget`)
+  to be imported without `--pythonpath`.
+
 ## [0.5.1] - 2026-05-17
 
 ### Highlights
