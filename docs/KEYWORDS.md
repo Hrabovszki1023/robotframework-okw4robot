@@ -15,6 +15,10 @@ Aktionen, die keine Werte übergeben bekommen (z. B. Klicks/Fokus/Hover).
 - `DoubleClickOn <Name>`
 - `MoveOver      <Name>`
 - `SetFocus      <Name>`
+- `DragTo        <Source>  <Target>`
+- `DragStart     <Name>`
+- `DragOver      <Name>`
+- `Drop          <Name>`
 
 ### MoveOver
 
@@ -34,6 +38,43 @@ VerifyValue    Username1    user1
 
 **Unterstützte Widgets (aus Doku):** Button, TextField, MultilineField, CheckBox,  
 (Fokus: zusätzlich Label, ComboBox, RadioList, ListBox)
+
+### Drag & Drop
+
+Drag-&-Drop-Keywords folgen dem **Collect → Execute**-Pattern:
+`DragStart` und `DragOver` sind vorbereitend (sammeln nur Element-Referenzen).
+Erst `Drop` fuehrt die gesamte Drag-Sequenz atomar aus.
+
+- `DragTo       <Source>  <Target>`
+- `DragStart    <Name>`
+- `DragOver     <Name>`
+- `Drop         <Name>`
+
+**DragTo** ist der Shortcut fuer den einfachen Fall (Source direkt auf Target,
+keine Zwischenstopps):
+
+```robot
+SelectWindow   DragDropPage
+DragTo         SpalteA    SpalteB
+VerifyValue    SpalteA    B
+VerifyValue    SpalteB    A
+```
+
+**DragStart + DragOver + Drop** fuer Szenarien mit Zwischenzielen
+(z.B. TreeView-Knoten aufklappen waehrend des Ziehens):
+
+```robot
+SelectWindow   TreeView
+DragStart      SourceNode
+DragOver       FolderNode1
+DragOver       FolderNode2
+Drop           TargetNode
+```
+
+**Widget-Methoden:** `okw_drag_start()`, `okw_drag_over()`, `okw_drop()`
+**Pre-Condition:** `_pre_read()` (exists) fuer alle drei; `Drop` fuehrt aus
+**Screenshots:** Vorher/Nachher bei `Drop` und `DragTo`
+**Adapter:** JS-basierte HTML5-Event-Simulation (DragEvent + DataTransfer)
 
 ---
 
