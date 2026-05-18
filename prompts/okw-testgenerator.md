@@ -32,17 +32,23 @@ zwischen echten Fehlern (Testaktion/Verifikation) und Umgebungsproblemen
 (Browser startet nicht, Seite laedt nicht).
 
 ```robot
-# Phase 1-3: Vorbereitung — Fehler = NOISE
+# Phase 1: App starten
 OnFailNOISE    StartApp       MyAppChrome
+
+# Phase 2-3: Navigation — Fehler = NOISE
 OnFailNOISE    SelectWindow   Chrome
 OnFailNOISE    SetValue       URL    ${URL}
+
 OnFailNOISE    SelectWindow   LoginPage
+
 # Phase 4: Testaktion — Fehler = FAIL (echter Bug)
 SetValue       Benutzer    admin
 SetValue       Passwort    geheim
 ClickOn        Anmelden
+
 # Phase 5: Verifikation — Fehler = FAIL
-VerifyValue    Titel    Dashboard
+OnFailNOISE    SelectWindow   Dashboard
+VerifyValue    Titel    Willkommen
 ```
 
 ---
@@ -340,6 +346,40 @@ Regeln fuer die Ausgabe:
 - Jeder Testfall bekommt einen sprechenden deutschen oder englischen Namen.
 - Backslashes in Regex verdoppeln: `\\d+` statt `\d+` (Robot-Framework-Syntax).
 
+### Fenster-Abschnitte (Lesbarkeit)
+
+`SelectWindow` eroeffnet einen neuen **Abschnitt** im Testfall oder Keyword.
+Alle Aktionen die auf diesem Fenster arbeiten, stehen ohne Leerzeile direkt
+darunter. Vor dem naechsten `SelectWindow` steht eine Leerzeile.
+
+```robot
+*** Keywords ***
+Seite Oeffnen
+    OnFailNOISE    StartApp       MyAppChrome
+
+    OnFailNOISE    SelectWindow   Chrome
+    OnFailNOISE    SetValue       URL    ${URL}
+
+    OnFailNOISE    SelectWindow   LoginPage
+
+*** Test Cases ***
+Login Und Dashboard Pruefen
+    OnFailNOISE    SelectWindow   LoginPage
+    SetValue       Benutzer    admin
+    SetValue       Passwort    geheim
+    ClickOn        Anmelden
+
+    OnFailNOISE    SelectWindow   Dashboard
+    VerifyValue    Titel    Willkommen
+    VerifyExist    Banner   YES
+```
+
+Regeln:
+- `StartApp` steht allein (eigener Abschnitt, Lifecycle).
+- Jeder `SelectWindow`-Block fasst alle Aktionen dieses Fensters zusammen.
+- **Keine Leerzeile** innerhalb eines Fenster-Abschnitts.
+- **Eine Leerzeile** zwischen zwei Abschnitten.
+
 ---
 
 ## Log-Formate (Fehleranalyse)
@@ -397,28 +437,27 @@ ${URL}    https://www.saucedemo.com
 
 *** Keywords ***
 Login Seite Oeffnen
-    # Phase 1-3: App starten und zur Login-Seite navigieren
     OnFailNOISE    StartApp       MyAppChrome
+
     OnFailNOISE    SelectWindow   Chrome
     OnFailNOISE    SetValue       URL    ${URL}
 
 Anmelden Mit
     [Arguments]    ${benutzer}    ${passwort}
-    # Phase 3: Navigation zum Testzustand
+
     OnFailNOISE    SelectWindow   SauceDemoLogin
-    # Phase 4: Testaktion
     SetValue       Benutzer    ${benutzer}
     SetValue       Passwort    ${passwort}
     ClickOn        Anmelden
 
 Login Erfolgreich
-    # Phase 3: Fensterwechsel ist Navigation
+
     OnFailNOISE    SelectWindow       SauceDemoProducts
-    # Phase 5: Verifikation
     VerifyValue        Titel    Products
 
 Login Fehlgeschlagen Mit Meldung
     [Arguments]    ${meldung}
+
     OnFailNOISE    SelectWindow       SauceDemoLogin
     VerifyValue        Fehlermeldung    ${meldung}
 
@@ -455,17 +494,16 @@ ${URL}    https://practice.expandtesting.com/hovers
 *** Keywords ***
 Hovers Seite Oeffnen
     OnFailNOISE    StartApp       MyAppChrome
+
     OnFailNOISE    SelectWindow   Chrome
     OnFailNOISE    SetValue       URL    ${URL}
+
     OnFailNOISE    SelectWindow   HoversPage
 
 *** Test Cases ***
 MoveOver zeigt User1 Info
-    # Phase 3: Context setzen (Vorbereitung)
     OnFailNOISE    SetContext      UserCard    user1
-    # Phase 4: Testaktion
     MoveOver        Avatar
-    # Phase 5: Verifikation
     VerifyValueWCM  Benutzername    *user1*
 
 MoveOver ProfilLink wird sichtbar
@@ -493,8 +531,10 @@ ${URL}    https://practice.expandtesting.com/webpark
 *** Keywords ***
 WebPark Seite Oeffnen
     OnFailNOISE    StartApp       MyAppChrome
+
     OnFailNOISE    SelectWindow   Chrome
     OnFailNOISE    SetValue       URL    ${URL}
+
     OnFailNOISE    SelectWindow   WebParkPage
 
 Parkkosten Berechnen
@@ -553,8 +593,10 @@ ${URL}    https://practice.expandtesting.com/drag-and-drop
 *** Keywords ***
 DragDrop Seite Oeffnen
     OnFailNOISE    StartApp       MyAppChrome
+
     OnFailNOISE    SelectWindow   Chrome
     OnFailNOISE    SetValue       URL    ${URL}
+
     OnFailNOISE    SelectWindow   DragDropPage
 
 *** Test Cases ***
