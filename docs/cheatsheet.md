@@ -86,12 +86,37 @@ Login erfolgreich
 | `ClickOn` | `<Name>` | Click widget |
 | `DoubleClickOn` | `<Name>` `[Value]` | Double-click widget (or entry within) |
 | `MoveOver` | `<Name>` | Move mouse over widget (hover) |
+| `DragTo` | `<Source>` `<Target>` | Drag source directly to target (shortcut) |
+| `DragStart` | `<Name>` | Mark drag source (preparatory, no action) |
+| `DragOver` | `<Name>` | Mark intermediate target (repeatable, no action) |
+| `Drop` | `<Name>` | Execute entire drag sequence atomically |
 | `SetValue` | `<Name>` `<Value>` | Set widget value |
 | `Select` | `<Name>` `<Value>` | Select option (ComboBox, ListBox, ...) |
 | `SelectMenu` | `<Name>` `[Value]` | Select menu item; with value: idempotent |
 | `TypeKey` | `<Name>` `<Key>` | Type text/keys (appends, does not overwrite) |
 | `Delete` | `<Name>` | Clear widget content |
 | `SetFocus` | `<Name>` | Set keyboard focus |
+
+### Drag & Drop
+
+**Simple case** — `DragTo` (one step, no intermediates):
+
+```robot
+DragTo         SpalteA    SpalteB              # drag A onto B
+VerifyValue    SpalteA    B
+```
+
+**Multi-step** — `DragStart` + optional `DragOver` + `Drop`:
+
+```robot
+DragStart      SourceNode                       # collect source
+DragOver       FolderNode1                      # collect intermediate
+DragOver       FolderNode2                      # collect another
+Drop           TargetNode                       # execute all at once
+```
+
+`DragStart`/`DragOver` only collect element references.
+`Drop` fires the complete HTML5 drag event sequence atomically.
 
 ### MoveOver (Hover)
 
