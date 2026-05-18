@@ -71,6 +71,94 @@ class WidgetKeywords:
         else:
             widget._with_screenshots("DoubleClickOn", widget.okw_double_click_value, value)
 
+    @keyword("DragStart")
+    def drag_start(self, name: str):
+        """Marks a widget as drag source (preparatory — no action yet).
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+
+        Behavior:
+        - First step of a multi-step Drag & Drop sequence.
+        - Only collects the source element — no drag events are fired.
+        - The actual drag is executed atomically when ``Drop`` is called.
+        - Use ``DragTo`` for the simple case (source → target, no intermediates).
+
+        Example:
+        | SelectWindow  | DragDropPage |
+        | *DragStart*   | *SpalteA*    |
+        | *Drop*        | *SpalteB*    |
+        """
+        w = resolve_widget(name)
+        w.okw_drag_start()
+
+    @keyword("DragOver")
+    def drag_over(self, name: str):
+        """Marks an intermediate drag target (preparatory — no action yet).
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+
+        Behavior:
+        - Can be called multiple times in a row, e.g. to expand tree nodes.
+        - Requires ``DragStart`` to have been called first.
+        - Only collects the intermediate element — no drag events are fired.
+        - The actual drag-over is executed atomically when ``Drop`` is called.
+
+        Example:
+        | SelectWindow  | TreeView       |
+        | DragStart     | SourceNode     |
+        | *DragOver*    | *FolderNode1*  |
+        | *DragOver*    | *FolderNode2*  |
+        | Drop          | TargetNode     |
+        """
+        w = resolve_widget(name)
+        w.okw_drag_over()
+
+    @keyword("Drop")
+    def drop(self, name: str):
+        """Executes the complete drag sequence and drops onto the target.
+
+        Arguments:
+        - ``name``: Logical widget name from the current window (YAML model).
+
+        Behavior:
+        - Executes the entire drag sequence atomically:
+          ``dragstart(source)`` → ``[dragover(intermediate)]*`` → ``drop(target)``
+          → ``dragend(source)``.
+        - Clears the collected drag state afterwards.
+        - Requires ``DragStart`` to have been called first.
+
+        Example:
+        | SelectWindow  | DragDropPage |
+        | DragStart     | SpalteA      |
+        | *Drop*        | *SpalteB*    |
+        """
+        w = resolve_widget(name)
+        w._with_screenshots("Drop", w.okw_drop)
+
+    @keyword("DragTo")
+    def drag_to(self, source: str, target: str):
+        """Drags a source widget directly onto a target widget (shortcut).
+
+        Arguments:
+        - ``source``: Logical source widget name (YAML model).
+        - ``target``: Logical target widget name (YAML model).
+
+        Behavior:
+        - Shortcut for ``DragStart`` + ``Drop`` without intermediates.
+        - Executes the complete drag sequence atomically in one step.
+
+        Example:
+        | SelectWindow | DragDropPage |
+        | *DragTo*     | *SpalteA*    | *SpalteB* |
+        """
+        src_w = resolve_widget(source)
+        tgt_w = resolve_widget(target)
+        src_w._with_screenshots("DragTo [Source]", lambda: None)
+        src_w.adapter.drag_to(src_w.locator, tgt_w.locator)
+        tgt_w._log_current_screenshot("DragTo [Target]")
+
     @keyword("MoveOver")
     def move_over(self, name: str):
         """Move the mouse over a widget (hover).

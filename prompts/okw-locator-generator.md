@@ -632,6 +632,29 @@ ChromeCpuLabel:
 Die Tabelle wird ueber `MemorizeTableCellValueByHeaders` header-basiert
 abgefragt -- die wechselnde Spaltenreihenfolge ist kein Problem.
 
+### Referenz 4: Drag & Drop (expandtesting.com/drag-and-drop)
+
+Zwei Spalten mit `draggable="true"`, die ihren Inhalt per HTML5 Drag tauschen.
+
+**Seiten-YAML (`DragDropPage.yaml`):**
+```yaml
+__self__:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { css: '.container' }
+
+SpalteA:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { id: column-a }
+
+SpalteB:
+  class: okw_web_selenium.widgets.webse_label.WebSe_Label
+  locator: { id: column-b }
+```
+
+**Warum einfach:** Drag-&-Drop-Elemente sind normale Labels -- die
+Drag-Logik steckt im Keyword (`DragTo`, `DragStart`/`Drop`), nicht
+im Widget. Keine spezielle Widget-Klasse noetig.
+
 ---
 
 ## Ausgabe-Regeln

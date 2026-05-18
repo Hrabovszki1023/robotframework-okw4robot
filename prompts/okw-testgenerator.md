@@ -78,6 +78,10 @@ Driver-agnostische GUI-Testautomatisierung fuer Web und Desktop.
 | `ClickOn`        | `<name>`               | –                          | Klick auf Widget.                               |
 | `DoubleClickOn`  | `<name>`               | –                          | Doppelklick auf Widget.                         |
 | `MoveOver`       | `<name>`               | –                          | Maus ueber Widget bewegen (Hover).              |
+| `DragTo`         | `<source>` `<target>`  | –                          | Zieht Source-Widget direkt auf Target (Shortcut). |
+| `DragStart`      | `<name>`               | –                          | Merkt Source (vorbereitend, keine Ausfuehrung). |
+| `DragOver`       | `<name>`               | –                          | Merkt Zwischenziel (wiederholbar, vorbereitend). |
+| `Drop`           | `<name>`               | –                          | Fuehrt gesamte Drag-Sequenz atomar aus.         |
 | `SetFocus`       | `<name>`               | –                          | Tastaturfokus setzen.                           |
 | `SetContext`     | `<group>` `<value>`    | –                          | Wiederholende Struktur per Platzhalter waehlen. |
 
@@ -525,6 +529,55 @@ Economy Parking Eine Woche
 verwenden projektspezifische Widget-Klassen (`widgets/webpark_datefield.py`,
 `widgets/webpark_timefield.py`), die `okw_set_value()` ueberschreiben.
 Standard-`SetValue` funktioniert nicht mit Flatpickr.
+
+### Referenz 4: Drag & Drop -- DragTo und DragStart/Drop
+
+**Seite:** https://practice.expandtesting.com/drag-and-drop
+
+HTML5 Drag-&-Drop-Spalten, die ihren Inhalt tauschen.
+Zeigt `DragTo` (Shortcut) und `DragStart` + `Drop` (mehrstufig).
+
+**Architektur:** `DragStart` und `DragOver` sind vorbereitende Keywords --
+sie sammeln nur Element-Referenzen. Erst `Drop` fuehrt die gesamte
+Drag-Sequenz atomar aus (dragstart → [dragover]* → drop → dragend).
+
+```robot
+*** Settings ***
+Library        okw_web_selenium.library.OkwWebSeleniumLibrary
+Test Setup     DragDrop Seite Oeffnen
+Test Teardown  StopApp    MyAppChrome
+
+*** Variables ***
+${URL}    https://practice.expandtesting.com/drag-and-drop
+
+*** Keywords ***
+DragDrop Seite Oeffnen
+    OnFailNOISE    StartApp       MyAppChrome
+    OnFailNOISE    SelectWindow   Chrome
+    OnFailNOISE    SetValue       URL    ${URL}
+    OnFailNOISE    SelectWindow   DragDropPage
+
+*** Test Cases ***
+Spalte A Nach B Ziehen Mit DragTo
+    [Documentation]    Shortcut: DragTo fuer den einfachen Fall.
+    VerifyValue    SpalteA    A
+    VerifyValue    SpalteB    B
+    DragTo         SpalteA    SpalteB
+    VerifyValue    SpalteA    B
+    VerifyValue    SpalteB    A
+
+Spalte A Nach B Ziehen Mehrstufig
+    [Documentation]    Mehrstufig: DragStart + Drop.
+    DragStart      SpalteA
+    Drop           SpalteB
+    VerifyValue    SpalteA    B
+    VerifyValue    SpalteB    A
+```
+
+**Wann welches Keyword:**
+- `DragTo Source Target` — einfacher Drag (kein Zwischenstopp).
+- `DragStart` + `DragOver`* + `Drop` — fuer Szenarien mit Zwischenzielen
+  (z.B. TreeView-Knoten aufklappen waehrend des Ziehens).
 
 ---
 

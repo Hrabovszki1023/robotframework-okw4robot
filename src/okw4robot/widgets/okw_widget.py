@@ -133,6 +133,32 @@ class OkwWidget(LoggingMixin):
         """
         raise NotImplementedError(f"{self.__class__.__name__}.okw_double_click_value()")
 
+    def okw_drag_start(self):
+        """Merkt sich dieses Element als Drag-Quelle (keine Ausfuehrung).
+
+        Erster Schritt einer mehrstufigen Drag-Sequenz.  Der Adapter sammelt
+        die Quelle und optionale Zwischenziele.  Erst ``okw_drop()`` fuehrt
+        die gesamte Sequenz atomar aus.
+        """
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_drag_start()")
+
+    def okw_drag_over(self):
+        """Merkt sich dieses Element als Zwischenziel (keine Ausfuehrung).
+
+        Kann mehrfach hintereinander aufgerufen werden, z.B. um in einem
+        TreeView Knoten aufzuklappen.  Setzt ``okw_drag_start()`` voraus.
+        Erst ``okw_drop()`` fuehrt die gesamte Sequenz aus.
+        """
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_drag_over()")
+
+    def okw_drop(self):
+        """Fuehrt die gesamte Drag-Sequenz aus und laesst auf diesem Ziel los.
+
+        Letzter Schritt: Fuehrt dragstart(source) → [dragover(mid)]* →
+        drop(target) → dragend(source) atomar aus und raeumt den Zustand auf.
+        """
+        raise NotImplementedError(f"{self.__class__.__name__}.okw_drop()")
+
     def okw_set_value(self, value: str):
         raise NotImplementedError(f"{self.__class__.__name__}.okw_set_value()")
 
