@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3] - 2026-05-18
+
+### Features
+- **Drag & Drop keywords**: `DragStart`, `DragOver`, `Drop`, `DragTo`
+  for HTML5 drag-and-drop interactions.
+- Collect-then-execute pattern: `DragStart`/`DragOver` only collect
+  element references. `Drop` executes the entire drag sequence atomically.
+- `DragTo <source> <target>` — shortcut for simple source-to-target drag
+  without intermediates.
+- AI prompts updated with Drag & Drop reference examples.
+
 ## [0.5.2] - 2026-05-17
 
 ### Bug Fixes
