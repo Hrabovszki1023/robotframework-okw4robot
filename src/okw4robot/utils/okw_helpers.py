@@ -207,7 +207,7 @@ def verify_yes_no_poll(
     Args:
         get_actual_bool: Zero-argument callable returning bool (current state).
         expected: ``"YES"`` or ``"NO"`` (and TRUE/FALSE/1/0 variants).
-        timeout_var: Robot variable name for the timeout (e.g. ``"${OKW_TIMEOUT_VERIFY_EXIST}"``).
+        timeout_var: Robot variable name for the timeout (e.g. ``"${OKW_TIMEOUT_VERIFY_EXISTS}"``).
         default_timeout: Default timeout in seconds.
         context_label: Prepended to assertion error messages.
     """

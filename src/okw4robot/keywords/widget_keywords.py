@@ -445,8 +445,8 @@ class WidgetKeywords:
         verify_with_timeout(w.okw_get_value, expected, MatchMode.REGX, timeout, f"[VerifyValueREGX] '{name}'")
         w._log_current_screenshot("VerifyValueREGX")
 
-    @keyword("VerifyExist")
-    def verify_exist(self, name, expected):
+    @keyword("VerifyExists")
+    def verify_exists(self, name, expected):
         """Verifies whether a widget exists (present in the UI) or not.
 
         Arguments:
@@ -458,19 +458,19 @@ class WidgetKeywords:
 
         Behavior:
         - Resolves the widget and polls ``adapter.element_exists(locator)`` until
-          ``${OKW_TIMEOUT_VERIFY_EXIST}`` (default 2s) using ``${OKW_POLL_VERIFY}`` (default 0.1s).
+          ``${OKW_TIMEOUT_VERIFY_EXISTS}`` (default 2s) using ``${OKW_POLL_VERIFY}`` (default 0.1s).
         - Passes when the actual existence matches ``expected``; otherwise raises AssertionError.
 
         Examples:
-        | VerifyExist | LoginButton | YES |
-        | VerifyExist | LegacyLink  | NO  |
+        | VerifyExists | LoginButton | YES |
+        | VerifyExists | LegacyLink  | NO  |
         """
         widget = resolve_widget(name)
         verify_yes_no_poll(
             lambda: widget.okw_exists(),
             expected,
-            "${OKW_TIMEOUT_VERIFY_EXIST}", 2.0,
-            f"[VerifyExist] '{name}'",
+            "${OKW_TIMEOUT_VERIFY_EXISTS}", 2.0,
+            f"[VerifyExists] '{name}'",
         )
 
     @keyword("LogValue")
