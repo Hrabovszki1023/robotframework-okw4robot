@@ -83,6 +83,42 @@ class AppKeywords(LoggingMixin):
         context.set_app(app_name, app_model)
         self.log_info(f"App '{app_name}' gestartet.")
 
+    def _log_context_screenshot(self, label: str, base64_png: str):
+        try:
+            from robot.libraries.BuiltIn import BuiltIn
+            flag = BuiltIn().get_variable_value(
+                "${OKW_LOG_SCREENSHOTS}", default="YES")
+            if str(flag).strip().upper() in ("NO", "FALSE", "0"):
+                return
+        except Exception:
+            pass
+        from robot.api import logger
+        data_uri = f"data:image/png;base64,{base64_png}"
+        onclick = (
+            "var s=this.parentElement.parentElement.querySelector('img').src;"
+            "var w=window.open('','_blank');"
+            "var d=w.document;"
+            "d.title=this.parentElement.firstChild.textContent;"
+            "d.body.style.cssText="
+            "'margin:0;background:#222;display:flex;"
+            "align-items:center;justify-content:center;min-height:100vh';"
+            "var i=d.createElement('img');"
+            "i.src=s;"
+            "d.body.appendChild(i);"
+            "return false;"
+        )
+        html = (
+            f'<div style="display:inline-block; margin:4px;">'
+            f'<div style="font-size:11px; color:#555;">{label}'
+            f' <a href="#" onclick="{onclick}" '
+            f'style="margin-left:6px; font-size:10px;">&#x29C9; Vollbild</a>'
+            f'</div>'
+            f'<img src="{data_uri}" '
+            f'alt="{label}" style="max-width:400px; border:1px solid #ccc;">'
+            f'</div>'
+        )
+        logger.info(html, html=True)
+
     @keyword("SelectWindow")
     def select_window(self, name: str):
         self.log_info(f"Wähle Fenster/Widget '{name}'...")
@@ -125,6 +161,21 @@ class AppKeywords(LoggingMixin):
 
         self.log_info(f"SetContext '{group}' mit {placeholders}.")
         context.set_context(group, placeholders)
+
+        # Screenshot des Context-Elements (opt-in via Adapter)
+        adapter = context.get_adapter()
+        if hasattr(adapter, 'get_context_screenshot_base64'):
+            resolved_locator = dict(ctx_locator) if isinstance(ctx_locator, dict) else ctx_locator
+            if isinstance(resolved_locator, dict) and placeholders:
+                key = list(resolved_locator.keys())[0]
+                val = str(list(resolved_locator.values())[0]).format(**placeholders)
+                resolved_locator = {key: val}
+            resolved_str = f"{list(resolved_locator.keys())[0]}:{list(resolved_locator.values())[0]}" if isinstance(resolved_locator, dict) else str(resolved_locator)
+            self.log_info(f"Setting context element '{resolved_str}'.")
+            base64_png = adapter.get_context_screenshot_base64(resolved_locator)
+            if base64_png:
+                self._log_context_screenshot(
+                    f"SetContext '{group}' [{resolved_str}]", base64_png)
 
     @keyword("StopApp")
     def stop_app(self, name: str | None = None):

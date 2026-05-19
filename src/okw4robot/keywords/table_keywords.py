@@ -42,14 +42,17 @@ def _get_poll() -> float:
 
 
 def _resolve_table(name):
+    from ..utils.okw_helpers import _log_resolved_element
     model = context.get_current_window_model()
     if name not in model:
         raise KeyError(f"Table '{name}' not found in current window.")
     entry = model[name]
     widget_class = load_class(entry["class"])
     adapter = context.get_adapter()
+    locator = entry.get("locator")
     extras = {k: v for k, v in entry.items() if k not in ("class", "locator")}
-    return widget_class(adapter, entry.get("locator"), **extras)
+    _log_resolved_element(name, locator)
+    return widget_class(adapter, locator, **extras)
 
 
 def _match_wcm(actual: str, expected: str) -> bool:

@@ -119,6 +119,20 @@ def _apply_context_locator(child_locator, context_locator, placeholders):
     return child_locator
 
 
+def _format_locator(locator) -> str:
+    if isinstance(locator, dict) and len(locator) == 1:
+        key, val = list(locator.items())[0]
+        return f"{key}:{val}"
+    return str(locator) if locator else ""
+
+
+def _log_resolved_element(name: str, locator):
+    from robot.api import logger
+    loc_str = _format_locator(locator)
+    if loc_str:
+        logger.info(f"Resolving element '{name}' → '{loc_str}'.")
+
+
 def resolve_widget(name: str):
     """Resolve a logical widget name to a widget instance using the current context.
 
@@ -145,9 +159,11 @@ def resolve_widget(name: str):
         if isinstance(model, dict) and "class" in model:
             widget_class = load_class(model["class"])
             adapter = context.get_adapter()
+            locator = model.get("locator")
             extras = {k: v for k, v in model.items()
                       if k not in ("class", "locator") and not isinstance(v, dict)}
-            return widget_class(adapter, model.get("locator"), **extras)
+            _log_resolved_element(name, locator)
+            return widget_class(adapter, locator, **extras)
 
     model = context.get_current_window_model()
 
@@ -165,6 +181,7 @@ def resolve_widget(name: str):
             )
             extras = {k: v for k, v in entry.items()
                       if k not in ("class", "locator")}
+            _log_resolved_element(name, locator)
             return widget_class(adapter, locator, **extras)
 
     if name not in model:
@@ -172,8 +189,10 @@ def resolve_widget(name: str):
     entry = model[name]
     widget_class = load_class(entry["class"])
     adapter = context.get_adapter()
+    locator = entry.get("locator")
     extras = {k: v for k, v in entry.items() if k not in ("class", "locator")}
-    return widget_class(adapter, entry.get("locator"), **extras)
+    _log_resolved_element(name, locator)
+    return widget_class(adapter, locator, **extras)
 
 
 def verify_yes_no_poll(

@@ -1,9 +1,29 @@
+import time
+
 from okw4robot.utils.logging_mixin import LoggingMixin
 from okw4robot.utils.loader import load_class
 
 
 # Reservierte Keys auf Fenster-/Widget-Ebene (keine Kind-Widgets)
 _RESERVED_KEYS = frozenset({"class", "locator", "__self__", "__context__"})
+
+
+def _get_precondition_timeout() -> float:
+    try:
+        from robot.libraries.BuiltIn import BuiltIn
+        val = BuiltIn().get_variable_value("${OKW_TIMEOUT_PRECONDITION}", default=5.0)
+        return float(val) if isinstance(val, (int, float)) else BuiltIn().convert_time(str(val))
+    except Exception:
+        return 5.0
+
+
+def _get_precondition_poll() -> float:
+    try:
+        from robot.libraries.BuiltIn import BuiltIn
+        val = BuiltIn().get_variable_value("${OKW_POLL_PRECONDITION}", default=0.1)
+        return float(val) if isinstance(val, (int, float)) else BuiltIn().convert_time(str(val))
+    except Exception:
+        return 0.1
 
 
 class Context(LoggingMixin):
@@ -190,13 +210,16 @@ class Context(LoggingMixin):
         window_model = self._app_model[window_name]
 
         # --- Fenster als Widget aufloesen und selektieren ---
+        from okw4robot.utils.okw_helpers import _log_resolved_element
         if isinstance(window_model, dict) and "class" in window_model:
             widget_cls = load_class(window_model["class"])
             adapter = self.get_adapter()
             locator = window_model.get("locator")
+            _log_resolved_element(window_name, locator)
             extras = {k: v for k, v in window_model.items()
                       if k not in _RESERVED_KEYS and not isinstance(v, dict)}
             window_widget = widget_cls(adapter, locator, **extras)
+            self._wait_for_window(window_widget, window_name)
             window_widget.okw_select_window()
             window_widget._log_current_screenshot(f"SelectWindow [{window_name}]")
             self.log_info(
@@ -209,7 +232,9 @@ class Context(LoggingMixin):
                 widget_cls = load_class(self_cfg["class"])
                 adapter = self.get_adapter()
                 locator = self_cfg.get("locator")
+                _log_resolved_element(window_name, locator)
                 window_widget = widget_cls(adapter, locator)
+                self._wait_for_window(window_widget, window_name)
                 window_widget._log_current_screenshot(
                     f"SelectWindow [{window_name}]"
                 )
@@ -238,6 +263,26 @@ class Context(LoggingMixin):
         if self._window is None:
             raise RuntimeError("No window selected.")
         return self._app_model[self._window]
+
+    # === WINDOW PRECONDITION ===
+    def _wait_for_window(self, window_widget, window_name: str):
+        timeout = _get_precondition_timeout()
+        poll = _get_precondition_poll()
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                if window_widget.okw_exists():
+                    return
+            except NotImplementedError:
+                return
+            except Exception:
+                pass
+            if time.monotonic() >= end:
+                raise RuntimeError(
+                    f"[SelectWindow] Fenster '{window_name}' existiert nicht "
+                    f"(Timeout {timeout}s)."
+                )
+            time.sleep(poll)
 
     # === CONTEXT (Repeating Structures) ===
     def set_context(self, group_name: str, placeholders: dict):
