@@ -125,6 +125,73 @@ class AppKeywords(LoggingMixin):
         context.set_window(name)
         self.log_info(f"Fenster/Widget '{name}' aktiviert.")
 
+    @keyword("VerifyWindowExists")
+    def verify_window_exists(self, name: str, expected: str):
+        """Verifies whether a window exists without selecting it.
+
+        Arguments:
+        - ``name``: Window name from the current app model (YAML).
+        - ``expected``: Must be ``YES`` or ``NO`` (case-insensitive).
+
+        Behavior:
+        - Resolves the window widget from the app model (class + locator).
+        - Polls ``okw_exists()`` until ``${OKW_TIMEOUT_VERIFY_EXISTS}``
+          (default 2s) using ``${OKW_POLL_VERIFY}`` (default 0.1s).
+        - Does NOT select the window or change the current context.
+
+        Examples:
+        | VerifyWindowExists | LoginPage | YES |
+        | VerifyWindowExists | ErrorPage | NO  |
+        """
+        from ..utils.okw_helpers import verify_yes_no_poll, _log_resolved_element
+
+        app_model = context._app_model
+        if not app_model:
+            raise RuntimeError(
+                "[VerifyWindowExists] Kein App-Modell geladen – "
+                "du musst vorher 'StartApp' ausführen."
+            )
+        if name not in app_model:
+            modell_name = context._app_name or "<App-Modell>"
+            raise KeyError(
+                f"[VerifyWindowExists] Fenster '{name}' nicht im Modell "
+                f"'{modell_name}' gefunden."
+            )
+
+        window_model = app_model[name]
+        window_widget = None
+
+        if isinstance(window_model, dict) and "class" in window_model:
+            widget_cls = load_class(window_model["class"])
+            adapter = context.get_adapter()
+            locator = window_model.get("locator")
+            _log_resolved_element(name, locator)
+            extras = {k: v for k, v in window_model.items()
+                      if k not in ("class", "locator", "__self__", "__context__")
+                      and not isinstance(v, dict)}
+            window_widget = widget_cls(adapter, locator, **extras)
+        elif isinstance(window_model, dict):
+            self_cfg = window_model.get("__self__", {})
+            if "class" in self_cfg and "locator" in self_cfg:
+                widget_cls = load_class(self_cfg["class"])
+                adapter = context.get_adapter()
+                locator = self_cfg.get("locator")
+                _log_resolved_element(name, locator)
+                window_widget = widget_cls(adapter, locator)
+
+        if window_widget is None:
+            raise RuntimeError(
+                f"[VerifyWindowExists] Fenster '{name}' hat kein "
+                f"aufloesbares Widget (class + locator fehlt)."
+            )
+
+        verify_yes_no_poll(
+            lambda: window_widget.okw_exists(),
+            expected,
+            "${OKW_TIMEOUT_VERIFY_EXISTS}", 2.0,
+            f"[VerifyWindowExists] '{name}'",
+        )
+
     @keyword("SetContext")
     def set_context(self, group: str, *args: str):
         import re

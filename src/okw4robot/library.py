@@ -116,7 +116,7 @@ class OKW4RobotLibrary(
 
     | *Variable*                      | *Standard* | *Verwendet von*                          |
     | ``${OKW_TIMEOUT_VERIFY_VALUE}`` | 10s        | VerifyValue, VerifyValueWCM, VerifyValueREGX |
-    | ``${OKW_TIMEOUT_VERIFY_EXISTS}`` | 2s        | VerifyExists                             |
+    | ``${OKW_TIMEOUT_VERIFY_EXISTS}`` | 2s        | VerifyExists, VerifyWindowExists         |
     | ``${OKW_TIMEOUT_VERIFY_VISIBLE}`` | 2s       | VerifyIsVisible                          |
     | ``${OKW_TIMEOUT_VERIFY_ENABLED}`` | 2s       | VerifyIsEnabled                          |
     | ``${OKW_TIMEOUT_VERIFY_FOCUS}`` | 2s         | VerifyHasFocus                           |
