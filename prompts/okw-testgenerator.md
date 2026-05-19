@@ -88,6 +88,8 @@ Driver-agnostische GUI-Testautomatisierung fuer Web und Desktop.
 | `DragStart`      | `<name>`               | –                          | Merkt Source (vorbereitend, keine Ausfuehrung). |
 | `DragOver`       | `<name>`               | –                          | Merkt Zwischenziel (wiederholbar, vorbereitend). |
 | `Drop`           | `<name>`               | –                          | Fuehrt gesamte Drag-Sequenz atomar aus.         |
+| `Delete`         | `<name>`               | –                          | Feldinhalt loeschen/leeren.                     |
+| `SelectMenu`     | `<name>` `[value]`     | –                          | Menueeintrag auswaehlen (optional: Wert fuer checkbare Items). |
 | `SetFocus`       | `<name>`               | –                          | Tastaturfokus setzen.                           |
 | `SetContext`     | `<group>` `<value>`    | –                          | Wiederholende Struktur per Platzhalter waehlen. |
 
@@ -99,6 +101,7 @@ Driver-agnostische GUI-Testautomatisierung fuer Web und Desktop.
 | `VerifyValueWCM`   | `<name>` `<pattern>`     | Wildcard-Match (`*` = beliebig, `?` = ein Zeichen).        |
 | `VerifyValueREGX`  | `<name>` `<regex>`       | Regex-Match (Python `re.search`, nicht verankert).         |
 | `MemorizeValue`    | `<name>` `<variable>`    | Speichert Widget-Wert in `${variable}`.                    |
+| `HasValue`         | `<name>`                 | Prueft ob Widget einen Wert hat.                           |
 | `LogValue`         | `<name>`                 | Loggt den aktuellen Widget-Wert.                           |
 
 #### Widget – Zustand pruefen
@@ -139,11 +142,66 @@ VerifyAttributeWCM    Username    class    *form-control*
 | `VerifyListCount`     | `<name>` `<expected_count>`     | Anzahl der Eintraege in einer Liste pruefen.     |
 | `VerifySelectedCount` | `<name>` `<expected_count>`     | Anzahl der selektierten Eintraege pruefen.       |
 
-#### JavaScript (nur Web-Adapter)
+#### Tabelle – Index-basiert (Zeile/Spalte als Zahl, 1-basiert)
 
-| Keyword      | Parameter    | Beschreibung                                         |
-|--------------|-------------|------------------------------------------------------|
-| `ExecuteJS`  | `<script>`  | JavaScript-Snippet im Browser ausfuehren. Gibt Ergebnis zurueck. |
+| Keyword                    | Parameter                                    | Beschreibung                                          |
+|----------------------------|----------------------------------------------|-------------------------------------------------------|
+| `ClickOnTableCell`         | `<name>` `<row>` `<col>`                    | Klick auf Tabellenzelle (Zeile/Spalte als Index).     |
+| `DoubleClickOnTableCell`   | `<name>` `<row>` `<col>`                    | Doppelklick auf Tabellenzelle.                        |
+| `SetTableCellValue`        | `<name>` `<row>` `<col>` `<value>`          | Wert in Tabellenzelle setzen.                         |
+| `LogTableCellValue`        | `<name>` `<row>` `<col>`                    | Zellwert loggen.                                      |
+| `MemorizeTableCellValue`   | `<name>` `<row>` `<col>` `<variable>`       | Zellwert in `${variable}` speichern.                  |
+| `VerifyTableCellValue`     | `<name>` `<row>` `<col>` `<expected>`       | Zellwert pruefen (WCM).                               |
+| `VerifyTableRowContent`    | `<name>` `<row>` `<expected_row_pattern>`    | Zeileninhalt pruefen (WCM-Muster, `\n`-getrennt).    |
+| `VerifyTableColumnContent` | `<name>` `<col>` `<expected_column_pattern>` | Spalteninhalt pruefen (WCM-Muster, `\n`-getrennt).   |
+| `VerifyTableContent`       | `<name>` `<expected_table_pattern>`          | Gesamte Tabelle pruefen (Matrix, Zeilen `\n`, Zellen `\t`). |
+| `VerifyTableHasRow`        | `<name>` `<expected_row_pattern>`            | Prueft ob mindestens eine Zeile dem Muster entspricht.|
+| `VerifyTableRowCount`      | `<name>` `<expected_count>`                  | Anzahl Tabellenzeilen pruefen.                        |
+| `VerifyTableColumnCount`   | `<name>` `<expected_count>`                  | Anzahl Tabellenspalten pruefen.                       |
+
+#### Tabelle – Header-basiert (Zeile/Spalte als Name)
+
+Header-basierte Keywords finden Zellen ueber **Spalten- und Zeilennamen** statt
+ueber Indizes. Das ist robust gegen wechselnde Zeilen-/Spaltenreihenfolgen.
+
+| Keyword                              | Parameter                                                    | Beschreibung                                              |
+|--------------------------------------|--------------------------------------------------------------|-----------------------------------------------------------|
+| `ClickOnTableCellByHeaders`          | `<name>` `<row>` `<col>`                                    | Klick auf Zelle (Zeile/Spalte als Header-Name).           |
+| `DoubleClickOnTableCellByHeaders`    | `<name>` `<row>` `<col>`                                    | Doppelklick auf Zelle (Header-basiert).                   |
+| `SetTableCellValueByHeaders`         | `<name>` `<row>` `<col>` `<value>`                          | Wert setzen (Header-basiert).                             |
+| `LogTableCellValueByHeaders`         | `<name>` `<row>` `<col>`                                    | Zellwert loggen (Header-basiert).                         |
+| `MemorizeTableCellValueByHeaders`    | `<name>` `<row>` `<col>` `<variable>`                       | Zellwert speichern (Header-basiert).                      |
+| `VerifyTableCellValueByHeaders`      | `<name>` `<row>` `<col>` `<expected>`                       | Zellwert pruefen (Header-basiert, WCM).                   |
+| `VerifyTableCellValueByHeadersREGX`  | `<name>` `<row>` `<col>` `<expected>`                       | Zellwert pruefen (Header-basiert, Regex).                 |
+| `VerifyTableRowContentByHeader`      | `<name>` `<row_header>` `<row_value>` `<expected_pattern>`  | Zeileninhalt pruefen (Header identifiziert Zeile, WCM).   |
+| `VerifyTableRowContentByHeaderREGX`  | `<name>` `<row_header>` `<row_value>` `<expected_pattern>`  | Zeileninhalt pruefen (Header identifiziert Zeile, Regex). |
+| `VerifyTableColumnContentByHeader`   | `<name>` `<col_header>` `<expected_pattern>`                 | Spalteninhalt pruefen (Header-Name, WCM).                 |
+| `VerifyTableColumnContentByHeaderREGX` | `<name>` `<col_header>` `<expected_pattern>`               | Spalteninhalt pruefen (Header-Name, Regex).               |
+
+**Beispiel: Dynamische Tabelle mit wechselnder Spaltenreihenfolge**
+
+```robot
+Dynamische Tabelle Chrome CPU Pruefen
+    SelectWindow   DynamicTablePage
+    MemorizeTableCellValueByHeaders    TaskManager    Chrome    CPU    CHROME_CPU
+    VerifyValueWCM     ChromeCpuLabel    *${CHROME_CPU}*
+```
+
+`MemorizeTableCellValueByHeaders` liest die Header-Zeile, findet "Chrome" in
+der Namensspalte und "CPU" in der Header-Zeile — unabhaengig von der Position.
+
+#### Konfiguration
+
+| Keyword            | Parameter              | Beschreibung                                                  |
+|--------------------|------------------------|---------------------------------------------------------------|
+| `SetOKWParameter`  | `<name>` `<value>`     | OKW-Laufzeitparameter setzen (z.B. Timeouts).                |
+
+Verfuegbare Parameter:
+
+| Parameter                       | Standard | Beschreibung                           |
+|---------------------------------|----------|----------------------------------------|
+| `OKW_TIMEOUT_VERIFY_VALUE`      | `10`     | Timeout fuer Verify-Keywords (Sekunden)|
+| `OKW_LOG_SCREENSHOTS`           | `YES`    | Screenshot-Logging ein/aus             |
 
 ---
 
@@ -172,6 +230,63 @@ SetValue              Comment    $EMPTY       # wird NICHT ignoriert – explizi
 Alle Zustandspruefungen akzeptieren:
 - `YES`, `TRUE`, `1` (Gross-/Kleinschreibung egal)
 - `NO`, `FALSE`, `0`
+
+---
+
+## SetContext -- Wiederholende GUI-Strukturen
+
+`SetContext` scoped nachfolgende Widget-Operationen auf eine **wiederholende
+GUI-Struktur** (z.B. Produktkarten, Listeneintraege, Tabellenzeilen) --
+ohne jede Instanz einzeln im YAML zu definieren.
+
+### Funktionsweise
+
+1. `SetContext ProduktKarte Sauce Labs Backpack` setzt den Platzhalter
+   `{ProduktName}` auf `Sauce Labs Backpack`.
+2. Nachfolgende Widget-Keywords (`VerifyValue`, `ClickOn`, ...) wirken
+   nur innerhalb der gematchten Instanz.
+3. Kind-Locatoren verwenden relative Pfade (`.//...`) -- sie sind auf
+   das Context-Element beschraenkt.
+
+### Testbeispiel
+
+```robot
+SelectWindow       Products
+SetContext         ProduktKarte    Sauce Labs Backpack
+VerifyValue        Produktpreis    $29.99
+ClickOn            InDenWarenkorb
+
+SetContext         ProduktKarte    Sauce Labs Bike Light
+VerifyValue        Produktpreis    $9.99
+ClickOn            InDenWarenkorb
+```
+
+Gleiche Keywords, unterschiedlicher Context. Zwei Produktkarten getestet
+ohne Code-Duplizierung.
+
+### YAML-Struktur (Referenz)
+
+```yaml
+ProduktKarte:
+  __context__:
+    locator: { xpath: '//div[@class="item"][.//span[text()="{ProduktName}"]]' }
+  Produktpreis:
+    class: okw_web_selenium.widgets.webse_label.WebSe_Label
+    locator: { xpath: './/div[@class="price"]' }
+  InDenWarenkorb:
+    class: okw_web_selenium.widgets.webse_button.WebSe_Button
+    locator: { xpath: './/button[contains(@class,"add")]' }
+```
+
+### Regeln
+
+- `__context__` ist ein reservierter Key auf Widget-Gruppen-Ebene.
+- Platzhalter verwenden `{Name}`-Syntax, ersetzt per `str.format()`.
+- Mehrere Platzhalter moeglich: `SetContext Tbl Zeile=A Spalte=3`.
+- Kind-Locatoren muessen **relative XPath-Pfade** verwenden (`.//...`).
+- **Nur XPath** fuer Context-Locatoren (CSS unterstuetzt keine Textauswahl).
+- Context wird bei `SelectWindow` zurueckgesetzt (neues Fenster = kein Context).
+- Widgets ausserhalb der Context-Gruppe sind nicht betroffen.
 
 ---
 
@@ -620,6 +735,58 @@ Spalte A Nach B Ziehen Mehrstufig
 - `DragTo Source Target` — einfacher Drag (kein Zwischenstopp).
 - `DragStart` + `DragOver`* + `Drop` — fuer Szenarien mit Zwischenzielen
   (z.B. TreeView-Knoten aufklappen waehrend des Ziehens).
+
+---
+
+## Einsatz als Testfall-Generierungs-Profil
+
+Dieser Prompt kann als **Rollenprofil** fuer die KI-gestuetzte Testfallerstellung
+verwendet werden -- auch von Mitarbeitern im Anforderungsbereich, die kein
+Robot Framework oder Selenium kennen.
+
+### Die Kette: Von der Anforderung zum OKW-Testfall
+
+```
+Anforderung (User Story, Spezifikation, Abnahmekriterien)
+        │
+        ▼
+  Testfall-Ableitungs-Prompt
+  ("Leite aus dieser Anforderung Testfaelle ab:
+   Aequivalenzklassen, Grenzwerte, Fehlerfaelle")
+        │
+        ▼
+  OKW-Profil-Prompt (dieses Dokument)
+  ("Schreibe die Testfaelle in OKW-Notation")
+        │
+        ▼
+  Fertige .robot-Dateien (+ YAML-Locator-Skelette)
+```
+
+### Was dieser Prompt liefert
+
+- Alle OKW-Keywords mit Parametern und Semantik
+- Fuenf-Phasen-Modell (Reset → Testdaten → Navigation → Aktion → Verifikation)
+- OnFailNOISE-Muster (Umgebungsfehler vs. echte Bugs)
+- SetContext fuer wiederholende Strukturen
+- Tabellen-Keywords (index- und header-basiert)
+- Tokens ($IGNORE, $EMPTY, $DELETE) und Match-Modi (EXACT, WCM, REGX)
+- Referenzloesungen aus dem okw-examples-Repository
+
+### Was ein kombinierter Prompt ergaenzen wuerde
+
+- **Testableitungsregeln**: Aequivalenzklassen, Grenzwerte, Negativtests
+- **Abdeckungserwartungen**: Happy Path, Fehlerfaelle, Randfaelle pro Anforderung
+- **Scope-Definition**: Ob YAML-Locatoren mitgeneriert werden oder nur `.robot`-Dateien
+
+### Kernvorteil
+
+Die Person, die die Anforderung schreibt, braucht **kein** Robot Framework,
+Selenium oder sonstiges Test-Tooling zu kennen. Sie schreibt die Anforderung,
+die KI liefert Testfaelle in OKW-Notation. Ein Testautomatisierer ergaenzt
+dann nur noch die YAML-Locatoren am realen System.
+
+Dieser Ansatz folgt ISO/IEC/IEEE 29119-5 (Keyword-Driven Testing): Die
+Testlogik ist unabhaengig von der Automatisierungstechnologie.
 
 ---
 
