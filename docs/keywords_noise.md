@@ -114,12 +114,67 @@ Bei einem Fehler in Phase 4-5 (ohne Wrapper):
 FAIL: [X] VerifyValue: erwartet 'Gespeichert', ist 'Entwurf'
 ```
 
+## OnFailIgnoreNOISE
+
+`OnFailIgnoreNOISE` ist die „stumme" Variante von `OnFailNOISE`. Bei einem
+Fehler wird die Exception **nicht** weitergeworfen — der Testfall laeuft
+weiter. Der Fehler wird als `[N][IGNORED]` geloggt.
+
+### Syntax
+
+```
+OnFailIgnoreNOISE    <Keyword>    [Parameter1]    [Parameter2]    ...
+```
+
+### Einsatzzweck
+
+Fuer **optionale Vorbereitungsschritte**, die scheitern duerfen, ohne den
+Testfall abzubrechen. Typische Beispiele:
+
+- Werbung/Ads entfernen (Seite hat moeglicherweise keine Ads)
+- Cookie-Banner schliessen (Banner erscheint nur beim ersten Besuch)
+- Optionale UI-Elemente wegklicken (Willkommensdialog, Newsletter-Popup)
+
+### Unterschied zu OnFailNOISE
+
+| Keyword | Bei Fehler | Tag gesetzt? | Test laeuft weiter? |
+|---------|-----------|--------------|---------------------|
+| `OnFailNOISE` | `[N]` Prefix, Exception wird geworfen | NOISE | Nein — Testfall schlaegt fehl |
+| `OnFailIgnoreNOISE` | `[N][IGNORED]` wird geloggt | — | Ja — Test laeuft weiter |
+
+### Beispiel
+
+```robotframework
+*** Keywords ***
+Login Seite Oeffnen
+    OnFailNOISE          StartApp       MyAppChrome
+
+    OnFailNOISE          SelectWindow   Chrome
+    OnFailNOISE          SetValue       URL    ${URL}
+    OnFailIgnoreNOISE    RemoveAds
+    OnFailNOISE          VerifyWindowExists    LoginPage    YES
+```
+
+`RemoveAds` entfernt Werbeeinblendungen per JavaScript. Wenn die Seite
+keine Ads hat, schlaegt das Keyword fehl — aber `OnFailIgnoreNOISE`
+faengt den Fehler ab und der Test geht weiter.
+
+### Wann OnFailNOISE, wann OnFailIgnoreNOISE?
+
+- **OnFailNOISE**: Der Schritt *muss* gelingen, damit der Test Sinn hat
+  (z.B. `StartApp`, `SelectWindow`, `SetValue URL`). Fehler = NOISE, aber
+  Test wird abgebrochen.
+- **OnFailIgnoreNOISE**: Der Schritt ist *optional* (z.B. Ad-Blocker,
+  Cookie-Banner). Fehler wird ignoriert, Test laeuft weiter.
+
+---
+
 ## Einsatz ist optional
 
-`OnFailNOISE` ist ein optionales Werkzeug. Tester die das NOISE-vs-Signal-
-Konzept verstanden haben, koennen es einsetzen. Ohne `OnFailNOISE` bleiben
-alle Fehler standard `[X]` FAILs — es aendert sich nichts am bisherigen
-Verhalten.
+`OnFailNOISE` und `OnFailIgnoreNOISE` sind optionale Werkzeuge. Tester die
+das NOISE-vs-Signal-Konzept verstanden haben, koennen sie einsetzen. Ohne
+diese Wrapper bleiben alle Fehler standard `[X]` FAILs — es aendert sich
+nichts am bisherigen Verhalten.
 
 ## Zusammenspiel mit OKW-Tokens
 

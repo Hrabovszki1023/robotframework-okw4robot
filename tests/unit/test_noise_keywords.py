@@ -72,3 +72,30 @@ class TestOnFailNoiseParameterweitergabe:
     def test_keyword_mit_mehreren_parametern(self, kw, builtin_mock):
         kw.on_fail_noise("SetValue", "Benutzer", "admin")
         builtin_mock.run_keyword.assert_called_once_with("SetValue", "Benutzer", "admin")
+
+
+class TestOnFailIgnoreNoiseKlassifizierung:
+
+    def test_fehler_wird_ignoriert_test_laeuft_weiter(self, kw, builtin_mock):
+        builtin_mock.run_keyword.side_effect = AssertionError("Element nicht gefunden")
+        kw.on_fail_ignore_noise("RemoveAds")
+
+    def test_kein_noise_tag_bei_ignoriertem_fehler(self, kw, builtin_mock):
+        builtin_mock.run_keyword.side_effect = AssertionError("Element nicht gefunden")
+        kw.on_fail_ignore_noise("RemoveAds")
+        builtin_mock.set_tags.assert_not_called()
+
+    def test_runtime_error_wird_auch_ignoriert(self, kw, builtin_mock):
+        builtin_mock.run_keyword.side_effect = RuntimeError("Adapter nicht verfuegbar")
+        kw.on_fail_ignore_noise("RemoveAds")
+
+
+class TestOnFailIgnoreNoiseErfolgsfall:
+
+    def test_kein_effekt_bei_erfolgreichem_keyword(self, kw, builtin_mock):
+        kw.on_fail_ignore_noise("RemoveAds")
+        builtin_mock.run_keyword.assert_called_once_with("RemoveAds")
+
+    def test_keyword_mit_parametern(self, kw, builtin_mock):
+        kw.on_fail_ignore_noise("RemoveAds", "div.ad-banner", "iframe[src*='ad']")
+        builtin_mock.run_keyword.assert_called_once_with("RemoveAds", "div.ad-banner", "iframe[src*='ad']")

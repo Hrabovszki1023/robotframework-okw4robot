@@ -127,7 +127,7 @@ robotframework-okw4robot/
       tooltip_keywords.py       # VerifyTooltip, ...
       table_keywords.py         # VerifyTableCellValue, ...
       list_keywords.py          # VerifyListCount, VerifySelectedCount
-      noise_keywords.py         # OnFailNOISE (NOISE/FAIL classification)
+      noise_keywords.py         # OnFailNOISE, OnFailIgnoreNOISE (NOISE/FAIL classification)
       params.py                 # SetOKWParameter (timeouts)
     runtime/
       context.py                # Central runtime context (adapter, app, window)
@@ -177,7 +177,7 @@ robotframework-okw4robot/
 - [keywords_table_headers.md](docs/keywords_table_headers.md) – Table keywords (header-based)
 - [keywords_list.md](docs/keywords_list.md) – VerifyListCount, VerifySelectedCount
 - [keywords_ignore_rule.md](docs/keywords_ignore_rule.md) – $IGNORE, $EMPTY, $DELETE
-- [keywords_noise.md](docs/keywords_noise.md) – OnFailNOISE (NOISE/FAIL classification)
+- [keywords_noise.md](docs/keywords_noise.md) – OnFailNOISE, OnFailIgnoreNOISE (NOISE/FAIL classification)
 
 ### Concepts
 

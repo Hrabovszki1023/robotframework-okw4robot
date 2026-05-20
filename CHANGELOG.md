@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.4] - 2026-05-20
+
+### Features
+- **OnFailIgnoreNOISE**: Silent NOISE wrapper — on failure, logs
+  `[N][IGNORED]` and continues the test. For optional preparation
+  steps (e.g., removing ads, closing cookie banners) that may fail
+  without invalidating the test.
+- **VerifyWindowExists**: Verifies window existence via polling
+  without changing the active window context.
+- **VerifyExists**: Renamed from `VerifyExist` (with `s`) for
+  grammatical consistency. Timeout variable renamed accordingly
+  (`${OKW_TIMEOUT_VERIFY_EXISTS}`).
+
+### Docs
+- `keywords_noise.md`: OnFailIgnoreNOISE section with comparison table,
+  examples, and usage guidelines
+- `KEYWORDS.md`: OnFailIgnoreNOISE added to NOISE/FAIL section;
+  VerifyExist → VerifyExists renamed
+- `okw-testgenerator.md`: Five-phase model updated with OnFailIgnoreNOISE
+  for optional steps; example code includes RemoveAds pattern
+- `README.md` / `README_de.md`: Project structure updated
+
 ## [0.5.3] - 2026-05-18
 
 ### Features

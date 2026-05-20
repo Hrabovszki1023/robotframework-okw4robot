@@ -128,7 +128,7 @@ Prüfungen warten bis zum Sollzustand oder Timeout (Polling).
 - `VerifyAttributeREGX    <Name>  <AttributeName>  <ExpectedRegex>`
 
 ### Exist / State
-- `VerifyExist        <Name>  <YES/NO>`
+- `VerifyExists       <Name>  <YES/NO>`
 - `VerifyHasFocus     <Name>  <YES/NO>`
 - `VerifyIsVisible    <Name>  <YES/NO>`
 - `VerifyIsEnabled    <Name>  <YES/NO>`
@@ -215,11 +215,18 @@ Tabellen-Keywords (technologieuebergreifend). Syntax/Token siehe `docs/table_tok
 
 ## 8. Fail-Klassifizierung (NOISE / FAIL)
 
-- `OnFailNOISE    <Keyword>    [Param1]    [Param2]    ...`
+- `OnFailNOISE          <Keyword>    [Param1]    [Param2]    ...`
+- `OnFailIgnoreNOISE    <Keyword>    [Param1]    [Param2]    ...`
 
-Wraps ein beliebiges Keyword. Bei Fehler wird die Meldung mit `[N]`
-(NOISE) prefixed statt `[X]` (FAIL). Fuer Vorbereitungsphasen (Reset,
-Umgebung, Navigation). Siehe [keywords_noise.md](keywords_noise.md).
+`OnFailNOISE` wraps ein beliebiges Keyword. Bei Fehler wird die Meldung
+mit `[N]` (NOISE) prefixed statt `[X]` (FAIL). Fuer Vorbereitungsphasen
+(Reset, Umgebung, Navigation).
+
+`OnFailIgnoreNOISE` wraps ein beliebiges Keyword. Bei Fehler wird
+`[N][IGNORED]` geloggt und der Test laeuft weiter. Fuer optionale
+Vorbereitungsschritte (z.B. Werbung entfernen, Cookie-Banner schliessen).
+
+Siehe [keywords_noise.md](keywords_noise.md).
 
 ---
 

@@ -10,16 +10,19 @@ die mit den OKW-Bibliotheken lauffaehig sind.
 
 Jeder Testfall folgt einem festen Zusammenspiel aus fuenf Phasen:
 
-| Phase | Nr. | Keywords | Aufgabe | OnFailNOISE? |
-|-------|-----|----------|---------|--------------|
-| Reset/Bereinigung | 1 | `StartApp`, `StopApp` | Testumgebung zuruecksetzen | JA |
-| Testdaten | 2 | `SetValue`, `Select`, `TypeKey` | Felder befuellen, Auswahl treffen | JA |
-| Navigation | 3 | `SelectWindow`, `SetContext` | Zum Testzustand navigieren | JA |
-| Testaktion | 4 | `ClickOn`, `DoubleClickOn`, `MoveOver` | Aktion ausloesen | NEIN |
-| Verifikation | 5 | `VerifyValue`, `VerifyExist`, ... | Ergebnis pruefen | NEIN |
+| Phase | Nr. | Keywords | Aufgabe | Wrapper |
+|-------|-----|----------|---------|---------|
+| Reset/Bereinigung | 1 | `StartApp`, `StopApp` | Testumgebung zuruecksetzen | `OnFailNOISE` |
+| Testdaten | 2 | `SetValue`, `Select`, `TypeKey` | Felder befuellen, Auswahl treffen | `OnFailNOISE` |
+| Navigation | 3 | `SelectWindow`, `SetContext` | Zum Testzustand navigieren | `OnFailNOISE` |
+| Optionale Schritte | 1-3 | `RemoveAds`, Cookie-Banner, ... | Optionale Bereinigung | `OnFailIgnoreNOISE` |
+| Testaktion | 4 | `ClickOn`, `DoubleClickOn`, `MoveOver` | Aktion ausloesen | — |
+| Verifikation | 5 | `VerifyValue`, `VerifyExistss`, ... | Ergebnis pruefen | — |
 
 **Regeln:**
 - Phasen 1-3 werden mit `OnFailNOISE` umschlossen (Vorbereitung).
+- Optionale Vorbereitungsschritte werden mit `OnFailIgnoreNOISE` umschlossen
+  (bei Fehler wird der Schritt ignoriert, der Test laeuft weiter).
 - Phasen 4-5 laufen direkt -- hier zeigt ein Fehler einen echten Bug.
 - `VerifyValue` prueft mit Timeout bis `${OKW_TIMEOUT_VERIFY_VALUE}` (Standard 10s) -- kein manuelles `Sleep` noetig.
 - Test Teardown in Settings setzen: `StopApp` schliesst die Anwendung.
@@ -31,15 +34,25 @@ Fehler als **NOISE** statt **FAIL**. Damit unterscheidet der Report
 zwischen echten Fehlern (Testaktion/Verifikation) und Umgebungsproblemen
 (Browser startet nicht, Seite laedt nicht).
 
+### OnFailIgnoreNOISE
+
+`OnFailIgnoreNOISE` ist die „stumme" Variante: Bei Fehler wird
+`[N][IGNORED]` geloggt und der Test laeuft weiter. Fuer **optionale**
+Vorbereitungsschritte, die scheitern duerfen (z.B. Werbung entfernen,
+Cookie-Banner schliessen).
+
 ```robot
 # Phase 1: App starten
-OnFailNOISE    StartApp       MyAppChrome
+OnFailNOISE          StartApp       MyAppChrome
 
 # Phase 2-3: Navigation — Fehler = NOISE
-OnFailNOISE    SelectWindow   Chrome
-OnFailNOISE    SetValue       URL    ${URL}
+OnFailNOISE          SelectWindow   Chrome
+OnFailNOISE          SetValue       URL    ${URL}
 
-OnFailNOISE    SelectWindow   LoginPage
+# Optionaler Schritt: Werbung entfernen — Fehler wird ignoriert
+OnFailIgnoreNOISE    RemoveAds
+
+OnFailNOISE          SelectWindow   LoginPage
 
 # Phase 4: Testaktion — Fehler = FAIL (echter Bug)
 SetValue       Benutzer    admin
@@ -108,7 +121,7 @@ Driver-agnostische GUI-Testautomatisierung fuer Web und Desktop.
 
 | Keyword              | Parameter               | Beschreibung                                          |
 |----------------------|-------------------------|-------------------------------------------------------|
-| `VerifyExist`        | `<name>` `<YES\|NO>`    | Element vorhanden (YES) oder nicht (NO)?              |
+| `VerifyExists`        | `<name>` `<YES\|NO>`    | Element vorhanden (YES) oder nicht (NO)?              |
 | `VerifyIsVisible`    | `<name>` `<YES\|NO>`    | Element sichtbar (YES) oder nicht (NO)?               |
 | `VerifyIsEnabled`    | `<name>` `<YES\|NO>`    | Element aktiviert (YES) oder nicht (NO)?              |
 | `VerifyIsEditable`   | `<name>` `<YES\|NO>`    | Element bearbeitbar (YES) oder nicht (NO)?            |
@@ -288,6 +301,29 @@ ProduktKarte:
 - Context wird bei `SelectWindow` zurueckgesetzt (neues Fenster = kein Context).
 - Widgets ausserhalb der Context-Gruppe sind nicht betroffen.
 
+### Web-spezifische Keywords (nur okw-web-selenium)
+
+| Keyword          | Parameter              | Beschreibung                                    |
+|------------------|------------------------|-------------------------------------------------|
+| `ExecuteJS`      | `<script>`             | Rohes JavaScript im Browser-Kontext ausfuehren. |
+| `RemoveAds`      | `[selector1]` `[...]`  | Werbe-Iframes/Overlays entfernen. Ohne Argumente: Google Ads. Mit Argumenten: eigene CSS-Selektoren. Installiert MutationObserver fuer asynchron nachladende Ads. |
+
+**RemoveAds im Test-Setup:**
+
+```robot
+*** Keywords ***
+Seite Oeffnen
+    OnFailNOISE          StartApp       MyAppChrome
+
+    OnFailNOISE          SelectWindow   Chrome
+    OnFailNOISE          SetValue       URL    ${URL}
+    OnFailIgnoreNOISE    RemoveAds
+    OnFailNOISE          VerifyWindowExists    LoginPage    YES
+```
+
+`RemoveAds` wird mit `OnFailIgnoreNOISE` gewrappt — wenn die Seite keine
+Ads hat, geht der Test einfach weiter.
+
 ---
 
 ## robotframework-okw-remote-ssh
@@ -356,7 +392,7 @@ Login mit gueltigen Zugangsdaten
     SetValue          Password    geheim
     ClickOn           OK
     SelectWindow      Dashboard
-    VerifyExist       WelcomeBanner    YES
+    VerifyExists       WelcomeBanner    YES
     VerifyValue       UserLabel        Willkommen, admin
 ```
 
@@ -380,7 +416,7 @@ Pflichtfelder Ausfuellen Optionale Felder Ignorieren
     SetValue        Notes        $EMPTY       # explizit leeren
     ClickOn         Submit
     SelectWindow    ConfirmationPage
-    VerifyExist     SuccessMessage    YES
+    VerifyExists     SuccessMessage    YES
 ```
 
 ### Wildcard und Regex pruefen
@@ -486,7 +522,7 @@ Login Und Dashboard Pruefen
 
     OnFailNOISE    SelectWindow   Dashboard
     VerifyValue    Titel    Willkommen
-    VerifyExist    Banner   YES
+    VerifyExists    Banner   YES
 ```
 
 Regeln:
@@ -509,10 +545,10 @@ EXACT match failed:
   actual:   Admin
 ```
 
-### VerifyExist / VerifyIsVisible etc.
+### VerifyExists / VerifyIsVisible etc.
 
 ```
-[VerifyExist] 'LoginButton'
+[VerifyExists] 'LoginButton'
 Expected to exist (YES), but element is absent.
 ```
 
@@ -520,7 +556,7 @@ Expected to exist (YES), but element is absent.
 
 Wenn ein Testfall fehlschlaegt, pruefe in dieser Reihenfolge:
 
-1. **VerifyExist / VerifyIsVisible** – Ist das Widget ueberhaupt vorhanden/sichtbar?
+1. **VerifyExists / VerifyIsVisible** – Ist das Widget ueberhaupt vorhanden/sichtbar?
 2. **SelectWindow** – Stimmt das aktive Fenster? Wurde das richtige Fenster gewaehlt?
 3. **Widget-Name** – Existiert der Name im YAML-Modell des aktuellen Fensters?
 4. **Adapter** – Ist der Adapter (Selenium) aktiv? Laeuft der Browser?
@@ -595,7 +631,7 @@ Login Ohne Passwort
 **Seite:** https://practice.expandtesting.com/hovers
 
 Drei Benutzerkarten mit versteckten Infos, die erst bei Hover erscheinen.
-Zeigt `MoveOver`, `SetContext` und `VerifyExist`.
+Zeigt `MoveOver`, `SetContext` und `VerifyExists`.
 
 ```robot
 *** Settings ***
@@ -624,7 +660,7 @@ MoveOver zeigt User1 Info
 MoveOver ProfilLink wird sichtbar
     OnFailNOISE    SetContext      UserCard    user1
     MoveOver        Avatar
-    VerifyExist     ProfilLink    YES
+    VerifyExists     ProfilLink    YES
 ```
 
 ### Referenz 3: WebPark -- Projektspezifische Widgets und Boundary-Tests
