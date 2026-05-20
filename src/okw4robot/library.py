@@ -149,7 +149,7 @@ class OKW4RobotLibrary(
     """
 
     ROBOT_LIBRARY_DOC_FORMAT = 'ROBOT'
-    ROBOT_LIBRARY_VERSION = '0.4.0'
+    ROBOT_LIBRARY_VERSION = '0.5.4'
 
     def __init__(self):
         """Initialisiert die OKW4RobotLibrary.

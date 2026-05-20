@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "robotframework-okw4robot"
-version = "0.5.3"
+version = "0.5.4"
 description = "Driver-agnostic Robot Framework keyword library core for GUI test automation (OKW4Robot)."
 authors = [{ name = "Zoltán Hrabovszki" }]
 readme = "README.md"
