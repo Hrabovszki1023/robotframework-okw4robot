@@ -139,6 +139,91 @@ ServiceName:
 - `application/json` -- JSON-Body (Standard)
 - `application/x-www-form-urlencoded` -- Formular-Daten
 
+### Environment-Variablen
+
+Credentials und URLs gehoeren NICHT ins Service-YAML. Stattdessen
+Platzhalter `${VAR}` verwenden, die aus einer Environment-Datei
+aufgeloest werden:
+
+```yaml
+# locators/ServiceName.yaml — sicher fuer Repo
+ServiceName:
+  __self__:
+    class: okw_api_rest.library.OkwApiRestLibrary
+    base_url: ${BASE_URL}
+    content_type: ${CONTENT_TYPE}
+```
+
+```yaml
+# ~/.okw/env/env-test.yaml — im Userprofil, NICHT im Repo
+BASE_URL: https://api.example.com
+CONTENT_TYPE: application/json
+API_USER: admin
+API_PASSWORD: geheim
+```
+
+```robot
+RESTStart    ServiceName    env-test     # laedt ~/.okw/env/env-test.yaml
+```
+
+**Suchordnung fuer Env-Dateien (wie ~/.ssh/):**
+
+| Prioritaet | Pfad | Zweck |
+|---|---|---|
+| 1 | `~/.okw/env/` | Userprofil (sicher, nicht im Repo) |
+| 2 | `$OKW_ENV_DIR` | CI/CD Override |
+| 3 | `locators/` neben Test | Entwicklung |
+| 4 | OS-Umgebungsvariablen | Fallback fuer einzelne `${VAR}` |
+
+### Authentifizierung im YAML
+
+Auth wird in `__self__` konfiguriert — der Test sieht davon nichts.
+
+```yaml
+# Basic Auth
+auth_type: basic
+auth_user: ${API_USER}
+auth_password: ${API_PASSWORD}
+
+# API Key (Header-basiert)
+auth_type: api_key
+auth_header: X-API-Key       # Header-Name (default: X-API-Key)
+auth_key: ${API_KEY}
+
+# Bearer Token (statisch, aus env-Datei)
+auth_type: bearer
+auth_token: ${AUTH_TOKEN}
+```
+
+**Dynamische Token** (Login → Token → verwenden) sind Testlogik und
+gehoeren in den Test via `RESTMemorizeValue` + `RESTSetHeader`.
+
+### SSL / Zertifikate
+
+```yaml
+__self__:
+  base_url: ${BASE_URL}
+  verify_ssl: false                      # Self-signed Certs
+  client_cert: ~/.okw/certs/client.pem   # mTLS Client-Zertifikat
+  client_key: ~/.okw/certs/client.key    # Private Key
+  ca_bundle: ~/.okw/certs/ca-bundle.pem  # Custom CA
+```
+
+Pfade unterstuetzen `~` (Home) und `$ENV_VAR` Expansion.
+
+### Verzeichnisstruktur im Userprofil
+
+```
+~/.okw/
+  env/
+    env-test.yaml         # Credentials + URLs fuer Test
+    env-prod.yaml         # Credentials + URLs fuer Prod
+  certs/
+    client.pem            # Client-Zertifikat
+    client.key            # Private Key
+    ca-bundle.pem         # Custom CA Bundle
+```
+
 ---
 
 ## Verschachtelter Request-Body (RESTSetContext)
@@ -307,17 +392,23 @@ Unautorisierter Zugriff Ohne Token
 
 ## Generierungsmuster aus Swagger/OpenAPI
 
-### Schritt 1: YAML-Konfiguration
+### Schritt 1: YAML-Konfiguration + Env-Datei
 
-Aus der Swagger-Spec `host` + `basePath` die YAML-Datei ableiten:
+Aus der Swagger-Spec `host` + `basePath` die YAML-Datei ableiten.
+Credentials und URLs in eine separate Env-Datei auslagern.
 
 ```yaml
-# Swagger: host=api.example.com, basePath=/v1
+# locators/ServiceName.yaml — Platzhalter, sicher fuer Repo
 ServiceName:
   __self__:
     class: okw_api_rest.library.OkwApiRestLibrary
-    base_url: https://api.example.com/v1
+    base_url: ${BASE_URL}
     content_type: application/json
+```
+
+```yaml
+# ~/.okw/env/env-test.yaml — im Userprofil, NICHT im Repo
+BASE_URL: https://api.example.com/v1
 ```
 
 ### Schritt 2: Endpoint-Keywords
@@ -408,6 +499,9 @@ Notizen Ohne Token
 8. **Kein `Sleep`** -- REST-Tests brauchen kein Warten.
 9. **Aufraeumen** im Teardown (erstellte Ressourcen loeschen).
 10. **Zufaellige Testdaten** fuer Emails/Namen (Generate Random String).
+11. **Keine Credentials im Testcode** -- URLs und Secrets in `~/.okw/env/` ablegen.
+12. **Service-YAML mit Platzhaltern** (`${BASE_URL}`) statt hartkodierten URLs.
+13. **`RESTStart` mit env-Parameter** wenn Platzhalter verwendet werden.
 
 ---
 
@@ -425,14 +519,21 @@ Swagger-Spec fuer eine Notes-API mit Endpoints:
 
 ### Ausgabe
 
-**`locators/NotesAPI.yaml`:**
+**`locators/NotesAPI.yaml`** (sicher fuer Repo):
 
 ```yaml
 NotesAPI:
   __self__:
     class: okw_api_rest.library.OkwApiRestLibrary
-    base_url: https://practice.expandtesting.com/notes/api
-    content_type: application/x-www-form-urlencoded
+    base_url: ${BASE_URL}
+    content_type: ${CONTENT_TYPE}
+```
+
+**`~/.okw/env/env-test.yaml`** (im Userprofil):
+
+```yaml
+BASE_URL: https://practice.expandtesting.com/notes/api
+CONTENT_TYPE: application/x-www-form-urlencoded
 ```
 
 **`tests/REST_Notes_Integration.robot`:**
@@ -487,7 +588,7 @@ Testbenutzer Anlegen
     ${random}=    Generate Random String    8    [LOWER][NUMBERS]
     Set Suite Variable    ${EMAIL}       testuser_${random}@test.com
     Set Suite Variable    ${PASSWORD}    Test1234!
-    RESTStart              NotesAPI
+    RESTStart              NotesAPI    env-test
     Registriere Benutzer    name=IntTest    email=${EMAIL}    password=${PASSWORD}
     RESTVerifyStatus       201
 
