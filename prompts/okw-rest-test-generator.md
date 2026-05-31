@@ -285,6 +285,24 @@ __self__:
 
 Pfade unterstuetzen `~` (Home) und `$ENV_VAR` Expansion.
 
+### Retry bei Fehler
+
+Automatische Wiederholung bei transienten HTTP-Fehlern.
+Im YAML konfiguriert — der Testcode bleibt unveraendert.
+
+```yaml
+__self__:
+  base_url: ${BASE_URL}
+  retry_count: 3           # max Wiederholungen (default: 0 = aus)
+  retry_delay: 1000        # Wartezeit in ms (default: 1000)
+  retry_on: 429,502,503    # Status-Codes die Retry ausloesen
+```
+
+Wenn die Response einen `retry_on`-Statuscode hat, wird der Request
+automatisch bis `retry_count` mal mit `retry_delay` ms Pause wiederholt.
+Der Test merkt nichts davon — bei Erfolg geht es normal weiter,
+bei Misserfolg sieht `RESTVerifyStatus` den letzten Fehler-Status.
+
 ### Verzeichnisstruktur im Userprofil
 
 ```
