@@ -38,6 +38,7 @@ Jeder REST-Test folgt dem OKW-Phasenmodell:
 | Aktion | `RESTSendRequest` | HTTP-Request senden |
 | Pruefen | `RESTVerifyValue` | Response-Wert pruefen |
 | Status | `RESTVerifyStatus` | HTTP-Statuscode pruefen |
+| Timing | `RESTVerifyResponseTime` | Response-Zeit pruefen |
 | Merken | `RESTMemorizeValue` | Response-Wert speichern |
 | Stop | `RESTStop` | Service stoppen |
 
@@ -84,6 +85,10 @@ Query-Parameter werden von `RESTSetContext` nicht beeinflusst.
 |---|---|---|
 | `RESTSendRequest` | `method` | GET, POST, PUT, PATCH, DELETE |
 
+`RESTSendRequest` protokolliert Request-Body und Response-Body
+automatisch als formatiertes JSON im Robot-Log. Sensible Felder
+(`password`, `token`, `secret`) werden im Request mit `***` maskiert.
+
 ### Pruefen
 
 | Keyword | Parameter | Beschreibung |
@@ -92,6 +97,7 @@ Query-Parameter werden von `RESTSetContext` nicht beeinflusst.
 | `RESTVerifyValueWCM` | `field`, `expected` | Wildcard (`*`, `?`) |
 | `RESTVerifyValueREGX` | `field`, `expected` | Regulaerer Ausdruck |
 | `RESTVerifyStatus` | `expected` | HTTP-Statuscode |
+| `RESTVerifyResponseTime` | `max_ms` | Response-Zeit unter Schwellwert (ms) |
 | `RESTVerifyHeader` | `header`, `expected` | Response-Header |
 
 **Feldpfade:** Punkt-Notation fuer verschachtelte Felder: `data.name`, `data.token`.
@@ -484,6 +490,7 @@ Notizen Ohne Token
 | Format/Muster pruefen | `RESTVerifyValueREGX` | `RESTVerifyValueREGX data.id ^[a-f0-9]{24}$` |
 | Dynamische IDs | `RESTVerifyValueREGX` | `RESTVerifyValueREGX data.token ^[A-Za-z0-9_\-\.]+$` |
 | Statuscode | `RESTVerifyStatus` | `RESTVerifyStatus 200` |
+| Antwortzeit | `RESTVerifyResponseTime` | `RESTVerifyResponseTime 500` |
 
 ---
 
@@ -502,6 +509,7 @@ Notizen Ohne Token
 11. **Keine Credentials im Testcode** -- URLs und Secrets in `~/.okw/env/` ablegen.
 12. **Service-YAML mit Platzhaltern** (`${BASE_URL}`) statt hartkodierten URLs.
 13. **`RESTStart` mit env-Parameter** wenn Platzhalter verwendet werden.
+14. **`RESTVerifyResponseTime`** fuer Performance-kritische Endpoints (z.B. Login, Health-Check).
 
 ---
 
