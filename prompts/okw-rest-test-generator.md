@@ -68,6 +68,7 @@ Unterstuetzt `$MEM{}`-Expansion: `RESTSelectEndpoint /notes/$MEM{NOTE_ID}`
 |---|---|---|
 | `RESTSetValue` | `field`, `value` | Body-Feld oder Query-Parameter setzen (Auto-Typ) |
 | `RESTSetValueAsString` | `field`, `value` | Body-Feld immer als String setzen (keine Konvertierung) |
+| `RESTSetValueAsList` | `field`, `*values` | Body-Feld als JSON-Array setzen |
 | `RESTSetContext` | `path` | Verschachtelungs-Kontext setzen |
 | `RESTSetHeader` | `header`, `value` | Request-Header setzen |
 
@@ -116,6 +117,34 @@ RESTSetValue    name      Zoltan     # Body-Feld (String)
 Query-Parameter sind immer Strings (keine Typ-Konvertierung).
 Query-Parameter werden von `RESTSetContext` nicht beeinflusst.
 
+**`RESTSetValueAsList` fuer JSON-Arrays:**
+
+```robot
+RESTSetValueAsList    tags      wichtig    dringend    arbeit    # → ["wichtig", "dringend", "arbeit"]
+RESTSetValueAsList    scores    42         87          15        # → [42, 87, 15] (auto-typed)
+RESTSetValueAsList    items                                      # → [] (leeres Array)
+```
+
+Alternative: Array-Index-Syntax in `RESTSetValue`:
+
+```robot
+RESTSetValue    scores[0]    42         # → "scores": [42, ...]
+RESTSetValue    scores[1]    87
+RESTSetValue    scores[2]    15
+```
+
+**Entscheidungsregel:**
+- Kurzes Array (2–5 Werte, gleicher Typ) → `RESTSetValueAsList`
+- Langes Array oder gemischte Typen → `field[0]`, `field[1]`, ...
+- Array von Objects → `RESTSetContext items[0]` + `RESTSetValue`
+
+**`RESTVerifyListCount` fuer Array-Laenge:**
+
+```robot
+RESTVerifyListCount    todos    3         # todos hat 3 Eintraege
+RESTVerifyListCount    data     0         # data ist leer
+```
+
 ### Aktion
 
 | Keyword | Parameter | Beschreibung |
@@ -135,6 +164,7 @@ automatisch als formatiertes JSON im Robot-Log. Sensible Felder
 | `RESTVerifyValueREGX` | `field`, `expected` | Regulaerer Ausdruck |
 | `RESTVerifyStatus` | `expected` | HTTP-Statuscode |
 | `RESTVerifyResponseTime` | `max_ms` | Response-Zeit unter Schwellwert (ms) |
+| `RESTVerifyListCount` | `field`, `expected` | Anzahl Elemente in JSON-Array |
 | `RESTVerifyHeader` | `header`, `expected` | Response-Header |
 
 **Feldpfade:** Punkt-Notation fuer verschachtelte Felder: `data.name`, `data.token`.
