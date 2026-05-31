@@ -66,17 +66,54 @@ Unterstuetzt `$MEM{}`-Expansion: `RESTSelectEndpoint /notes/$MEM{NOTE_ID}`
 
 | Keyword | Parameter | Beschreibung |
 |---|---|---|
-| `RESTSetValue` | `field`, `value` | Body-Feld oder Query-Parameter setzen |
+| `RESTSetValue` | `field`, `value` | Body-Feld oder Query-Parameter setzen (Auto-Typ) |
+| `RESTSetValueAsString` | `field`, `value` | Body-Feld immer als String setzen (keine Konvertierung) |
 | `RESTSetContext` | `path` | Verschachtelungs-Kontext setzen |
 | `RESTSetHeader` | `header`, `value` | Request-Header setzen |
+
+**Automatische Typ-Erkennung in `RESTSetValue`:**
+
+`RESTSetValue` erkennt den JSON-Typ automatisch aus dem Wert:
+
+| Eingabe | JSON-Ergebnis | Regel |
+|---|---|---|
+| `Zoltan` | `"Zoltan"` | Text → String |
+| `42` | `42` | Ganzzahl → Integer |
+| `3.14` | `3.14` | Dezimalzahl → Float |
+| `true` / `false` | `true` / `false` | → Boolean |
+| `null` oder `$NULL` | `null` | → Null |
+| `$EMPTY` | `""` | → Leerer String |
+
+```robot
+RESTSetValue    name        Zoltan       # → String "Zoltan"
+RESTSetValue    count       42           # → Integer 42
+RESTSetValue    active      true         # → Boolean true
+RESTSetValue    comment     $NULL        # → null
+```
+
+**`RESTSetValueAsString` fuer erzwungene Strings:**
+
+Wenn ein Wert wie eine Zahl oder Boolean aussieht, die API aber
+einen String erwartet, `RESTSetValueAsString` verwenden:
+
+```robot
+RESTSetValueAsString    zipcode    01234    # → String "01234" (nicht Integer)
+RESTSetValueAsString    flag       true     # → String "true" (nicht Boolean)
+```
+
+**Entscheidungsregel fuer die KI:**
+- Standardfall → `RESTSetValue` (Auto-Typ)
+- API-Doku sagt explizit "type: string" fuer Zahlen/Booleans → `RESTSetValueAsString`
+- Im Zweifel → `RESTSetValue` (die meisten APIs erwarten native Typen)
 
 **`?`-Prefix fuer Query-Parameter:**
 
 ```robot
-RESTSetValue    ?page     1          # Query-Parameter: ?page=1
-RESTSetValue    name      Zoltan     # Body-Feld
+RESTSetValue    ?page     1          # Query-Parameter: ?page=1 (immer String)
+RESTSetValue    name      Zoltan     # Body-Feld (String)
 ```
 
+Query-Parameter sind immer Strings (keine Typ-Konvertierung).
 Query-Parameter werden von `RESTSetContext` nicht beeinflusst.
 
 ### Aktion
@@ -126,6 +163,7 @@ RESTSelectEndpoint     /users/$MEM{USER_ID}
 |---|---|
 | `$IGNORE` | Keyword wird uebersprungen (Feld wird nicht gesendet) |
 | `$EMPTY` | Feld wird explizit auf leeren String gesetzt |
+| `$NULL` | Feld wird explizit auf JSON `null` gesetzt |
 
 ---
 
