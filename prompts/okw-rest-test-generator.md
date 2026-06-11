@@ -35,6 +35,7 @@ Jeder REST-Test folgt dem OKW-Phasenmodell:
 | Eingabe | `RESTSetValue` | Request-Body oder Query-Parameter setzen |
 | Kontext | `RESTSetContext` | In verschachteltes JSON navigieren |
 | Header | `RESTSetHeader` | Request-Header setzen |
+| Datei | `RESTSetFile` | Datei-Upload (Multipart) |
 | Aktion | `RESTSendRequest` | HTTP-Request senden |
 | Pruefen | `RESTVerifyValue` | Response-Wert pruefen |
 | Status | `RESTVerifyStatus` | HTTP-Statuscode pruefen |
@@ -69,6 +70,7 @@ Unterstuetzt `$MEM{}`-Expansion: `RESTSelectEndpoint /notes/$MEM{NOTE_ID}`
 | `RESTSetValue` | `field`, `value` | Body-Feld oder Query-Parameter setzen (Auto-Typ) |
 | `RESTSetValueAsString` | `field`, `value` | Body-Feld immer als String setzen (keine Konvertierung) |
 | `RESTSetValueAsList` | `field`, `*values` | Body-Feld als JSON-Array setzen |
+| `RESTSetFile` | `field`, `filepath`, `[mime_type]` | Datei fuer Multipart-Upload setzen |
 | `RESTSetContext` | `path` | Verschachtelungs-Kontext setzen |
 | `RESTSetHeader` | `header`, `value` | Request-Header setzen |
 
@@ -137,6 +139,37 @@ RESTSetValue    scores[2]    15
 - Kurzes Array (2–5 Werte, gleicher Typ) → `RESTSetValueAsList`
 - Langes Array oder gemischte Typen → `field[0]`, `field[1]`, ...
 - Array von Objects → `RESTSetContext items[0]` + `RESTSetValue`
+
+**`RESTSetFile` fuer Datei-Uploads (Multipart Form-Data):**
+
+Wenn eine API Dateien erwartet, `RESTSetFile` verwenden. Der Request
+wechselt automatisch auf Multipart-Encoding. Textfelder via `RESTSetValue`
+werden als Formularfelder mitgesendet.
+
+```robot
+RESTSelectEndpoint    /api/documents
+RESTSetValue          title       Jahresbericht
+RESTSetFile           file        ${CURDIR}/testdata/report.pdf
+RESTSendRequest       POST
+```
+
+Mehrere Dateien (gleiches oder verschiedenes Feld):
+
+```robot
+RESTSetFile    attachments    foto1.jpg
+RESTSetFile    attachments    foto2.jpg
+```
+
+Optionaler MIME-Type als dritter Parameter (sonst Auto-Detection):
+
+```robot
+RESTSetFile    data    export.bin    application/octet-stream
+```
+
+**Entscheidungsregel:**
+- API erwartet JSON-Body → `RESTSetValue` / `RESTSetValueAsString`
+- API erwartet Datei-Upload → `RESTSetFile` (+ optional `RESTSetValue` fuer Textfelder)
+- Swagger/OpenAPI zeigt `multipart/form-data` → `RESTSetFile`
 
 **`RESTVerifyListCount` fuer Array-Laenge:**
 
