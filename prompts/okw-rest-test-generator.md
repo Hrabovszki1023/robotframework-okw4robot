@@ -302,6 +302,24 @@ auth_type: bearer
 auth_token: ${AUTH_TOKEN}
 ```
 
+**OAuth 2.0 Client Credentials** (Maschine-zu-Maschine):
+
+```yaml
+auth_type: oauth2_client_credentials
+token_url: https://auth.example.com/oauth/token
+client_id: ${CLIENT_ID}
+client_secret: ${CLIENT_SECRET}
+scope: read write
+```
+
+`RESTStart` holt den Token automatisch. Der Testcode braucht kein
+`RESTSetHeader Authorization` — das passiert im Hintergrund.
+
+**Entscheidungsregel:**
+- API nutzt OAuth 2.0 Client Credentials → `auth_type: oauth2_client_credentials` in YAML
+- API nutzt Login-Endpoint der Token im Body liefert → `RESTMemorizeValue` + `RESTSetHeader` im Test
+- API nutzt statischen Token/API-Key → `auth_type: bearer` oder `auth_type: api_key` in YAML
+
 **Dynamische Token** (Login → Token → verwenden) sind Testlogik und
 gehoeren in den Test via `RESTMemorizeValue` + `RESTSetHeader`.
 
