@@ -41,6 +41,7 @@ Jeder REST-Test folgt dem OKW-Phasenmodell:
 | Status | `RESTVerifyStatus` | HTTP-Statuscode pruefen |
 | Timing | `RESTVerifyResponseTime` | Response-Zeit pruefen |
 | Merken | `RESTMemorizeValue` | Response-Wert speichern |
+| Speichern | `RESTSaveResponseToFile` | Response-Body als Datei speichern |
 | Stop | `RESTStop` | Service stoppen |
 
 ---
@@ -211,6 +212,21 @@ Array-Zugriff: `data.items[0].name`.
 | `RESTMemorizeBody` | `name` | Gesamten Response-Body speichern |
 
 Gespeicherte Werte per `$MEM{name}` in nachfolgenden Keywords verwenden:
+
+### Speichern
+
+| Keyword | Parameter | Beschreibung |
+|---|---|---|
+| `RESTSaveResponseToFile` | `filepath` | Response-Body (bytes) als Datei speichern |
+
+Speichert die HTTP-Response als lokale Datei (binaersicher fuer PDF, CSV, Bilder).
+Verzeichnisse werden automatisch angelegt. Bestehende Dateien werden ueberschrieben (Warnung im Log).
+
+```robot
+RESTSaveResponseToFile    ${CURDIR}/downloads/report.pdf
+RESTSaveResponseToFile    $MEM{DOWNLOAD_DIR}/export.csv
+RESTSaveResponseToFile    $IGNORE
+```
 
 ```robot
 RESTMemorizeValue      data.token   TOKEN
