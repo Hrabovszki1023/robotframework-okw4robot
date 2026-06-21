@@ -647,6 +647,46 @@ Notizen Ohne Token
 
 ---
 
+## Cookie-Handling (requests.Session)
+
+OKW REST nutzt intern `requests.Session`. Cookies die der Server per
+`Set-Cookie` sendet werden automatisch gespeichert und bei Folge-Requests
+mitgeschickt. Kein manuelles Cookie-Handling noetig.
+
+```robot
+# Login — Server setzt Session-Cookie automatisch
+RESTSelectEndpoint     /api/login
+RESTSetValue           username    admin
+RESTSetValue           password    secret
+RESTSendRequest        POST
+RESTVerifyStatus       200
+
+# Folge-Request — Cookie geht automatisch mit
+RESTSelectEndpoint     /api/projects
+RESTSendRequest        GET
+RESTVerifyStatus       200         # kein 401, Session ist aktiv
+```
+
+Fuer Negativtests (ungueltige Session) kann der Cookie manuell
+ueberschrieben werden:
+
+```robot
+RESTSetHeader          Cookie    JSESSIONID=UNGUELTIG
+RESTSendRequest        GET
+RESTVerifyStatus       401
+```
+
+## Request/Response Logging
+
+`RESTSendRequest` loggt automatisch:
+- **Request:** Method, URL, alle Headers (Klartext), Query-Parameter, Body, Files
+- **Response:** Status, alle Headers (Klartext), Body
+
+Headers werden **nicht maskiert** — maximale Beobachtbarkeit fuer Debugging.
+Nur Body-Felder (`password`, `token`, `secret`) werden mit `***` maskiert.
+
+---
+
 ## Ausgabe-Regeln
 
 1. **Settings-Block** mit Library-Import immer zuerst.
