@@ -371,6 +371,11 @@ Deterministische Remote-Kommandoausfuehrung und SFTP-Dateitransfer via SSH.
 | `Get Remote File`                     | `<session>` `<remote_path>` `<local_path>`      | Datei herunterladen (SFTP)           |
 | `Verify Remote File Exists`           | `<session>` `<remote_path>` `[expected=YES]`    | Datei existiert? YES/NO              |
 | `Verify Remote Directory Exists`      | `<session>` `<remote_dir>` `[expected=YES]`     | Verzeichnis existiert? YES/NO        |
+| `Verify Remote Directory Contains`    | `<session>` `<remote_dir>` `<expected>`         | Verzeichnis enthaelt Eintrag? (EXACT) |
+| `Verify Remote Directory Contains WCM`| `<session>` `<remote_dir>` `<pattern>`          | Verzeichnis enthaelt Eintrag? (Wildcard) |
+| `Verify Remote Directory Contains REGX`| `<session>` `<remote_dir>` `<regex>`           | Verzeichnis enthaelt Eintrag? (Regex) |
+| `Verify Remote Directory Count`       | `<session>` `<remote_dir>` `<expected>`         | Anzahl Eintraege im Verzeichnis      |
+| `Memorize Remote Directory Contents`  | `<session>` `<remote_dir>` `<key>`              | Verzeichnisinhalt in `$MEM{KEY}`     |
 
 ---
 
