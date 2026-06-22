@@ -340,6 +340,7 @@ Deterministische Remote-Kommandoausfuehrung und SFTP-Dateitransfer via SSH.
 |------------------------|------------------------------|-------------------------------------------------------|
 | `Open Remote Session`  | `<session>` `<config_ref>`   | Oeffnet benannte Session via `remotes/<config_ref>.yaml` |
 | `Close Remote Session` | `<session>`                  | Schliesst Session und gibt Ressourcen frei             |
+| `Close All Remote Sessions` | —                       | Schliesst alle offenen Sessions (fuer Suite Teardown)  |
 
 #### Execution (Vorbereiten + Ausfuehren)
 
