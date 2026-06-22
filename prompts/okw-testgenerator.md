@@ -377,6 +377,9 @@ Deterministische Remote-Kommandoausfuehrung und SFTP-Dateitransfer via SSH.
 | `Verify Remote Directory Contains REGX`| `<session>` `<remote_dir>` `<regex>`           | Verzeichnis enthaelt Eintrag? (Regex) |
 | `Verify Remote Directory Count`       | `<session>` `<remote_dir>` `<expected>`         | Anzahl Eintraege im Verzeichnis      |
 | `Memorize Remote Directory Contents`  | `<session>` `<remote_dir>` `<key>`              | Verzeichnisinhalt in `$MEM{KEY}`     |
+| `Set Remote File Mode`                | `<session>` `<remote_path>` `<mode>`             | SFTP chmod (z.B. `0755`)             |
+| `Verify Remote File Mode`             | `<session>` `<remote_path>` `<expected>`         | SFTP stat, EXACT Oktal-Vergleich     |
+| `Memorize Remote File Mode`           | `<session>` `<remote_path>` `<key>`              | Dateiberechtigungen in `$MEM{KEY}`   |
 
 ---
 
