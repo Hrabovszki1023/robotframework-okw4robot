@@ -37,6 +37,12 @@ class OKW4RobotLibrary(
 ):
     """Driver-agnostic Robot Framework library for GUI test automation.
 
+    = Runnable Examples =
+
+    Complete ``.robot`` examples for all OKW libraries are available in the
+    [https://github.com/Hrabovszki1023/okw-examples|okw-examples]
+    repository.
+
     = Overview =
 
     ``OKW4RobotLibrary`` provides session-less, context-based keyword access to
