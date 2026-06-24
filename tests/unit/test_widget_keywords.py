@@ -128,27 +128,27 @@ class TestVerifyValue:
 
 
 class TestVerifyExist:
-    def test_verify_exist_yes(self):
+    def test_verify_exists_yes(self):
         w = MockWidget(exists=True)
         register_widget("Elem", w)
         from okw4robot.keywords.widget_keywords import WidgetKeywords
         kw = WidgetKeywords()
-        kw.verify_exist("Elem", "YES")  # should not raise
+        kw.verify_exists("Elem", "YES")  # should not raise
 
-    def test_verify_exist_no(self):
+    def test_verify_exists_no(self):
         w = MockWidget(exists=False)
         register_widget("Elem", w)
         from okw4robot.keywords.widget_keywords import WidgetKeywords
         kw = WidgetKeywords()
-        kw.verify_exist("Elem", "NO")  # should not raise
+        kw.verify_exists("Elem", "NO")  # should not raise
 
-    def test_verify_exist_fail(self):
+    def test_verify_exists_fail(self):
         w = MockWidget(exists=False)
         register_widget("Elem", w)
         from okw4robot.keywords.widget_keywords import WidgetKeywords
         kw = WidgetKeywords()
         with pytest.raises(AssertionError):
-            kw.verify_exist("Elem", "YES")
+            kw.verify_exists("Elem", "YES")
 
 
 class TestSetFocus:

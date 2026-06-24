@@ -435,7 +435,7 @@ class WidgetKeywords:
 
         Examples:
         | VerifyValueREGX | Username | ^adm.*$ |
-        | VerifyValueREGX | Title    | (?i)hello\s+world |
+        | VerifyValueREGX | Title    | (?i)hello\\s+world |
         """
         if should_ignore(expected):
             print(f"[VerifyValueREGX] '{name}' ignored (blank or $IGNORE)")
