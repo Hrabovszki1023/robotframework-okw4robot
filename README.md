@@ -1,5 +1,8 @@
 # OKW4Robot
 
+[![PyPI](https://img.shields.io/pypi/v/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
+[![Python](https://img.shields.io/pypi/pyversions/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
+
 Driver-agnostic keyword architecture for [Robot Framework](https://robotframework.org/).
 
 One unified set of keywords for different GUI technologies

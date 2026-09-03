@@ -65,6 +65,41 @@ __self__:
   url: https://example.com           # Start-URL
 ```
 
+#### Browser-Options via YAML
+
+`__self__` unterstuetzt einen optionalen `options`-Block fuer Chrome,
+Firefox und Edge:
+
+```yaml
+__self__:
+  class: okw_web_selenium.adapters.selenium_web.SeleniumWebAdapter
+  browser: chrome
+  options:
+    arguments:
+      - "--start-maximized"
+      - "--disable-notifications"
+      - "--lang=de"
+    extensions:
+      - "my-extension.crx"           # relativ zu locators/
+    preferences:
+      download.default_directory: "/tmp/downloads"
+      intl.accept_languages: "de,en"
+```
+
+| Key | Typ | Beschreibung |
+|---|---|---|
+| `arguments` | Liste | CLI-Argumente fuer den Browser (z.B. `--start-maximized`, `--disable-gpu`) |
+| `extensions` | Liste | Pfade zu Extension-Dateien (`.crx` fuer Chrome, `.xpi` fuer Firefox). Relativ zu `locators/`. |
+| `preferences` | Dict | Browser-Einstellungen (Chrome: `add_experimental_option`, Firefox: `set_preference`) |
+
+**Headless-Modus:** Wird ueber die Umgebungsvariable `OKW_BROWSER_HEADLESS=true`
+gesteuert (nicht via YAML). Funktioniert fuer Chrome, Firefox und Edge.
+Der Adapter setzt automatisch `--headless`, `--no-sandbox`, `--disable-gpu`
+und `--window-size=1920,1080`.
+
+**Extension-Pfade:** Werden relativ zum `locators/`-Verzeichnis aufgeloest.
+Absolute Pfade werden direkt verwendet.
+
 ### Java RemoteSwing
 
 ```yaml
@@ -129,6 +164,64 @@ __self__:
 | `RemoteSw_Frame` | `okw_java_remoteswing.widgets.remotesw_frame` | Top-Level-Fenster (`JFrame`) |
 | `RemoteSw_Dialog` | `okw_java_remoteswing.widgets.remotesw_dialog` | Modal-/Nicht-modaler Dialog (`JDialog`) |
 | `RemoteSw_Panel` | `okw_java_remoteswing.widgets.remotesw_panel` | Logischer Fensterbereich (`JPanel`) |
+
+---
+
+## Synchronisation: `_wait_before` (Delay-Strategie)
+
+Jede `okw_*`-Methode ruft als Erstes `self._wait_before(intent)` auf.
+Das ist die **zentrale Einstiegsstelle** fuer die gesamte Synchronisation
+im OKW-Framework. Kein `Sleep` im Testcode, keine manuellen Wartezeiten.
+
+### Synchronisationskette
+
+`_wait_before` fuehrt automatisch folgende Schritte aus:
+
+| Schritt | Pruefung | Standard |
+|---------|----------|----------|
+| 1. **exists** | Element existiert im DOM | Aktiv |
+| 2. **scroll_into_view** | Element in den sichtbaren Bereich scrollen | Inaktiv |
+| 3. **visible** | Element ist sichtbar | Aktiv |
+| 4. **enabled** | Element ist aktiviert (nicht disabled) | Aktiv |
+| 5. **editable** | Element ist beschreibbar | Nur bei `write` |
+| 6. **until_not_visible** | Ladeanzeigen/Spinner verschwunden | Projektspezifisch |
+
+Alle Schritte sind **timeout-basiert** (Standard: 10s, Poll: 100ms).
+
+### Intent: `read` vs. `write`
+
+| Intent | Wann | Prueft |
+|---|---|---|
+| `read` | `okw_get_value()`, `okw_get_text()`, ... | exists → visible |
+| `write` | `okw_set_value()`, `okw_click()`, ... | exists → visible → enabled → editable |
+
+### YAML-Konfiguration (pro Widget)
+
+Die Synchronisation kann pro Widget via `wait`-Block im YAML angepasst werden:
+
+```yaml
+LangsamesWidget:
+  class: okw_web_selenium.widgets.webse_textfield.WebSe_TextField
+  locator: { css: '#slow-input' }
+  wait:
+    write:
+      timeout: 20
+      editable: true
+      until_not_visible:
+        - ".loading-spinner"
+        - ".overlay-mask"
+    read:
+      timeout: 15
+```
+
+### Konsequenz fuer die Testentwicklung
+
+- **Nie `Sleep` im Testcode.** Die Wartelogik ist im Widget.
+- **Nie Selenium-Waits im Testcode.** `_wait_before` erledigt das.
+- **Projektspezifische Wartezeiten** werden im YAML konfiguriert,
+  nicht im `.robot`-File.
+- **Abgeleitete Widgets** erben die Synchronisation automatisch —
+  `self._wait_before('write')` als erste Zeile genuegt.
 
 ---
 
@@ -382,6 +475,115 @@ Wenn Standard-Widgets nicht reichen (z.B. bei JavaScript-UI-Bibliotheken
 wie Flatpickr, Select2, React-Datepicker), koennen **projektspezifische
 Widget-Klassen** erstellt werden.
 
+**Damit steht und faellt die gesamte Automatisierung.** Wer dieses
+Konzept nicht versteht, programmiert am Framework vorbei — und verliert
+alle Vorteile (Wartbarkeit, DRY, Synchronisation, Technologiewechsel).
+
+### Wann ableiten? (Entscheidungsregel)
+
+| Situation | Aktion |
+|---|---|
+| Standard-HTML-Element (`<input>`, `<select>`, `<button>`, ...) | Standard-Widget verwenden (`WebSe_TextField`, `WebSe_ComboBox`, ...) |
+| JS-Komponente mit abweichendem Eingabeverhalten (Datepicker, Autocomplete, Rich-Text-Editor) | **Ableiten**: neue Klasse, `okw_set_value()` ueberschreiben |
+| JS-Komponente mit abweichendem Leseverhalten (Custom-Label, Badge, Chip-Liste) | **Ableiten**: neue Klasse, `okw_get_value()` ueberschreiben |
+| Widget sieht anders aus, verhält sich aber wie Standard-HTML | **Nicht ableiten** — Standard-Widget mit richtigem Locator reicht |
+
+**Faustregel:** Ableiten, wenn die `okw_*`-Methode des Standard-Widgets
+das GUI-Element nicht korrekt bedienen kann. Nie ableiten wegen Optik.
+
+### DRY: Ein Widget fuer alle Instanzen
+
+Das Kernprinzip: **Eine einzige Widget-Klasse behandelt ALLE Instanzen
+eines GUI-Element-Typs im gesamten Projekt.**
+
+Wenn eine Anwendung 30 Flatpickr-Datumsfelder hat, gibt es genau
+**eine** Klasse `FlatpickrDateField` — nicht 30 verschiedene Loesungen.
+Der Unterschied zwischen den 30 Feldern ist nur der Locator in YAML.
+
+```yaml
+# Alle Flatpickr-Felder im Projekt nutzen dieselbe Widget-Klasse:
+Geburtsdatum:
+  class: widgets.flatpickr_date.FlatpickrDateField
+  locator: { css: '#birthday .flatpickr-input' }
+
+Reisedatum:
+  class: widgets.flatpickr_date.FlatpickrDateField
+  locator: { css: '#travel-date .flatpickr-input' }
+
+Lieferdatum:
+  class: widgets.flatpickr_date.FlatpickrDateField
+  locator: { css: '#delivery .flatpickr-input' }
+```
+
+### Synchronisation gehoert ins Widget (nicht in den Test)
+
+Jede `okw_*`-Methode ruft als Erstes `self._wait_before(intent)` auf.
+Diese Methode fuehrt automatisch eine Synchronisationskette aus:
+
+1. **exists** — Wartet bis das Element im DOM existiert
+2. **scroll_into_view** — Scrollt das Element in den sichtbaren Bereich
+3. **visible** — Wartet bis das Element sichtbar ist
+4. **enabled** — Wartet bis das Element aktiv ist (nicht disabled)
+5. **editable** — Wartet bis das Element beschreibbar ist (nur bei `write`)
+6. **busy** — Wartet bis Ladeanzeigen (`until_not_visible`) verschwunden sind
+
+Die Synchronisation ist **Timeout-basiert** (Standard: 10s) mit
+konfigurierbarem Poll-Intervall (Standard: 100ms).
+
+**Konsequenz fuer abgeleitete Widgets:** Ein abgeleitetes Widget erbt
+die gesamte Synchronisation automatisch. Die ueberschriebene Methode
+muss nur `self._wait_before('write')` bzw. `self._wait_before('read')`
+als erste Zeile aufrufen — der Rest ist erledigt.
+
+```python
+class FlatpickrDateField(WebSe_TextField):
+    def okw_set_value(self, value: str):
+        self._wait_before('write')           # <-- Synchronisation erledigt
+        self.adapter.click(self.locator)      # Kalender oeffnen
+        self.adapter.clear_element_text(self.locator)
+        self.adapter.input_text(self.locator, value)
+        self.adapter.press_keys(None, "ESCAPE")  # Kalender schliessen
+```
+
+**Nie `Sleep` im Testcode verwenden.** Wenn ein Element Zeit braucht,
+gehoert die Wartelogik in `_wait_before()` oder in die `okw_*`-Methode
+des Widgets — nie in die `.robot`-Datei.
+
+### Anti-Patterns: Was man NICHT tun darf
+
+Diese Fehler zerstoeren alle Vorteile des Frameworks:
+
+**FALSCH — Selenium direkt im Test aufrufen:**
+```robot
+# NIEMALS SO:
+${element}=    Get WebElement    css:#dateField .flatpickr-input
+Execute Javascript    arguments[0].value = '2024-01-15'    ARGUMENTS    ${element}
+```
+
+**FALSCH — Sleep im Test statt Synchronisation im Widget:**
+```robot
+# NIEMALS SO:
+ClickOn    Absenden
+Sleep      3s
+VerifyValue    Status    Gespeichert
+```
+
+**FALSCH — Fuer jedes Feld eine eigene Loesung:**
+```robot
+# NIEMALS SO — 30 verschiedene Keywords fuer 30 Datepicker:
+Setze Geburtsdatum    2024-01-15
+Setze Reisedatum      2024-03-20
+Setze Lieferdatum     2024-06-01
+```
+
+**RICHTIG — Ein Widget, ein Keyword, alle Instanzen:**
+```robot
+# SO:
+SetValue    Geburtsdatum    2024-01-15
+SetValue    Reisedatum      2024-03-20
+SetValue    Lieferdatum     2024-06-01
+```
+
 ### Verzeichnisstruktur
 
 ```
@@ -390,7 +592,7 @@ projekt/
     MyPage.yaml
   widgets/
     __init__.py
-    my_custom_widget.py
+    flatpickr_date.py
   tests/
     MyTest.robot
 ```
@@ -399,7 +601,7 @@ projekt/
 
 ```yaml
 DatumsFeld:
-  class: widgets.my_custom_widget.MyCustomWidget
+  class: widgets.flatpickr_date.FlatpickrDateField
   locator: { id: dateField }
 ```
 
@@ -407,25 +609,42 @@ Der `class:`-Key referenziert die projektlokale Klasse. Der YAML-Loader
 fuegt das Projektverzeichnis (Parent von `locators/`) automatisch zu
 `sys.path` hinzu -- kein `--pythonpath` noetig.
 
-### Widget-Klasse
+### Schritt-fuer-Schritt: Widget ableiten
+
+1. **Identifizieren:** Welche `okw_*`-Methode funktioniert nicht mit dem
+   Standard-Widget? (Im Browser testen: `SetValue` funktioniert nicht
+   bei Flatpickr → `okw_set_value()` muss ueberschrieben werden.)
+
+2. **Basisklasse waehlen:** Die naechstliegende Standard-Widget-Klasse
+   (`WebSe_TextField` fuer Texteingaben, `WebSe_ComboBox` fuer
+   Auswahlfelder, `WebSe_Label` fuer nur-lesen, ...).
+
+3. **Nur die abweichende Methode ueberschreiben:**
 
 ```python
 from okw_web_selenium.widgets.webse_textfield import WebSe_TextField
 
-class MyCustomWidget(WebSe_TextField):
+class FlatpickrDateField(WebSe_TextField):
     def okw_set_value(self, value: str):
         self._wait_before('write')
-        # Projektspezifische Eingabelogik
-        self.adapter.focus(self.locator)
-        self.adapter.press_keys(self.locator, "CTRL+a")
-        self.adapter.press_keys(None, value)     # None = kein erneuter Click
+        self.adapter.click(self.locator)
+        self.adapter.clear_element_text(self.locator)
+        self.adapter.input_text(self.locator, value)
         self.adapter.press_keys(None, "ESCAPE")
 ```
+
+4. **YAML anpassen:** `class:` auf die neue Klasse zeigen lassen.
+
+5. **Test bleibt unveraendert:** `SetValue DatumsFeld 2024-01-15`
+   funktioniert jetzt — ohne Aenderung am Testcode.
 
 **Regeln:**
 - Erbt von der naechstliegenden Standard-Widget-Klasse.
 - Ueberschreibt nur die Methode, die anders funktionieren muss.
 - Alle anderen Methoden (get_value, type_key, etc.) bleiben unveraendert.
+- `self._wait_before('write'|'read')` ist immer die erste Zeile.
+- Keine Selenium-Aufrufe im Testcode — alles geht ueber den Adapter.
+- Keine `Sleep`-Aufrufe — Synchronisation gehoert ins Widget.
 
 ---
 

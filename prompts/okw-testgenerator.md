@@ -6,26 +6,35 @@ die mit den OKW-Bibliotheken lauffaehig sind.
 
 ---
 
-## Fuenf-Phasen-Modell
+## Phasen-Modell
 
-Jeder Testfall folgt einem festen Zusammenspiel aus fuenf Phasen:
+Jeder Testfall folgt einem festen Zusammenspiel aus sechs Phasen (0-5):
 
 | Phase | Nr. | Keywords | Aufgabe | Wrapper |
 |-------|-----|----------|---------|---------|
-| Reset/Bereinigung | 1 | `StartApp`, `StopApp` | Testumgebung zuruecksetzen | `OnFailNOISE` |
-| Testdaten | 2 | `SetValue`, `Select`, `TypeKey` | Felder befuellen, Auswahl treffen | `OnFailNOISE` |
-| Navigation | 3 | `SelectWindow`, `SetContext` | Zum Testzustand navigieren | `OnFailNOISE` |
-| Optionale Schritte | 1-3 | `RemoveAds`, Cookie-Banner, ... | Optionale Bereinigung | `OnFailIgnoreNOISE` |
-| Testaktion | 4 | `ClickOn`, `DoubleClickOn`, `MoveOver` | Aktion ausloesen | — |
-| Verifikation | 5 | `VerifyValue`, `VerifyExistss`, ... | Ergebnis pruefen | — |
+| Umgebung | 0 | `ENV_Start`, `ENV_Stop` | Testumgebung bereitstellen (Container, Services) | `OnFailNOISE` |
+| App-Lifecycle | 1 | `StartApp`, `StopApp` | Anwendung starten/beenden | `OnFailNOISE` |
+| Navigation + Testdaten | 2 | `SelectWindow`, `SetContext`, `SetValue`, `Select`, `TypeKey` | Zum Testzustand navigieren, Felder befuellen | `OnFailNOISE` |
+| Optionale Schritte | 0-2 | `RemoveAds`, Cookie-Banner, ... | Optionale Bereinigung | `OnFailIgnoreNOISE` |
+| Testaktion | 3 | `ClickOn`, `DoubleClickOn`, `MoveOver` | Aktion ausloesen | — |
+| Verifikation | 4 | `VerifyValue`, `VerifyExists`, ... | Ergebnis pruefen | — |
+
+**Phase 0 — Umgebung im Testfall:**
+Phase 0 definiert die Testumgebung als Teil des Testfalls selbst — nicht
+als externe Voraussetzung. Der Test beschreibt deklarativ, welche
+Infrastruktur er braucht (`ENV_Start`), und raeemt sie am Ende auf
+(`ENV_Stop`). Das macht Tests vollstaendig reproduzierbar: Kein
+"funktioniert auf meinem Rechner", kein manuelles Container-Starten.
 
 **Regeln:**
-- Phasen 1-3 werden mit `OnFailNOISE` umschlossen (Vorbereitung).
+- Phasen 0-2 werden mit `OnFailNOISE` umschlossen (Vorbereitung).
 - Optionale Vorbereitungsschritte werden mit `OnFailIgnoreNOISE` umschlossen
   (bei Fehler wird der Schritt ignoriert, der Test laeuft weiter).
-- Phasen 4-5 laufen direkt -- hier zeigt ein Fehler einen echten Bug.
+- Phasen 3-4 laufen direkt -- hier zeigt ein Fehler einen echten Bug.
 - `VerifyValue` prueft mit Timeout bis `${OKW_TIMEOUT_VERIFY_VALUE}` (Standard 10s) -- kein manuelles `Sleep` noetig.
-- Test Teardown in Settings setzen: `StopApp` schliesst die Anwendung.
+- Test Teardown: `StopApp` + `ENV_Stop` (Anwendung und Umgebung aufraeumen).
+- Phase 0 entfaellt, wenn die Umgebung extern bereitsteht (z.B. vorhandener Server).
+- Phase 1 kann in Phase 2 aufgehen, wenn keine Testdaten eingespielt werden muessen.
 
 ### OnFailNOISE
 
@@ -42,24 +51,18 @@ Vorbereitungsschritte, die scheitern duerfen (z.B. Werbung entfernen,
 Cookie-Banner schliessen).
 
 ```robot
-# Phase 1: App starten
 OnFailNOISE          StartApp       MyAppChrome
 
-# Phase 2-3: Navigation — Fehler = NOISE
 OnFailNOISE          SelectWindow   Chrome
 OnFailNOISE          SetValue       URL    ${URL}
-
-# Optionaler Schritt: Werbung entfernen — Fehler wird ignoriert
 OnFailIgnoreNOISE    RemoveAds
 
 OnFailNOISE          SelectWindow   LoginPage
-
-# Phase 4: Testaktion — Fehler = FAIL (echter Bug)
 SetValue       Benutzer    admin
 SetValue       Passwort    geheim
+
 ClickOn        Anmelden
 
-# Phase 5: Verifikation — Fehler = FAIL
 OnFailNOISE    SelectWindow   Dashboard
 VerifyValue    Titel    Willkommen
 ```
@@ -396,12 +399,15 @@ Test Teardown     StopHost
 Login mit gueltigen Zugangsdaten
     StartHost         web
     StartApp          web/LoginApp
+
     SelectWindow      LoginDialog
     SetValue          Username    admin
     SetValue          Password    geheim
+
     ClickOn           OK
+
     SelectWindow      Dashboard
-    VerifyExists       WelcomeBanner    YES
+    VerifyExists      WelcomeBanner    YES
     VerifyValue       UserLabel        Willkommen, admin
 ```
 
@@ -418,14 +424,17 @@ ${IGNORE}         $IGNORE
 Pflichtfelder Ausfuellen Optionale Felder Ignorieren
     StartHost       web
     StartApp        web/RegistrationApp
+
     SelectWindow    RegistrationForm
     SetValue        Firstname    Max
     SetValue        Lastname     Mustermann
     SetValue        Comment      ${IGNORE}    # optionales Feld ueberspringen
     SetValue        Notes        $EMPTY       # explizit leeren
+
     ClickOn         Submit
+
     SelectWindow    ConfirmationPage
-    VerifyExists     SuccessMessage    YES
+    VerifyExists    SuccessMessage    YES
 ```
 
 ### Wildcard und Regex pruefen
@@ -435,17 +444,21 @@ Pflichtfelder Ausfuellen Optionale Felder Ignorieren
 Fehlermeldung Pruefen
     StartHost       web
     StartApp        web/LoginApp
+
     SelectWindow    LoginDialog
     SetValue        Username    wrong
     SetValue        Password    wrong
+
     ClickOn         OK
+
     VerifyIsVisible    ErrorMessage    YES
     VerifyCaptionWCM   ErrorMessage    *falsch*
     VerifyCaptionREGX  ErrorMessage    (?i)invalid|falsch
 
 Attribut Pruefen
+
     SelectWindow    RegistrationForm
-    VerifyAttribute    Email    type    email
+    VerifyAttribute       Email    type    email
     VerifyAttributeWCM    Email    class    *required*
 ```
 
@@ -456,7 +469,8 @@ Attribut Pruefen
 Pflichtfeld-Kennzeichnung Pruefen
     StartHost       web
     StartApp        web/FormApp
-    SelectWindow    DataForm
+
+    SelectWindow     DataForm
     VerifyLabel      Email       E-Mail-Adresse
     VerifyTooltip    HelpIcon    Bitte gueltige E-Mail eingeben
     VerifyTooltipWCM HelpIcon    *E-Mail*
@@ -474,16 +488,17 @@ Test Teardown    Run Keywords
 
 *** Test Cases ***
 Upload Datei Und GUI Pruefen
-    # SSH: Datei hochladen
     Open Remote Session    r1    buildserver
     Put Remote File        r1    data/test.csv    /opt/app/import/test.csv
     Verify Remote File Exists    r1    /opt/app/import/test.csv    YES
     Close Remote Session   r1
-    # GUI: Import ausloesen und Ergebnis pruefen
+
     StartHost              web
     StartApp               web/ImportApp
+
     SelectWindow           ImportDashboard
     ClickOn                TriggerImport
+
     SelectWindow           ImportResult
     VerifyIsVisible        SuccessIcon    YES
     VerifyValueWCM         StatusLabel    *importiert*
@@ -506,11 +521,24 @@ Regeln fuer die Ausgabe:
 - Jeder Testfall bekommt einen sprechenden deutschen oder englischen Namen.
 - Backslashes in Regex verdoppeln: `\\d+` statt `\d+` (Robot-Framework-Syntax).
 
-### Fenster-Abschnitte (Lesbarkeit)
+### Formatierungsregeln (Lesbarkeit)
 
-`SelectWindow` eroeffnet einen neuen **Abschnitt** im Testfall oder Keyword.
-Alle Aktionen die auf diesem Fenster arbeiten, stehen ohne Leerzeile direkt
-darunter. Vor dem naechsten `SelectWindow` steht eine Leerzeile.
+Zwei Regeln sorgen dafuer, dass Testfaelle visuell strukturiert sind:
+
+#### Regel 1: Leerzeile vor `SelectWindow`
+
+`SelectWindow` eroeffnet einen neuen **Fenster-Abschnitt**. Alle Aktionen
+die auf diesem Fenster arbeiten, stehen ohne Leerzeile direkt darunter.
+Vor dem naechsten `SelectWindow` steht eine **Leerzeile** — so sieht man
+sofort, welche Aktionen zu welchem Fenster gehoeren.
+
+#### Regel 2: Leerzeile zwischen Phasen
+
+Die fuenf Phasen (Reset, Testdaten, Navigation, Testaktion, Verifikation)
+werden durch **Leerzeilen** voneinander getrennt. So erkennt man den
+Uebergang zwischen Vorbereitung (NOISE) und eigentlichem Test (SIGNAL).
+
+#### Beispiel (beide Regeln kombiniert)
 
 ```robot
 *** Keywords ***
@@ -527,18 +555,22 @@ Login Und Dashboard Pruefen
     OnFailNOISE    SelectWindow   LoginPage
     SetValue       Benutzer    admin
     SetValue       Passwort    geheim
+
     ClickOn        Anmelden
 
     OnFailNOISE    SelectWindow   Dashboard
     VerifyValue    Titel    Willkommen
-    VerifyExists    Banner   YES
+    VerifyExists   Banner   YES
 ```
 
-Regeln:
-- `StartApp` steht allein (eigener Abschnitt, Lifecycle).
-- Jeder `SelectWindow`-Block fasst alle Aktionen dieses Fensters zusammen.
-- **Keine Leerzeile** innerhalb eines Fenster-Abschnitts.
-- **Eine Leerzeile** zwischen zwei Abschnitten.
+#### Zusammenfassung
+
+| Regel | Wo | Warum |
+|---|---|---|
+| Leerzeile **vor** `SelectWindow` | Zwischen Fenster-Abschnitten | Sichtbar machen welche Aktionen zu welchem Fenster gehoeren |
+| Leerzeile **zwischen Phasen** | Zwischen NOISE und SIGNAL | Vorbereitung von eigentlichem Test trennen |
+| **Keine** Leerzeile | Innerhalb eines Fenster-Abschnitts / einer Phase | Zusammengehoeriges bleibt zusammen |
+| `StartApp` steht allein | Eigener Abschnitt (Lifecycle) | Lifecycle-Keywords sind keine Fenster-Aktionen |
 
 ---
 
@@ -608,18 +640,19 @@ Anmelden Mit
     OnFailNOISE    SelectWindow   SauceDemoLogin
     SetValue       Benutzer    ${benutzer}
     SetValue       Passwort    ${passwort}
+
     ClickOn        Anmelden
 
 Login Erfolgreich
 
-    OnFailNOISE    SelectWindow       SauceDemoProducts
-    VerifyValue        Titel    Products
+    OnFailNOISE    SelectWindow   SauceDemoProducts
+    VerifyValue    Titel    Products
 
 Login Fehlgeschlagen Mit Meldung
     [Arguments]    ${meldung}
 
-    OnFailNOISE    SelectWindow       SauceDemoLogin
-    VerifyValue        Fehlermeldung    ${meldung}
+    OnFailNOISE    SelectWindow   SauceDemoLogin
+    VerifyValue    Fehlermeldung    ${meldung}
 
 *** Test Cases ***
 Login Standard User
@@ -699,13 +732,12 @@ WebPark Seite Oeffnen
 
 Parkkosten Berechnen
     [Arguments]    ${parkplatz}    ${ein_datum}    ${ein_zeit}    ${aus_datum}    ${aus_zeit}
-    # Phase 2: Testdaten eingeben
     Select         Parkplatz        ${parkplatz}
     SetValue       EingangDatum     ${ein_datum}
     SetValue       EingangZeit      ${ein_zeit}
     SetValue       AusgangDatum     ${aus_datum}
     SetValue       AusgangZeit      ${aus_zeit}
-    # Phase 4: Testaktion
+
     ClickOn        KostenBerechnen
 
 *** Test Cases ***
@@ -764,7 +796,9 @@ Spalte A Nach B Ziehen Mit DragTo
     [Documentation]    Shortcut: DragTo fuer den einfachen Fall.
     VerifyValue    SpalteA    A
     VerifyValue    SpalteB    B
+
     DragTo         SpalteA    SpalteB
+
     VerifyValue    SpalteA    B
     VerifyValue    SpalteB    A
 
@@ -772,6 +806,7 @@ Spalte A Nach B Ziehen Mehrstufig
     [Documentation]    Mehrstufig: DragStart + Drop.
     DragStart      SpalteA
     Drop           SpalteB
+
     VerifyValue    SpalteA    B
     VerifyValue    SpalteB    A
 ```
