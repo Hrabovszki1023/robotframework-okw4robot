@@ -386,6 +386,88 @@ Deterministische Remote-Kommandoausfuehrung und SFTP-Dateitransfer via SSH.
 
 ---
 
+## robotframework-okw-kafka
+
+Apache Kafka Integrationstests fuer Robot Framework.
+Kafka ist nicht das Testobjekt — es ist das **Werkzeug**: asynchrone
+Verarbeitung per Nachrichten ausloesen und Ergebnisse verifizieren.
+
+**Installation:** `pip install robotframework-okw-kafka`
+
+**Library-Import:** `Library    okw_kafka.library.OkwKafkaLibrary    config_dir=configs    backend=confluent`
+
+**Backend:** `confluent` (echter Broker) oder `stub` (In-Memory, fuer Contract-Tests).
+
+#### YAML-Konfiguration
+
+```yaml
+# configs/kafka-local.yaml
+bootstrap_servers: "localhost:9092"
+consumer_group: "okw-test"
+auto_offset_reset: "earliest"
+value_serializer: "json"
+value_deserializer: "json"
+```
+
+#### Session Lifecycle
+
+| Keyword       | Parameter        | Beschreibung                                           |
+|---------------|------------------|--------------------------------------------------------|
+| `KafkaStart`  | `<config_name>`  | Verbindet via YAML-Konfiguration (ohne Dateiendung)    |
+| `KafkaStop`   |                  | Schliesst alle Producer/Consumer/Admin-Verbindungen    |
+
+#### Produce (Nachricht aufbauen + senden)
+
+| Keyword                | Parameter              | Token-Support     | Beschreibung                                                  |
+|------------------------|------------------------|-------------------|---------------------------------------------------------------|
+| `KafkaSetTopic`        | `<topic>`              | $IGNORE           | Setzt das Ziel-Topic fuer Produce/Consume                    |
+| `KafkaSetValue`        | `<field>` `<value>`    | $IGNORE, $EMPTY   | Feld im Nachrichtenkoerper setzen (JSONPath, Auto-Typisierung)|
+| `KafkaSetValueAsString`| `<field>` `<value>`    | $IGNORE, $EMPTY   | Feld setzen, immer als String (keine Auto-Konvertierung)     |
+| `KafkaSetHeader`       | `<key>` `<value>`      | $IGNORE, $EMPTY   | Kafka-Message-Header setzen                                   |
+| `KafkaSetKey`          | `<key>`                | $IGNORE, $EMPTY   | Message-Key setzen (Partitionierung)                         |
+| `KafkaProduce`         | `[topic]`              |                   | Nachricht senden. Body/Headers/Key werden danach zurueckgesetzt |
+
+**JSONPath-Notation:** Felder werden mit `$.`-Prefix adressiert.
+Verschachtelte Pfade moeglich: `$.order.items[0].name`.
+Werte werden auto-typisiert: `42` → int, `true` → bool, `null` → None.
+
+#### Consume (Nachricht empfangen)
+
+| Keyword              | Parameter                                           | Token-Support | Beschreibung                                           |
+|----------------------|-----------------------------------------------------|---------------|--------------------------------------------------------|
+| `KafkaConsume`       | `<topic>` `[FILTER=$.field=value]` `[TIMEOUT=N]`   | $IGNORE       | Pollt bis passende Nachricht eintrifft (Standard: 30s) |
+| `KafkaConsumeLatest` | `<topic>` `[timeout]`                               | $IGNORE       | Letzte Nachricht holen, Backlog ueberspringen          |
+
+**Filter:** `FILTER=$.item=Widget-42` konsumiert nur Nachrichten, deren Feld
+`$.item` den Wert `Widget-42` hat. Nicht-passende Nachrichten werden uebersprungen.
+
+#### Verify (Nachrichteninhalt pruefen)
+
+| Keyword                | Parameter                    | Match-Mode | Beschreibung                           |
+|------------------------|------------------------------|------------|----------------------------------------|
+| `KafkaVerifyValue`     | `<jsonpath>` `<expected>`    | EXACT      | Feldwert pruefen                       |
+| `KafkaVerifyValueWCM`  | `<jsonpath>` `<pattern>`     | WCM        | Wildcard-Match (`*`, `?`)              |
+| `KafkaVerifyValueREGX` | `<jsonpath>` `<regex>`       | REGX       | Regex-Match                            |
+| `KafkaVerifyHeader`    | `<key>` `<expected>`         | EXACT      | Header-Wert pruefen                    |
+| `KafkaVerifyKey`       | `<expected>`                 | EXACT      | Message-Key pruefen                    |
+
+#### Memorize (Werte merken)
+
+| Keyword              | Parameter                   | Beschreibung                                   |
+|----------------------|-----------------------------|-------------------------------------------------|
+| `KafkaMemorizeValue` | `<jsonpath>` `<key>`        | Feldwert in `$MEM{KEY}` speichern              |
+| `KafkaMemorizeKey`   | `<key>`                     | Message-Key in `$MEM{KEY}` speichern           |
+
+#### Admin (Topic-Verwaltung)
+
+| Keyword                     | Parameter                   | Beschreibung                           |
+|-----------------------------|-----------------------------|----------------------------------------|
+| `KafkaVerifyTopicExists`    | `<topic>` `<YES\|NO>`      | Topic existiert (YES) oder nicht (NO)  |
+| `KafkaVerifyPartitionCount` | `<topic>` `<expected>`      | Anzahl Partitionen pruefen             |
+| `KafkaLogTopics`            |                             | Alle verfuegbaren Topics loggen        |
+
+---
+
 ## Beispiele
 
 ### Login-Test (okw4robot – Web)
@@ -504,6 +586,88 @@ Upload Datei Und GUI Pruefen
     VerifyValueWCM         StatusLabel    *importiert*
 ```
 
+### Kafka Roundtrip: Produce, Consume, Verify
+
+```robot
+*** Settings ***
+Library    okw_kafka.library.OkwKafkaLibrary
+...        config_dir=configs    backend=confluent
+Test Setup     KafkaStart    kafka-local
+Test Teardown  KafkaStop
+
+*** Test Cases ***
+Bestellung Senden Und Bestaetigung Pruefen
+    KafkaSetTopic       order-commands
+    KafkaSetValue       $.action    create
+    KafkaSetValue       $.item      Widget-42
+    KafkaSetValue       $.quantity  3
+    KafkaSetKey         order-001
+    KafkaSetHeader      correlation-id    test-001
+    KafkaProduce
+
+    KafkaConsume             order-events    FILTER=$.item=Widget-42    TIMEOUT=30
+    KafkaVerifyValue         $.status    created
+    KafkaVerifyValueWCM      $.message   *successfully*
+    KafkaVerifyKey           order-001
+    KafkaVerifyHeader        correlation-id    test-001
+
+Wert Merken Und In Naechster Nachricht Verwenden
+    KafkaSetTopic       token-topic
+    KafkaSetValue       $.token     secret-abc-123
+    KafkaProduce
+
+    KafkaConsume             token-topic    TIMEOUT=30
+    KafkaMemorizeValue       $.token    AUTH_TOKEN
+
+    KafkaSetTopic       auth-commands
+    KafkaSetValue       $.auth      $MEM{AUTH_TOKEN}
+    KafkaProduce
+
+    KafkaConsume        auth-commands    TIMEOUT=30
+    KafkaVerifyValue    $.auth      secret-abc-123
+
+Topic Existenz Pruefen
+    KafkaSetTopic       admin-test
+    KafkaSetValue       $.x         1
+    KafkaProduce
+
+    KafkaVerifyTopicExists    admin-test            YES
+    KafkaVerifyTopicExists    nonexistent-topic    NO
+    KafkaLogTopics
+
+IGNORE Token Ueberspringt Keyword
+    KafkaSetTopic       $IGNORE
+    KafkaSetValue       $.x    $IGNORE
+    KafkaVerifyValue    $.x    $IGNORE
+```
+
+### Kombinierter Test: GUI + Kafka (Event-Driven)
+
+```robot
+*** Settings ***
+Library    okw4robot.library.OKW4RobotLibrary
+Library    okw_kafka.library.OkwKafkaLibrary
+...        config_dir=configs    backend=confluent
+Test Teardown    Run Keywords    StopHost    AND    KafkaStop
+
+*** Test Cases ***
+Bestellung Ueber GUI Aufgeben Und Kafka Event Pruefen
+    KafkaStart         kafka-local
+
+    StartHost          web
+    StartApp           web/ShopApp
+
+    SelectWindow       Produktseite
+    SetValue           Menge    1
+
+    ClickOn            InDenWarenkorb
+
+    KafkaConsume           order-events    FILTER=$.action=cart-add    TIMEOUT=30
+    KafkaVerifyValue       $.action    cart-add
+    KafkaVerifyValueREGX   $.orderId   [A-Z0-9]{8,}
+    KafkaMemorizeValue     $.orderId    ORDER_ID
+```
+
 ---
 
 ## Ausgabe-Format
@@ -516,8 +680,9 @@ Erzeuge immer ein vollstaendiges `.robot`-File mit:
 
 Regeln fuer die Ausgabe:
 - Trennzeichen zwischen Keyword und Argumenten: mindestens 4 Leerzeichen.
-- Jeder Testfall beginnt mit `StartHost` + `StartApp` + `SelectWindow`.
-- `StopHost` im Test Teardown.
+- GUI-Tests beginnen mit `StartHost` + `StartApp` + `SelectWindow`, Teardown: `StopHost`.
+- Kafka-Tests beginnen mit `KafkaStart`, Teardown: `KafkaStop`.
+- Kombinierte Tests: alle Libraries im Teardown aufraeumen.
 - Jeder Testfall bekommt einen sprechenden deutschen oder englischen Namen.
 - Backslashes in Regex verdoppeln: `\\d+` statt `\d+` (Robot-Framework-Syntax).
 
