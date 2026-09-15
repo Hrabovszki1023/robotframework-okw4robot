@@ -3,17 +3,23 @@
 [![PyPI](https://img.shields.io/pypi/v/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
 [![Python](https://img.shields.io/pypi/pyversions/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
 
-Driver-agnostic keyword architecture for [Robot Framework](https://robotframework.org/).
-
-One unified set of keywords for different GUI technologies
-(Web/Selenium, Web/Playwright, Java Swing, ...) — the actual implementation
-lives in the respective driver package.
+Driver-agnostic keyword architecture for [Robot Framework](https://robotframework.org/) — one set of keywords for Web, Java Swing, SAP GUI, and more.
 
 > **Deutsche Version:** [README_de.md](README_de.md)
 
 > **ISO/IEC/IEEE 29119-5:2024:** OKW4Robot implements the international standard
 > for Keyword-Driven Testing — structurally since 2003.
 > See [ISO 29119-5 Conformity](docs/iso-29119-5-conformity.md).
+
+## Signal vs. NOISE
+
+| Signal (your test) | NOISE (hidden by OKW) |
+|---|---|
+| `SetValue Benutzer admin` | Selenium/Swing/SAP adapter selection |
+| `VerifyValue Status Logged in` | Polling loop, timeout, match mode |
+| `ClickOn Login` | Element lookup, scroll, wait, click |
+
+Test code contains only **what** is tested (Signal). **How** it is executed (NOISE) stays in YAML locators, widget classes, and adapters.
 
 ---
 
@@ -213,6 +219,14 @@ Details: [docs/okw_parameters.md](docs/okw_parameters.md),
 [docs/synchronization_strategy.md](docs/synchronization_strategy.md)
 
 ---
+
+## Runnable Examples
+
+[okw-examples](https://github.com/Hrabovszki1023/okw-examples) — working Robot Framework tests for Web, Java Swing, SAP GUI, REST, SSH, Kafka.
+
+## Handbuch
+
+[OKW4Robot Handbuch](https://hrabovszki1023.github.io/okw-examples/) — step-by-step guide (German).
 
 ## License
 
