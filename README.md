@@ -21,6 +21,24 @@ Driver-agnostic keyword architecture for [Robot Framework](https://robotframewor
 
 Test code contains only **what** is tested (Signal). **How** it is executed (NOISE) stays in YAML locators, widget classes, and adapters.
 
+### The Trinity: Test — YAML — Widget
+
+OKW decouples business logic from technical implementation through three layers:
+
+```
+Test (.robot)          YAML locator (.yaml)       Widget + Adapter (.py)
+─────────────          ────────────────────       ──────────────────────
+Business language  →   Mapping layer          →   Technical implementation
+SetValue Name admin    Name:                      RemoteSw_TextField
+                         locator: {name: "txtName"}  → clear + typeIntoTextField
+```
+
+The **test** speaks the tester's language. The **YAML file** translates
+business terms into technical identifiers. The **widget + adapter**
+encapsulate the driver. When the GUI changes, only the YAML changes —
+the test stays the same. When the technology changes (Web → SAP),
+only the YAML and adapter change — the test stays the same.
+
 ---
 
 ## OKW Ecosystem
