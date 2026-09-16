@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
 [![Python](https://img.shields.io/pypi/pyversions/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
+[![License](https://img.shields.io/badge/License-OKW_Community-orange.svg)](LICENSE)
 
 Driver-agnostic keyword architecture for [Robot Framework](https://robotframework.org/) — one set of keywords for Web, Java Swing, SAP GUI, and more.
 
@@ -38,6 +39,21 @@ business terms into technical identifiers. The **widget + adapter**
 encapsulate the driver. When the GUI changes, only the YAML changes —
 the test stays the same. When the technology changes (Web → SAP),
 only the YAML and adapter change — the test stays the same.
+
+### Widget Naming Rule
+
+YAML widget keys are **business names**, not technical identifiers.
+The key appears in test code (`SetValue Name admin`) and must speak
+the domain language. Type prefixes (`txt`, `btn`, `chk`, `lbl`, `cb`)
+are NOISE — the type is already encoded in `class` and `locator`.
+This NOISE is eliminated by applying **DRY**: the technical type is
+maintained in exactly one place — the YAML locator file — and nowhere else.
+
+| Wrong (technical) | Right (business) | Why |
+|---|---|---|
+| `txtName` | `Name` | Today a TextField, tomorrow a MultilineField — test stays the same |
+| `btnOK` | `OK` | The test says "click OK", not "click button OK" |
+| `cbStatus` | `Status` | If the ComboBox becomes a RadioList, no test change |
 
 ---
 
