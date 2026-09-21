@@ -254,6 +254,22 @@ Details: [docs/okw_parameters.md](docs/okw_parameters.md),
 
 ---
 
+## AI Test Generation
+
+Test cases can be generated with any LLM (Claude, ChatGPT, Copilot, ...).
+OKW's architecture gives AI a decisive advantage over Page Object Model (POM):
+
+| | POM | OKW |
+|---|---|---|
+| **What the AI needs to learn** | Project-specific class hierarchy, naming conventions, base-page methods | Keyword list + YAML schema (compact, uniform) |
+| **Prompt size** | Large — entire class hierarchy as context | Small — keyword table + one YAML example |
+| **Transferability** | Learned for one project, not transferable | Learned once, works for all projects and technologies |
+| **Building blocks** | None — every page class written from scratch | Elementary keywords (`SetValue`, `ClickOn`, `VerifyValue`) are ready-made |
+| **Error surface** | Large — compile errors, wrong inheritance, missing imports | Small — wrong widget name or locator, immediately visible |
+
+The system prompts for AI-assisted test generation are maintained per library in
+[`prompts/`](prompts/).
+
 ## Runnable Examples
 
 [okw-examples](https://github.com/Hrabovszki1023/okw-examples) — working Robot Framework tests for Web, Java Swing, SAP GUI, REST, SSH, Kafka.

@@ -254,6 +254,23 @@ Details: [docs/okw_parameters.md](docs/okw_parameters.md),
 
 ---
 
+## KI-Testgenerierung
+
+Testfälle können mit jeder KI (Claude, ChatGPT, Copilot, ...) generiert werden.
+OKWs Architektur bietet gegenüber dem Page Object Model (POM) einen
+entscheidenden Vorteil:
+
+| | POM | OKW |
+|---|---|---|
+| **Was muss die KI lernen?** | Projekt-spezifische Klassenhierarchie, Konventionen, Base-Page-Methoden | Keyword-Liste + YAML-Schema (kompakt, einheitlich) |
+| **Prompt-Größe** | Groß — gesamte Klassenhierarchie als Kontext nötig | Klein — Keyword-Tabelle + ein YAML-Beispiel reichen |
+| **Übertragbarkeit** | Gelernt für ein Projekt, nicht übertragbar | Einmal gelernt, gilt für alle Projekte und Technologien |
+| **Bausteine vorhanden?** | Nein — jede Page-Klasse wird von Grund auf geschrieben | Ja — elementare Keywords (`SetValue`, `ClickOn`, `VerifyValue`) sind fertige Bausteine |
+| **Fehlerraum** | Groß — Kompilierfehler, falsche Vererbung, fehlende Imports | Klein — falscher Widget-Name oder Locator, sofort erkennbar |
+
+Die System-Prompts für die KI-gestützte Testgenerierung werden pro
+Bibliothek in [`prompts/`](prompts/) gepflegt.
+
 ## Lauffähige Beispiele
 
 [okw-examples](https://github.com/Hrabovszki1023/okw-examples) — lauffähige Robot Framework Tests für Web, Java Swing, SAP GUI, REST, SSH, Kafka.
