@@ -5,7 +5,7 @@ of verify keywords, synchronization, and ignore rules. This page describes
 the **five scopes** in which parameters can be set, and how they override
 each other.
 
-> **Deutsche Version:** [okw_parameters_de.md](okw_parameters_de.md)
+> **Deutsche Version:** [okw_parameters.de.md](okw_parameters.de.md)
 
 ---
 

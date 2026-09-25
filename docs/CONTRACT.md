@@ -22,13 +22,13 @@ das Projekt international zugaenglich bleiben.
 | Datei | Sprache | Beispiel |
 |-------|---------|---------|
 | `dokument.md` | **Englisch** (Primaersprache) | `okw_parameters.md` |
-| `dokument_de.md` | **Deutsch** | `okw_parameters_de.md` |
+| `dokument.de.md` | **Deutsch** | `okw_parameters.de.md` |
 
 Regeln:
 
 1. **Englisch ist die Primaersprache.** Die Datei ohne Suffix (`*.md`) ist immer
    die englische Version.
-2. **Deutsche Version** wird mit dem Suffix `_de.md` gekennzeichnet und liegt
+2. **Deutsche Version** wird mit dem Suffix `.de.md` gekennzeichnet und liegt
    **neben** der englischen Version im selben Verzeichnis.
 3. **Inhaltliche Gleichwertigkeit.** Beide Versionen muessen denselben
    fachlichen Inhalt abdecken. Code-Beispiele und Tabellen sind in beiden
@@ -45,11 +45,11 @@ Regeln:
 ```
 docs/
   okw_parameters.md          ← Englisch
-  okw_parameters_de.md       ← Deutsch
+  okw_parameters.de.md       ← Deutsch
   widgets_common.md           ← Englisch
-  widgets_common_de.md        ← Deutsch
+  widgets_common.de.md        ← Deutsch
   CONTRACT.md                 ← Englisch (dieses Dokument)
-  CONTRACT_de.md              ← Deutsch
+  CONTRACT.de.md              ← Deutsch
   ...
 ```
 

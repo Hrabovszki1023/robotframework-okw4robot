@@ -226,7 +226,7 @@ robotframework-okw4robot/
 
 - [context.md](docs/context.md) – Laufzeit-Kontext (Adapter, App, Fenster)
 - [objektzustaende.md](docs/objektzustaende.md) – Widget-Zustände (exists, visible, enabled, ...)
-- [okw_parameters.md](docs/okw_parameters.md) – Timeouts und Parameter ([DE](docs/okw_parameters_de.md))
+- [okw_parameters.md](docs/okw_parameters.md) – Timeouts und Parameter ([DE](docs/okw_parameters.de.md))
 - [synchronization_strategy.md](docs/synchronization_strategy.md) – Sync-Strategie
 - [widgets_common.md](docs/widgets_common.md) – Widget-Hierarchie und OkwWidget-Interface
 - [table_tokens.md](docs/table_tokens.md) – $TAB/$LF Token-Syntax

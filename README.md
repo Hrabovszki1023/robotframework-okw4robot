@@ -6,7 +6,7 @@
 
 Driver-agnostic keyword architecture for [Robot Framework](https://robotframework.org/) — one set of keywords for Web, Java Swing, SAP GUI, and more.
 
-> **Deutsche Version:** [README_de.md](README_de.md)
+> **Deutsche Version:** [README.de.md](README.de.md)
 
 > **ISO/IEC/IEEE 29119-5:2024:** OKW4Robot implements the international standard
 > for Keyword-Driven Testing — structurally since 2003.
@@ -226,7 +226,7 @@ robotframework-okw4robot/
 
 - [context.md](docs/context.md) – Runtime context (adapter, app, window)
 - [objektzustaende.md](docs/objektzustaende.md) – Widget states (exists, visible, enabled, ...)
-- [okw_parameters.md](docs/okw_parameters.md) – Timeouts and parameters ([DE](docs/okw_parameters_de.md))
+- [okw_parameters.md](docs/okw_parameters.md) – Timeouts and parameters ([DE](docs/okw_parameters.de.md))
 - [synchronization_strategy.md](docs/synchronization_strategy.md) – Sync strategy
 - [widgets_common.md](docs/widgets_common.md) – Widget hierarchy and OkwWidget interface
 - [table_tokens.md](docs/table_tokens.md) – $TAB/$LF token syntax
