@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
 [![Python](https://img.shields.io/pypi/pyversions/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
-[![License](https://img.shields.io/badge/License-OKW_Community-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Treiberunabhängige Keyword-Architektur für [Robot Framework](https://robotframework.org/) — ein Satz Keywords für Web, Java Swing, SAP GUI und mehr.
 
@@ -281,6 +281,4 @@ Bibliothek in [`prompts/`](prompts/) gepflegt.
 
 ## Lizenz
 
-- **Community** (nicht-kommerziell): siehe [LICENSE](LICENSE)
-- **Kommerziell**: siehe [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md)
-- **FAQ**: [docs/license_faq.md](docs/license_faq.md)
+Apache-2.0. Siehe [LICENSE](LICENSE) für Details.

@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
 [![Python](https://img.shields.io/pypi/pyversions/robotframework-okw4robot)](https://pypi.org/project/robotframework-okw4robot/)
-[![License](https://img.shields.io/badge/License-OKW_Community-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Driver-agnostic keyword architecture for [Robot Framework](https://robotframework.org/) — one set of keywords for Web, Java Swing, SAP GUI, and more.
 
@@ -280,6 +280,4 @@ The system prompts for AI-assisted test generation are maintained per library in
 
 ## License
 
-- **Community** (non-commercial): see [LICENSE](LICENSE)
-- **Commercial**: see [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md)
-- **FAQ**: [docs/license_faq.md](docs/license_faq.md)
+Apache-2.0. See [LICENSE](LICENSE) for details.
